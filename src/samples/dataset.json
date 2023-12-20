@@ -1,0 +1,67 @@
+{
+  "datapoints": [
+    {
+      "sku": "Standard_HB120-32rs_v3",
+      "exec_time": 120,
+      "nnodes": 2,
+      "appinputs": {
+        "APPMATRIXSIZE": "4000",
+        "APPINTERACTIONS": "10"
+      }
+    },
+    {
+      "sku": "Standard_HB120-32rs_v3",
+      "exec_time": 200,
+      "nnodes": 4,
+      "appinputs": {
+        "APPMATRIXSIZE": "4000",
+        "APPINTERACTIONS": "10"
+      }
+    },
+    {
+      "sku": "Standard_HB120-32rs_v3",
+      "exec_time": 50,
+      "nnodes": 8,
+      "appinputs": {
+        "APPMATRIXSIZE": "4000",
+        "APPINTERACTIONS": "10"
+      }
+    },
+    {
+      "sku": "Standard_HB120-32rs_v2",
+      "exec_time": 220,
+      "nnodes": 2,
+      "appinputs": {
+        "APPMATRIXSIZE": "4000",
+        "APPINTERACTIONS": "10"
+      }
+    },
+    {
+      "sku": "Standard_HB120-32rs_v2",
+      "exec_time": 300,
+      "nnodes": 4,
+      "appinputs": {
+        "APPMATRIXSIZE": "4000",
+        "APPINTERACTIONS": "10"
+      }
+    },
+    {
+      "sku": "Standard_HB120-32rs_v2",
+      "exec_time": 250,
+      "nnodes": 8,
+      "appinputs": {
+        "APPMATRIXSIZE": "4000",
+        "APPINTERACTIONS": "10"
+      }
+    },
+    {
+      "sku": "Standard_HB120-32rs_v2",
+      "exec_time": 250,
+      "nnodes": 8,
+      "appinputs": {
+        "APPMATRIXSIZE": "4000",
+        "APPINTERACTIONS": "10"
+      }
+    }
+  ]
+}

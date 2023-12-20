@@ -12,6 +12,8 @@ For now the tool focuses on testing:
 For next versions we will explore other factors such as storage, gpus and
 network.
 
+#### Warning: This repo is still going through major changes!
+
 ---
 ## Contributing
 

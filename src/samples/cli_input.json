@@ -1,0 +1,25 @@
+{
+  "rgprefix": "hpcadvisor",
+  "subscription": "mysubscription",
+  "appsetupurl": "https://raw.githubusercontent.com/marconetto/testbed/main/appsetup_matrix.sh",
+  "apprunscript": "run_mpi.sh",
+  "skus": [
+    "Standard_HB120-32rs_v3",
+    "Standard_HB120-32rs_v2",
+    "Standard_HB120-16rs_v2"
+  ],
+  "nnodes": [
+    2,
+    3,
+    4
+  ],
+  "ppr": 100,
+  "region": "eastus",
+  "appinputs": {
+    "appinteractions": "10",
+    "appmatrixsize": [
+      "4000",
+      "6000"
+    ]
+  }
+}
