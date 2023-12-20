@@ -15,6 +15,73 @@ network.
 #### Warning: This repo is still going through major changes!
 
 ---
+
+### Execution using poetry
+
+Poetry installation: <https://python-poetry.org/docs/>
+
+Using terminal go inside the hpcadvisor root directory:
+
+#### Install and create python virtual environment
+```
+poetry install
+poetry shell
+```
+
+#### Run only data collector on CLI
+
+Update `src/sample/cli_input.json` fields, in particular `mysubscription`
+
+To start:
+```
+./bin/hpcadvisor -u src/sample/cli_input.json
+```
+
+#### Run GUI (browser) so data collector and data exploration can be used
+
+Optional: Copy `src/sample/ui_defaults.json` to
+`$HOME/.hpcadvisor/ui_defaults.json` and modify it accordingly.
+
+To start:
+```
+./bin/hpcadvisor -g
+```
+
+#### Only test data exploration
+
+If you want to only test the data exploration component and has not run any data
+collection:
+
+
+```
+cp src/samples/dataset.json $HOME/.hpcadvisor/
+./bin/hpcadvisor -g
+```
+
+Then click on the data exploration button.
+
+
+---
+### Notes
+
+1) fix the process for data collection is interrupted, resources will not be
+deleted automatically.
+
+---
+### Generate standalone binary
+
+
+You can generate a standalone binary file using:
+- poetry (https://python-poetry.org/docs/)
+- pyinstaller (https://pyinstaller.org/en/stable/)
+
+From project root folder, type:
+
+```
+poetry run pyinstaller src/hpcadvisor/__main__.py  --onefile --name hpcadvisor
+```
+
+---
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
