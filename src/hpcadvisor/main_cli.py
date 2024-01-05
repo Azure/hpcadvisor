@@ -69,5 +69,5 @@ def main(user_input_file, env_file, debug):
     task_filename = utils.get_task_filename(rg_prefix)
     task_generator.generate_tasks(task_filename, data_system, data_app_input)
 
-    dataset_filename = utils.get_dataset_filename(rg_prefix)
+    dataset_filename = utils.get_dataset_filename()
     data_collector.collect_data(task_filename, dataset_filename, env_file)

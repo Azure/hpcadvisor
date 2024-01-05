@@ -26,11 +26,11 @@ def get_task_filename(rg_prefix):
     return os.path.join(deployment_dir, task_filename)
 
 
-def get_dataset_filename(rg_prefix=None):
-    # deployment_dir = _get_deployment_dir(rg_prefix)
-    # return os.path.join(deployment_dir, dataset_filename)
-    # TODO: placement of dataset needs some thinking
-
+# for now, dataset is stored in hpcadvisor dir
+# and deployment info is a tag into the dataset file
+# to be able to filter data
+# TODO: may change this in future
+def get_dataset_filename():
     return os.path.join(hpcadvisor_dir, dataset_filename)
 
 

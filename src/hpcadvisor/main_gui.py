@@ -19,7 +19,7 @@ from hpcadvisor import (
     data_collector,
     dataset_handler,
     logger,
-    plotadvisor,
+    plot_generator,
     task_generator,
     utils,
 )
@@ -53,7 +53,6 @@ def wait_execution(execution_placeholder):
             if lines:
                 last_line = lines[-1].strip()
 
-            print("last_line=", last_line)
             if last_line == "all_done":
                 return
         time.sleep(2)
@@ -131,16 +130,14 @@ def show_recommendation(app):
     st.text("")
 
 
-def show_plot_files(st):
-    if "rg_prefix" in st.session_state:
-        dataset_filename = utils.get_dataset_filename(st.session_state["rg_prefix"])
-    else:
-        dataset_filename = utils.get_dataset_filename()
+def show_plot_files(st, deployment_name):
+    dataset_filename = utils.get_dataset_filename()
 
     if os.path.exists(dataset_filename):
         appinputs = dataset_handler.get_appinput_combinations(dataset_filename)
         for appinput in appinputs:
-            plotadvisor.gen_graph(st, dataset_filename, appinput)
+            plot_generator.gen_plot_exectime_vs_numvms(st, dataset_filename, appinput)
+            plot_generator.gen_plot_exectime_vs_cost(st, dataset_filename, appinput)
 
 
 def show_dataexploration(app):
@@ -150,9 +147,19 @@ def show_dataexploration(app):
     st.text("")
     st.text("")
 
-    st.write("◉ VIEW DATA POINTS")
-    with st.expander("data points"):
-        show_plot_files(st)
+    st.markdown("### Data exploration ")
+    with st.expander("Setup"):
+        deployment_name = st.text_input(
+            "Deployment",
+            "",
+            key="deployment_id",
+        )
+
+    genplots_button = st.button("Generate Plots")
+
+    if genplots_button:
+        with st.expander("data points"):
+            show_plot_files(st, deployment_name)
 
     st.text("")
     st.text("")
@@ -356,7 +363,7 @@ def show_datageneration(app):
                 )
                 log.info(f"task_filename={task_filename} generated for {rg_prefix}")
 
-                dataset_filename = utils.get_dataset_filename(rg_prefix)
+                dataset_filename = utils.get_dataset_filename()
                 data_collector.collect_data(task_filename, dataset_filename, env_file)
                 time.sleep(3.00)
                 st.text("DONE.")
@@ -380,8 +387,8 @@ def main_gui():
     current_action = None
     if "currentaction" not in st.session_state:
         st.session_state.currentaction = None
+    print("st.session_state=", st.session_state)
 
-    print("current_action=", st.session_state.currentaction)
     with st.sidebar:
         st.title("⚙️  AzHPCAdvisor \n Azure HPC Resource Selection Advisor")
         st.text("")
@@ -452,18 +459,21 @@ def main_gui():
         st.text("🔸 Generate new data for better decision making")
 
     if app == "MATRIX" and button_recommendation:
-        show_recommendation(app)
         st.session_state.currentaction = "recommend"
+        show_recommendation(app)
 
-    if app == "MATRIX" and button_dataexploration:
-        show_dataexploration(app)
+    if app == "MATRIX" and (
+        button_dataexploration or st.session_state.currentaction == "dataexplore"
+    ):
         st.session_state.currentaction = "dataexplore"
+        if button_datageneration == False:
+            show_dataexploration(app)
 
     if app == "MATRIX" and (
         button_datageneration or st.session_state.currentaction == "datagen"
     ):
-        show_datageneration(app)
         st.session_state.currentaction = "datagen"
+        show_datageneration(app)
 
     # remove streamlit bottom info
     hide_streamlit_style = """
