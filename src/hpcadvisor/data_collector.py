@@ -7,9 +7,9 @@ from hpcadvisor import batch_handler, logger
 log = logger.logger
 
 
-def get_task_var(task_str, var_name):
+def get_task_property_value(task_str, property_name):
     for line in task_str.split(","):
-        if var_name in line:
+        if property_name in line:
             return line.split("=")[1]
 
     return None
@@ -29,7 +29,7 @@ def get_task_appinputs(task_str):
     return appinputs
 
 
-def get_tasks(tasks_file):
+def get_tasks_from_file(tasks_file):
     tasks = []
     with open(tasks_file) as f:
         lines = f.readlines()
@@ -43,8 +43,8 @@ def get_tasks(tasks_file):
     return tasks
 
 
-def process_tasks(tasks_file, data_file):
-    tasks = get_tasks(tasks_file)
+def process_tasks(tasks_file, dataset_file):
+    tasks = get_tasks_from_file(tasks_file)
     previous_sku = ""
     jobname = ""
     poolname = ""
@@ -54,9 +54,9 @@ def process_tasks(tasks_file, data_file):
         print(f"Processing task: {taskcounter}/{len(tasks)}")
         log.info(f"Processing task: {task}")
 
-        sku = get_task_var(task, "sku")
-        number_of_nodes = get_task_var(task, "nnodes")
-        ppr_perc = get_task_var(task, "ppr")
+        sku = get_task_property_value(task, "sku")
+        number_of_nodes = get_task_property_value(task, "nnodes")
+        ppr_perc = get_task_property_value(task, "ppr")
         appinputs = get_task_appinputs(task)
         # TODO: needs to have proper format for appinputs in create_compute_task
         appinputs_dict = dict(appinputs)
@@ -82,7 +82,7 @@ def process_tasks(tasks_file, data_file):
 
         batch_handler.wait_task_completion(jobname, taskid)
         batch_handler.store_task_execution_data(
-            poolname, jobname, taskid, ppr_perc, appinputs_dict, data_file
+            poolname, jobname, taskid, ppr_perc, appinputs_dict, dataset_file
         )
 
         previous_sku = sku
@@ -98,7 +98,8 @@ def collect_data(tasks_file, dataset_file, env_file):
     if batch_handler.setup_environment(env_file):
         log.info("Environment setup completed")
         log.info("Starting tasks...this may take a while")
-        process_tasks(tasks_file, dataset_file)
+        deployment_name = batch_handler.get_deployment_name()
+        process_tasks(tasks_file, dataset_file, deployment_name)
         batch_handler.delete_environment()
         log.info("Tasks completed")
     else:

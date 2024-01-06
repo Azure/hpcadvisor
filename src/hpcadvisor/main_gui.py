@@ -28,7 +28,6 @@ log = logger.logger
 
 # TODO: this entire code needs to be refactored
 
-tasks_filename = "tasks.txt"
 execution_tracker_filename = "progress.txt"
 
 

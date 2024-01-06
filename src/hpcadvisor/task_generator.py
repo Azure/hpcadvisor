@@ -5,11 +5,9 @@ import itertools
 import logging
 import sys
 
-logger = logging.getLogger(__name__)
+from hpcadvisor import data_collector, logger
 
-
-def test():
-    print("task_generator_test")
+log = logger.logger
 
 
 def reset_task_file(filename):
@@ -94,31 +92,34 @@ def _get_input_files():
     parser = argparse.ArgumentParser(description="Collect data script")
 
     parser.add_argument("-t", "--taskfile", help="Tasks File", required=True)
-    parser.add_argument("-u", "--userinput", help="UI Inputs", required=True)
+    # parser.add_argument("-u", "--userinput", help="UI Inputs", required=True)
 
     try:
         args = parser.parse_args()
         tasks_file = args.taskfile
-        userinput_file = args.userinput
+        # userinput_file = args.userinput
     except:
         parser.print_help()
         sys.exit(1)
 
-    logger.info(f"Tasks file: {tasks_file}")
-    logger.info(f"User input file: {userinput_file}")
+    log.info(f"Tasks file: {tasks_file}")
+    # log.info(f"User input file: {userinput_file}")
 
-    return tasks_file, userinput_file
+    return tasks_file
 
 
 if __name__ == "__main__":
-    tasks_file, userinput_file = _get_input_files()
+    tasks_file = _get_input_files()
+    print(tasks_file)
 
-    (raw_sku_text, raw_ppr_text, raw_nnodes_text, raw_app_text) = get_parameters(
-        userinput_file
-    )
-
-    logger.info(raw_sku_text, raw_ppr_text, raw_nnodes_text, raw_app_text)
-
-    generate_tasks(
-        tasks_file, raw_sku_text, raw_ppr_text, raw_nnodes_text, raw_app_text
-    )
+    # tasks_file, userinput_file = _get_input_files()
+    #
+    # (raw_sku_text, raw_ppr_text, raw_nnodes_text, raw_app_text) = get_parameters(
+    #     userinput_file
+    # )
+    #
+    # log.info(raw_sku_text, raw_ppr_text, raw_nnodes_text, raw_app_text)
+    #
+    # generate_tasks(
+    #     tasks_file, raw_sku_text, raw_ppr_text, raw_nnodes_text, raw_app_text
+    # )

@@ -18,17 +18,21 @@ from azure.cli.core.util import b64encode
 from azure.core.exceptions import ResourceExistsError
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.compute import ComputeManagementClient
-from azure.mgmt.compute.models import (DiskCreateOption, LinuxConfiguration,
-                                       OSProfile, SshConfiguration,
-                                       SshPublicKey, VirtualMachine,
-                                       VirtualMachineImage)
+from azure.mgmt.compute.models import (
+    DiskCreateOption,
+    LinuxConfiguration,
+    OSProfile,
+    SshConfiguration,
+    SshPublicKey,
+    VirtualMachine,
+    VirtualMachineImage,
+)
 from azure.mgmt.monitor import MonitorManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient, SubscriptionClient
 
 from hpcadvisor import dataset_handler, logger, utils
-from hpcadvisor.azure_identity_credential_adapter import \
-    AzureIdentityCredentialAdapter
+from hpcadvisor.azure_identity_credential_adapter import AzureIdentityCredentialAdapter
 
 batch_supported_images = "batch_supported_images.txt"
 VMIMAGE = "OpenLogic:CentOS-HPC:7_9-gen2:7.9.2022040101"
@@ -781,7 +785,7 @@ def _get_monitoring_data(batch_client, poolid, jobid, taskid):
 
     resource_ids = get_vmss_batch_resource_ids(batch_client, poolid)
 
-    cpu_usage_list = ""
+    cpu_usage_list = []
     for resource_id in resource_ids:
         average_cpu = None
         while average_cpu is None:
@@ -800,9 +804,8 @@ def _get_monitoring_data(batch_client, poolid, jobid, taskid):
 
             time.sleep(5)
 
-        cpu_usage_list += f"{average_cpu:.2f};"
+        cpu_usage_list.append(float(average_cpu))
 
-    cpu_usage_list = cpu_usage_list[:-1]
     return cpu_usage_list
 
 
@@ -820,8 +823,8 @@ def get_task_stdout(batch_client, jobid, taskid):
     return file_text
 
 
-# TODO: need to be moved to data_collector.py
-def store_task_execution_data(poolid, jobid, taskid, ppr_perc, appinputs, datasetfile):
+# TODO: may move this to data_collector.py in future
+def store_task_execution_data(poolid, jobid, taskid, ppr_perc, appinputs, dataset_file):
     log.info(f"collecting task execution data: {taskid}")
 
     if batch_client is None:
@@ -857,10 +860,12 @@ def store_task_execution_data(poolid, jobid, taskid, ppr_perc, appinputs, datase
     datapoint["sku"] = sku
     datapoint["nnodes"] = number_of_nodes
     datapoint["total_cores"] = total_cores
-    datapoint["ppr_perc"] = ppr_perc
+    datapoint["ppr_perc"] = float(ppr_perc)
     datapoint["cpu_usage"] = cpu_usage
     datapoint["exec_time"] = total_elapsed_in_seconds
     datapoint["appinputs"] = appinputs
+    datapoint["deployment"] = env["RG"]
+    datapoint["region"] = env["REGION"]
 
     log.debug(f"data point = {datapoint}")
-    dataset_handler.update_dataset(datasetfile, datapoint)
+    dataset_handler.add_datapoint(dataset_file, datapoint)
