@@ -25,6 +25,7 @@ def process_tasks(tasks_file, dataset_file):
         if previous_sku != sku:
             log.debug(f"Got new sku: previous=[{previous_sku}] sku=[{sku}]")
             if poolname != "":
+                log.info(f"Resizing pool: {poolname} to 0")
                 batch_handler.resize_pool(poolname, 0)
 
             poolname = batch_handler.create_pool(sku)
