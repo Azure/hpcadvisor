@@ -6,7 +6,7 @@ from hpcadvisor import logger
 
 log = logger.logger
 environment_filename = "env.conf"
-task_filename = "tasks.txt"
+task_filename = "tasks.json"
 dataset_filename = "dataset.json"
 ui_default_filename = "ui_default.json"
 
@@ -95,7 +95,7 @@ def generate_env_file(rg_prefix, user_data):
     return env_file
 
 
-def get_rg_prefix_from_env_file(env_file):
+def get_rg_prefix_from_file(env_file):
     with open(env_file, "r") as f:
         for line in f:
             if line.startswith("RG="):

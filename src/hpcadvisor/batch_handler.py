@@ -92,7 +92,7 @@ def resource_group_exists(subscription_id, resource_group):
 
 def resize_pool(poolid, target_nodes, wait_resize=True):
     # TODO: need to add a maximum amount of time for pool resizing
-    log.info(f"Resizing pool poolid={poolid} target nodes={target_nodes}")
+    log.info(f"Resizing pool '{poolid}' to {target_nodes} nodes...")
 
     if not batch_client:
         log.critical("batch_client is None")
@@ -303,7 +303,6 @@ def _get_node_agent_sku(vm_image):
         sys.exit(1)
 
     supported_images = batch_client.account.list_supported_images()
-    print(supported_images)
 
     for image in supported_images:
         if image.image_reference.offer == offer and image.image_reference.sku == sku:
@@ -475,7 +474,7 @@ def _append_environment_settings(environment_settings, name, value):
 def _get_environment_settings(appinputs):
     environment_settings = []
 
-    for key, value in appinputs:
+    for key, value in appinputs.items():
         _append_environment_settings(environment_settings, key, value)
 
     return environment_settings

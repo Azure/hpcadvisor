@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-
-import argparse
 import json
 import os
 import sys
@@ -59,7 +57,7 @@ def main(user_input_file, env_file, debug):
 
     if env_file and os.path.exists(env_file):
         log.warning(f"Using existing env file: {env_file}")
-        rg_prefix = utils.get_rg_prefix_from_env_file(env_file)
+        rg_prefix = utils.get_rg_prefix_from_file(env_file)
     else:
         log.warning("Generating new env file and deploying environment")
         rg_prefix = user_data["rgprefix"] + utils.get_random_code()

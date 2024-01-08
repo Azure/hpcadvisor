@@ -3,19 +3,14 @@
 import argparse
 import sys
 
-from hpcadvisor import main_cli, main_gui
 
-
-# TODO: need better way to handle these options
 def _process_arguments():
     envfile = None
     userinput = None
     debug = False
     gui = False
 
-    parser = argparse.ArgumentParser(
-        prog="hpcadvisor", description="HPC Advisor", exit_on_error=False
-    )
+    parser = argparse.ArgumentParser(prog="hpcadvisor", description="HPC Advisor")
 
     parser.add_argument("-e", "--envfile", help="Env File", required=False)
     parser.add_argument("-u", "--userinput", help="User Input File", required=False)
@@ -28,7 +23,6 @@ def _process_arguments():
 
     args = parser.parse_args()
 
-    # print(args)
     if args.gui == False and (args.userinput == None):
         print("Need either GUI enabled OR ui_input file")
         parser.print_help()
@@ -48,11 +42,14 @@ def main():
 
     if gui:
         print("Using GUI mode")
+        from hpcadvisor import main_gui
+
         main_gui.main(debug)
     else:
         print("Using CLI mode")
+        from hpcadvisor import main_cli
+
         main_cli.main(userinput, envfile, debug)
-    # main_cli.test(sys.argv[1:])
 
 
 if __name__ == "__main__":

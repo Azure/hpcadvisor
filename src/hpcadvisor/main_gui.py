@@ -386,7 +386,6 @@ def main_gui():
     current_action = None
     if "currentaction" not in st.session_state:
         st.session_state.currentaction = None
-    print("st.session_state=", st.session_state)
 
     with st.sidebar:
         st.title("⚙️  AzHPCAdvisor \n Azure HPC Resource Selection Advisor")
