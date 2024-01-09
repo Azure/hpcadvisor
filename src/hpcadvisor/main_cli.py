@@ -4,7 +4,7 @@ import json
 import os
 import sys
 
-from hpcadvisor import data_collector, logger, task_generator, utils
+from hpcadvisor import cli_plot_generator, data_collector, logger, task_generator, utils
 
 log = logger.logger
 
@@ -42,9 +42,14 @@ def _get_parameters(user_input_file):
     return json_data
 
 
-def main(user_input_file, env_file, debug):
+def main(user_input_file, env_file, debug, plots):
     if debug:
         logger.setup_debug_mode()
+
+    # TODO: stil not a great place to be doing this
+    if plots:
+        cli_plot_generator.gent_plots()
+        sys.exit(0)
 
     user_data = _get_parameters(user_input_file)
 

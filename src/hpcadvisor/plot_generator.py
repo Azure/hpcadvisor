@@ -6,11 +6,11 @@ import matplotlib.pyplot as plt
 import matplotlib.style as style
 import numpy as np
 import pandas as pd
-from matplotlib import cm
-from matplotlib.patches import Rectangle
 from matplotlib.ticker import MaxNLocator
 
-from hpcadvisor import dataset_handler, price_puller
+from hpcadvisor import dataset_handler, logger, price_puller
+
+log = logger.logger
 
 
 def pad_dict_list(dict_list, pad_value):
@@ -28,19 +28,18 @@ def pad_dict_list(dict_list, pad_value):
     return dict_list
 
 
-def gen_plot_exectime_vs_numvms(st, datasetfile, appinput):
+def _get_appinput_title(appinput):
+    return " ".join([f"{key}:{value} " for key, value in appinput.items()])
+
+
+def gen_plot_exectime_vs_numvms(st, datasetfile, appinput, plotfile="plot.png"):
     style.use("dark_background")
 
-    f = open(datasetfile, "r")
-    lines = f.readlines()
-
     num_vms = []
-    count = 0
 
     mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
         datasetfile, appinput
     )
-    appinputtitle = " ".join([f"{key} {value}" for key, value in appinput.items()])
 
     pad_dict_list(mydata, float("Nan"))
     df = pd.DataFrame(mydata)
@@ -57,27 +56,24 @@ def gen_plot_exectime_vs_numvms(st, datasetfile, appinput):
     ax.legend(handles, labels, loc="upper right")
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
-    title = f"Execution time (s) per SKU & Num Nodes\n{appinputtitle}"
+    appinput_title = _get_appinput_title(appinput)
+    title = f"Execution time (s) per SKU & Num Nodes\n{appinput_title}"
     ax.set_title(title)
 
     if st:
         st.pyplot(fig)
-    plt.savefig("my_plot.png")
+    log.info("Generating plot: " + plotfile)
+    plt.savefig(plotfile)
 
 
-def gen_plot_exectime_vs_cost(st, datasetfile, appinput):
+def gen_plot_exectime_vs_cost(st, datasetfile, appinput, plotfile="plot.png"):
     style.use("dark_background")
 
-    f = open(datasetfile, "r")
-    lines = f.readlines()
-
     num_vms = []
-    count = 0
 
     mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
         datasetfile, appinput
     )
-    appinputtitle = " ".join([f"{key} {value}" for key, value in appinput.items()])
 
     pad_dict_list(mydata, float("Nan"))
 
@@ -87,11 +83,10 @@ def gen_plot_exectime_vs_cost(st, datasetfile, appinput):
 
     exec_costs = {}
     for key in mydata:
-        print(key)
         exec_costs[key] = []
         for i in range(len(mydata[key])):
             exec_costs[key].append(
-                mydata[key][i] / 3600.0 * sku_costs[key] * num_vms[i]
+                (mydata[key][i] / 3600.0) * sku_costs[key] * num_vms[i]
             )
 
     df = pd.DataFrame(mydata)
@@ -108,11 +103,14 @@ def gen_plot_exectime_vs_cost(st, datasetfile, appinput):
     ax.legend(handles, labels, loc="upper right")
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
+    appinput_title = _get_appinput_title(appinput)
     title = (
-        f"Cost as function of execution time (s) per sku & num nodes\n{appinputtitle}"
+        f"Cost as function of execution time (s) per sku & num nodes\n{appinput_title}"
     )
     ax.set_title(title)
 
     if st:
         st.pyplot(fig)
-    plt.savefig("plot_time_cost.png")
+
+    log.info("Generating plot: " + plotfile)
+    plt.savefig(plotfile)

@@ -18,6 +18,14 @@ def _process_arguments():
         "-g", "--gui", action="store_true", help="GUI enabled", required=False
     )
     parser.add_argument(
+        "-p",
+        "--plots",
+        action="store_true",
+        help="Generate plots in CLI",
+        required=False,
+    )
+
+    parser.add_argument(
         "-d", "--debug", help="Debug Mode", action="store_true", default=False
     )
 
@@ -32,13 +40,14 @@ def _process_arguments():
     envfile = args.envfile
     gui = args.gui
     debug = args.debug
+    plots = args.plots
 
-    return userinput, envfile, gui, debug
+    return userinput, envfile, gui, debug, plots
 
 
 def main():
     print("HPC Advisor tool starting...")
-    userinput, envfile, gui, debug = _process_arguments()
+    userinput, envfile, gui, debug, plots = _process_arguments()
 
     if gui:
         print("Using GUI mode")
@@ -49,7 +58,7 @@ def main():
         print("Using CLI mode")
         from hpcadvisor import main_cli
 
-        main_cli.main(userinput, envfile, debug)
+        main_cli.main(userinput, envfile, debug, plots)
 
 
 if __name__ == "__main__":
