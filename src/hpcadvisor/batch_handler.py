@@ -463,9 +463,14 @@ def create_setup_task(jobid):
 
 
 def _append_environment_settings(environment_settings, name, value):
+    """
+    Appends environment variable to be used by the application.
+    All variables are converted to upper case for app execution.
+
+    """
     environment_settings.append(
         batchmodels.EnvironmentSetting(
-            name=name,
+            name=name.upper(),
             value=str(value),
         )
     )
