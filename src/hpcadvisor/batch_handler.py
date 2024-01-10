@@ -3,19 +3,13 @@
 import datetime
 import io
 import json
-import logging
 import os
-import random
-import sys
 import time
 
 import azure.batch.models as batchmodels
 import numpy as np
 from azure.batch import BatchServiceClient
-from azure.batch.batch_auth import SharedKeyCredentials
-from azure.batch.models import OutputFileUploadCondition
 from azure.cli.core.util import b64encode
-from azure.core.exceptions import ResourceExistsError
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.compute.models import (
@@ -641,16 +635,26 @@ def _get_total_cores(vm_size):
 
     subscription_id = env["SUBSCRIPTION"]
     region = env["REGION"]
-    resource_group = env["RG"]
 
     compute_client = ComputeManagementClient(credentials, subscription_id)
 
-    sku_info = compute_client.virtual_machine_sizes.list(region)
+    results = compute_client.resource_skus.list(
+        filter="location eq '{}'".format(region)
+    )
 
-    filtered_skus = [sku for sku in sku_info if sku.name.lower() == vm_size.lower()]
+    resourceSkusList = [result.as_dict() for result in results]
+    filtered_sku = next(
+        sku for sku in resourceSkusList if sku["name"].lower() == vm_size.lower()
+    )
 
-    if filtered_skus:
-        return filtered_skus[0].number_of_cores
+    if filtered_sku:
+        vcpus_available = next(
+            capability["value"]
+            for capability in filtered_sku["capabilities"]
+            if capability["name"] == "vCPUsAvailable"
+        )
+        log.debug(f"vcpus_available={vcpus_available} for sku={vm_size}")
+        return int(vcpus_available)
     else:
         log.critical(f"Cannot find sku={vm_size} to obtain its total cores")
         return None

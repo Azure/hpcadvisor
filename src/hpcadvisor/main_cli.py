@@ -9,7 +9,7 @@ from hpcadvisor import cli_plot_generator, data_collector, logger, task_generato
 log = logger.logger
 
 
-def _get_parameters(user_input_file):
+def get_userinput_from_file(user_input_file):
     required_variables = [
         "region",
         "skus",
@@ -51,22 +51,22 @@ def main(user_input_file, env_file, debug, plots):
         cli_plot_generator.gent_plots()
         sys.exit(0)
 
-    user_data = _get_parameters(user_input_file)
+    user_input = get_userinput_from_file(user_input_file)
 
     data_system = {}
-    data_system["sku"] = user_data["skus"]
-    data_system["nnodes"] = user_data["nnodes"]
-    data_system["ppr"] = user_data["ppr"]
+    data_system["sku"] = user_input["skus"]
+    data_system["nnodes"] = user_input["nnodes"]
+    data_system["ppr"] = user_input["ppr"]
 
-    data_app_input = user_data["appinputs"]
+    data_app_input = user_input["appinputs"]
 
     if env_file and os.path.exists(env_file):
         log.warning(f"Using existing env file: {env_file}")
         rg_prefix = utils.get_rg_prefix_from_file(env_file)
     else:
         log.warning("Generating new env file and deploying environment")
-        rg_prefix = user_data["rgprefix"] + utils.get_random_code()
-        env_file = utils.generate_env_file(rg_prefix, user_data)
+        rg_prefix = user_input["rgprefix"] + utils.get_random_code()
+        env_file = utils.generate_env_file(rg_prefix, user_input)
         utils.execute_env_deployer(env_file, rg_prefix)
 
     task_filename = utils.get_task_filename(rg_prefix)
