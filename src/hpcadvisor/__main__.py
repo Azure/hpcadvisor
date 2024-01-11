@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
 import argparse
+import os
 import sys
+
+from hpcadvisor import logger, main_common
 
 
 def _process_arguments():
@@ -24,6 +27,13 @@ def _process_arguments():
         help="Generate plots in CLI",
         required=False,
     )
+    parser.add_argument(
+        "-r",
+        "--resettasks",
+        help="Reset Task Status",
+        action="store_true",
+        default=False,
+    )
 
     parser.add_argument(
         "-d", "--debug", help="Debug Mode", action="store_true", default=False
@@ -41,24 +51,31 @@ def _process_arguments():
     gui = args.gui
     debug = args.debug
     plots = args.plots
+    resettasks = args.resettasks
 
-    return userinput, envfile, gui, debug, plots
+    return userinput, envfile, gui, debug, plots, resettasks
 
 
 def main():
     print("HPC Advisor tool starting...")
-    userinput, envfile, gui, debug, plots = _process_arguments()
+    userinput, envfile, gui, debug, plots, resettasks = _process_arguments()
+
+    if debug:
+        logger.setup_debug_mode()
+
+    if resettasks and envfile:
+        main_common.reset_tasks(envfile)
 
     if gui:
         print("Using GUI mode")
         from hpcadvisor import main_gui
 
-        main_gui.main(debug)
+        main_gui.main()
     else:
         print("Using CLI mode")
         from hpcadvisor import main_cli
 
-        main_cli.main(userinput, envfile, debug, plots)
+        main_cli.main(userinput, envfile, plots)
 
 
 if __name__ == "__main__":

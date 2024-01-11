@@ -694,8 +694,13 @@ def _get_average_value(metrics_data):
     numbers = np.array(values)
     n = len(numbers)
     numbers.sort()
-    cut_off_low = numbers[int(0.1 * n)]
-    cut_off_high = numbers[int(0.9 * n)]
+
+    if n == 0:
+        log.warn("zero values coming from collected metric data")
+    else:
+        cut_off_low = numbers[int(0.1 * n)]
+        cut_off_high = numbers[int(0.9 * n)]
+
     filtered_numbers = [x for x in numbers if x > cut_off_low and x < cut_off_high]
 
     return np.average(filtered_numbers)

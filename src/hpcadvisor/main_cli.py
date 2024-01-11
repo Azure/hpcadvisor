@@ -4,7 +4,13 @@ import json
 import os
 import sys
 
-from hpcadvisor import cli_plot_generator, data_collector, logger, task_generator, utils
+from hpcadvisor import (
+    cli_plot_generator,
+    data_collector,
+    logger,
+    taskset_handler,
+    utils,
+)
 
 log = logger.logger
 
@@ -42,10 +48,7 @@ def get_userinput_from_file(user_input_file):
     return json_data
 
 
-def main(user_input_file, env_file, debug, plots):
-    if debug:
-        logger.setup_debug_mode()
-
+def main(user_input_file, env_file, plots):
     # TODO: stil not a great place to be doing this
     if plots:
         cli_plot_generator.gent_plots()
@@ -70,7 +73,11 @@ def main(user_input_file, env_file, debug, plots):
         utils.execute_env_deployer(env_file, rg_prefix)
 
     task_filename = utils.get_task_filename(rg_prefix)
-    task_generator.generate_tasks(task_filename, data_system, data_app_input)
+    if not env_file:
+        log.info(f"Env file NOT specified. Generating new tasks file {task_filename}.")
+        taskset_handler.generate_tasks(task_filename, data_system, data_app_input)
+    else:
+        log.info(f"Env file specified. Reusing existing tasks file {task_filename}.")
 
     dataset_filename = utils.get_dataset_filename()
     data_collector.collect_data(task_filename, dataset_filename, env_file)

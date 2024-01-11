@@ -20,7 +20,7 @@ from hpcadvisor import (
     dataset_handler,
     logger,
     plot_generator,
-    task_generator,
+    taskset_handler,
     utils,
 )
 
@@ -299,7 +299,7 @@ def show_datageneration(app):
                     key, value = line.split("=")
                     data_app_input[key] = value.split(",")
 
-            data = task_generator.generate_tasks(
+            data = taskset_handler.generate_tasks(
                 task_filename, data_system, data_app_input
             )
 
@@ -357,7 +357,7 @@ def show_datageneration(app):
                 utils.execute_env_deployer(env_file, rg_prefix)
 
                 task_filename = utils.get_task_filename(rg_prefix)
-                task_generator.generate_tasks(
+                taskset_handler.generate_tasks(
                     task_filename, data_system, data_app_input
                 )
                 log.info(f"task_filename={task_filename} generated for {rg_prefix}")
@@ -487,11 +487,8 @@ if __name__ == "__main__":
     main_gui()
 
 
-def main(debug):
+def main():
     log.info("Starting HPC Advisor GUI")
-
-    if debug:
-        logger.setup_debug_mode()
 
     sys.argv = ["streamlit", "run", __file__]
     sys.exit(stcli.main())
