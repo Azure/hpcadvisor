@@ -42,6 +42,8 @@ local_css(style_css_path)
 
 st.session_state["executionOn"] = False
 
+debug = False
+
 
 def wait_execution(execution_placeholder):
     while True:
@@ -354,7 +356,7 @@ def show_datageneration(app):
                 data_app_input = _get_app_inputs(user_data["appinputs"])
 
                 env_file = utils.generate_env_file(rg_prefix, user_data)
-                utils.execute_env_deployer(env_file, rg_prefix)
+                utils.execute_env_deployer(env_file, rg_prefix, debug)
 
                 task_filename = utils.get_task_filename(rg_prefix)
                 taskset_handler.generate_tasks(
@@ -382,7 +384,7 @@ def show_datageneration(app):
     st.text("")
 
 
-def main_gui(debug):
+def main_gui():
     current_action = None
     if "currentaction" not in st.session_state:
         st.session_state.currentaction = None
@@ -484,10 +486,10 @@ def main_gui(debug):
 
 
 if __name__ == "__main__":
-    main_gui(debug)
+    main_gui()
 
 
-def main():
+def main(debug):
     log.info("Starting HPC Advisor GUI")
 
     sys.argv = ["streamlit", "run", __file__]

@@ -43,6 +43,7 @@ def gen_plot_exectime_vs_numvms(st, datasetfile, appinput, plotfile="plot.png"):
 
     pad_dict_list(mydata, float("Nan"))
     df = pd.DataFrame(mydata)
+    print(df)
     fig, ax = plt.subplots()
 
     for key in mydata:
