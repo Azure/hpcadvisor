@@ -70,12 +70,12 @@ def main():
         print("Using GUI mode")
         from hpcadvisor import main_gui
 
-        main_gui.main()
+        main_gui.main(debug)
     else:
         print("Using CLI mode")
         from hpcadvisor import main_cli
 
-        main_cli.main(userinput, envfile, plots)
+        main_cli.main(userinput, envfile, plots, debug)
 
 
 if __name__ == "__main__":

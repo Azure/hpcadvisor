@@ -382,7 +382,7 @@ def show_datageneration(app):
     st.text("")
 
 
-def main_gui():
+def main_gui(debug):
     current_action = None
     if "currentaction" not in st.session_state:
         st.session_state.currentaction = None
@@ -484,7 +484,7 @@ def main_gui():
 
 
 if __name__ == "__main__":
-    main_gui()
+    main_gui(debug)
 
 
 def main():

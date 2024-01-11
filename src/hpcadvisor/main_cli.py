@@ -48,7 +48,7 @@ def get_userinput_from_file(user_input_file):
     return json_data
 
 
-def main(user_input_file, env_file, plots):
+def main(user_input_file, env_file, plots, debug):
     # TODO: stil not a great place to be doing this
     if plots:
         cli_plot_generator.gent_plots()
@@ -69,8 +69,10 @@ def main(user_input_file, env_file, plots):
     else:
         log.warning("Generating new env file and deploying environment")
         rg_prefix = user_input["rgprefix"] + utils.get_random_code()
+        print(f"Resource group (deployment) name: {rg_prefix}")
         env_file = utils.generate_env_file(rg_prefix, user_input)
-        utils.execute_env_deployer(env_file, rg_prefix)
+        print(f"Environment file: {env_file}")
+        utils.execute_env_deployer(env_file, rg_prefix, debug)
 
     task_filename = utils.get_task_filename(rg_prefix)
     if not env_file:

@@ -103,7 +103,7 @@ def get_rg_prefix_from_file(env_file):
     return None
 
 
-def execute_env_deployer(env_file, rg_prefix):
+def execute_env_deployer(env_file, rg_prefix, debug=False):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     script_path = os.path.join(current_dir, "../scripts", "env_deployer.sh")
 
@@ -111,5 +111,7 @@ def execute_env_deployer(env_file, rg_prefix):
         log.critical("env_deployer.sh not found")
 
     command = f"bash {script_path} {env_file}"
+    if not debug:
+        command += " > /dev/null 2>&1"
     log.info(f"Executing: {command}")
     os.system(command)
