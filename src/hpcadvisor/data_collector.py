@@ -2,13 +2,13 @@
 
 import sys
 
-from hpcadvisor import batch_handler, logger, task_generator
+from hpcadvisor import batch_handler, logger, taskset_handler
 
 log = logger.logger
 
 
 def process_tasks(tasks_file, dataset_file):
-    tasks = task_generator.get_tasks_from_file(tasks_file)
+    tasks = taskset_handler.get_tasks_from_file(tasks_file, "pending")
     previous_sku = ""
     jobname = ""
     poolname = ""
@@ -46,6 +46,7 @@ def process_tasks(tasks_file, dataset_file):
         batch_handler.store_task_execution_data(
             poolname, jobname, taskid, ppr_perc, appinputs, dataset_file
         )
+        taskset_handler.update_task_status(task["id"], tasks_file)
 
         previous_sku = sku
         taskcounter += 1
