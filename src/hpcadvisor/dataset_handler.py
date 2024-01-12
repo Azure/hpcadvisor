@@ -59,7 +59,7 @@ def get_sku_nnodes_exec_time(dataset_file, appinput):
         data = json.load(file)
         max_exectime = 0
         mydata = {}
-        num_vms = []
+        num_vms = {}
         for datapoint in data[datapoints_label]:
             if "appinputs" in datapoint:
                 if datapoint["appinputs"] == appinput:
@@ -67,11 +67,10 @@ def get_sku_nnodes_exec_time(dataset_file, appinput):
                     nnodes = datapoint["nnodes"]
                     exectime = datapoint["exec_time"]
 
-                    if int(nnodes) not in num_vms:
-                        num_vms.append(int(nnodes))
-
                     if mydata.get(sku) is None:
                         mydata[sku] = []
+                        num_vms[sku] = []
                     mydata[sku].append(int(exectime))
+                    num_vms[sku].append(int(nnodes))
                     max_exectime = max(max_exectime, max(mydata[sku]))
         return mydata, num_vms, max_exectime

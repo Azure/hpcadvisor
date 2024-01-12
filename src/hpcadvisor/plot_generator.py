@@ -13,19 +13,7 @@ from hpcadvisor import dataset_handler, logger, price_puller
 log = logger.logger
 
 
-def pad_dict_list(dict_list, pad_value):
-    """Pad a dictionary of lists to the same length with a given value.
-    Which is required when some data points have not been collected.
-    """
-
-    max_list_len = 0
-    for lname in dict_list.keys():
-        max_list_len = max(max_list_len, len(dict_list[lname]))
-    for list_name in dict_list.keys():
-        list_len = len(dict_list[list_name])
-        if list_len < max_list_len:
-            dict_list[list_name] += [pad_value] * (max_list_len - list_len)
-    return dict_list
+markers = ["o", "s", "^", "D", "*", "+", "x", "|", "_", "."]
 
 
 def _get_appinput_title(appinput):
@@ -41,13 +29,14 @@ def gen_plot_exectime_vs_numvms(st, datasetfile, appinput, plotfile="plot.png"):
         datasetfile, appinput
     )
 
-    pad_dict_list(mydata, float("Nan"))
-    df = pd.DataFrame(mydata)
-    print(df)
     fig, ax = plt.subplots()
 
-    for key in mydata:
-        ax.plot(num_vms, df[key], label=key, marker="o")
+    markers = ["o", "s", "^", "D", "*", "+", "x", "|", "_", "."]
+    for index, key in enumerate(mydata):
+        marker = markers[index % len(markers)]
+        ax.plot(
+            num_vms[key], mydata[key], label=key, markerfacecolor="none", marker=marker
+        )
 
     ax.set_ylabel("Execution time (seconds)")
     ax.set_xlabel("Number of VMs")
@@ -70,13 +59,9 @@ def gen_plot_exectime_vs_numvms(st, datasetfile, appinput, plotfile="plot.png"):
 def gen_plot_exectime_vs_cost(st, datasetfile, appinput, plotfile="plot.png"):
     style.use("dark_background")
 
-    num_vms = []
-
     mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
         datasetfile, appinput
     )
-
-    pad_dict_list(mydata, float("Nan"))
 
     sku_costs = {}
     for key in mydata:
@@ -87,14 +72,20 @@ def gen_plot_exectime_vs_cost(st, datasetfile, appinput, plotfile="plot.png"):
         exec_costs[key] = []
         for i in range(len(mydata[key])):
             exec_costs[key].append(
-                (mydata[key][i] / 3600.0) * sku_costs[key] * num_vms[i]
+                (mydata[key][i] / 3600.0) * sku_costs[key] * num_vms[key][i]
             )
 
-    df = pd.DataFrame(mydata)
     fig, ax = plt.subplots()
 
-    for key in mydata:
-        ax.plot(exec_costs[key], df[key], label=key, marker="o")
+    for index, key in enumerate(mydata):
+        marker = markers[index % len(markers)]
+        ax.plot(
+            exec_costs[key],
+            mydata[key],
+            label=key,
+            markerfacecolor="none",
+            marker=marker,
+        )
 
     ax.set_ylabel("Execution time (seconds)")
     ax.set_xlabel("Cost (USD)")
