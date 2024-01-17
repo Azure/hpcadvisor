@@ -702,7 +702,7 @@ def _get_average_value(metrics_data):
         cut_off_low = numbers[int(0.1 * n)]
         cut_off_high = numbers[int(0.9 * n)]
 
-    filtered_numbers = [x for x in numbers if x > cut_off_low and x < cut_off_high]
+    filtered_numbers = [x for x in numbers if x >= cut_off_low and x <= cut_off_high]
 
     return np.average(filtered_numbers)
 
@@ -822,6 +822,7 @@ def _get_monitoring_data(batch_client, poolid, jobid, taskid):
 
                 log.debug(f"Metric data: {metrics_data}")
                 average_cpu = _get_average_value(metrics_data)
+                log.debug(f"average_cpu={average_cpu}")
                 if average_cpu is None:
                     log.debug("average_cpu is None, retrying...")
 
