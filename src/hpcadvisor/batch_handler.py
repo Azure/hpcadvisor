@@ -258,7 +258,7 @@ def get_job(batch_client, jobid):
 def create_job(poolid, jobid=None):
     if jobid is None:
         random_code = utils.get_random_code()
-        jobid = f"pool-{random_code}"
+        jobid = f"job-{random_code}"
 
     if not batch_client:
         log.error("batch_client is None")
