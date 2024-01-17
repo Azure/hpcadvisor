@@ -1,25 +1,42 @@
 import logging
 import sys
 
-logger = logging.getLogger(__name__)
+loggername = "hpcadvisor"
+loggerfilename = "hpcadvisor.log"
 
-logging.basicConfig(
-    level=logging.WARNING,
-    filename="hpcadvisor.log",
-    format="%(asctime)s | %(levelname)s | %(filename)s:%(funcName)s:%(lineno)s >>> %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
 
-stdout_handler = logging.StreamHandler(sys.stdout)
-stdout_handler.setLevel(logging.INFO)
+def _init_logger():
+    logging.basicConfig(
+        level=logging.WARNING,
+        filename=loggerfilename,
+        format="%(asctime)s | %(levelname)s | %(filename)s:%(funcName)s:%(lineno)s >>> %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 
-formatter = logging.Formatter("%(message)s")
-stdout_handler.setFormatter(formatter)
+    logger = logging.getLogger(loggername)
+    logger.setLevel(logging.INFO)
 
-logging.getLogger().addHandler(stdout_handler)
+    handler_stdout = logging.StreamHandler(sys.stdout)
+
+    logger.addHandler(handler_stdout)
+
+    formatter = logging.Formatter(
+        "%(asctime)s | %(levelname)s | %(filename)s:%(funcName)s:%(lineno)s >>> %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    handler_file = logging.FileHandler(loggerfilename)
+    handler_file.setFormatter(formatter)
+    logger.addHandler(handler_file)
+
+
+_init_logger()
+
+logger = logging.getLogger(loggername)
 
 
 def setup_debug_mode():
-    external_logger = logging.getLogger(__name__)
-    external_logger.setLevel(logging.DEBUG)
-    logger.info("Debug mode enabled")
+    for handler in logging.getLogger(loggername).handlers:
+        handler.setLevel(logging.DEBUG)
+    logger.setLevel(logging.DEBUG)
+    logger.debug("Debug mode enabled")
