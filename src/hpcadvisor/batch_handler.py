@@ -138,7 +138,6 @@ def _get_batch_client(subscription_id, resource_group):
 
     log.debug(f"Getting batch client sub={subscription_id}, rg={resource_group}")
     credentials = _get_credentials()
-    log.debug(credentials)
     batch_endpoint = _get_batch_endpoint(credentials, subscription_id, resource_group)
 
     batch_client = BatchServiceClient(
@@ -422,7 +421,7 @@ def create_setup_task(jobid):
         return
 
     app_setup_url = env["APPSETUPURL"]
-    log.debug(app_setup_url)
+    log.debug(f"application setup url: {app_setup_url}")
 
     random_code = utils.get_random_code()
     task_id = f"task-app-setup-{random_code}"
@@ -432,13 +431,13 @@ def create_setup_task(jobid):
         return
 
     script_name = os.path.basename(app_setup_url)
-    log.debug(script_name)
+    log.debug(f"script for application: {script_name}")
 
     task_commands = [
         f"/bin/bash -c 'cd $AZ_BATCH_NODE_MOUNTS_DIR/data ; pwd ; curl -sLO {app_setup_url} ; chmod +x {script_name} ; ./{script_name}'"
     ]
 
-    log.debug(task_commands)
+    log.debug(f"task command: {task_commands}")
 
     user = batchmodels.UserIdentity(
         auto_user=batchmodels.AutoUserSpecification(
@@ -502,7 +501,7 @@ def create_compute_task(jobid, number_of_nodes, ppr_perc, sku, appinputs):
         f"/bin/bash -c '$AZ_BATCH_NODE_MOUNTS_DIR/data/{app_run_script}'",
     ]
 
-    log.debug(task_commands)
+    log.debug(f"task command: {task_commands}")
 
     multi_instance_settings = batchmodels.MultiInstanceSettings(
         number_of_instances=number_of_nodes,
