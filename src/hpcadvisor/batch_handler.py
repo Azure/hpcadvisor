@@ -5,6 +5,7 @@ import io
 import json
 import os
 import time
+from datetime import timedelta
 
 import azure.batch.models as batchmodels
 import numpy as np
@@ -793,31 +794,42 @@ def _get_monitoring_data(batch_client, poolid, jobid, taskid):
     client = MonitorManagementClient(credentials, subscription_id)
 
     # Azure monitor logs metrics by UTC time
+
     start_time = str(task.execution_info.start_time).replace("+00:00", "")
     end_time = str(task.execution_info.end_time).replace("+00:00", "")
 
+    task_duration = task.execution_info.end_time - task.execution_info.start_time
+    log.info(f"task duration={task_duration}")
+
     resource_ids = get_vmss_batch_resource_ids(batch_client, poolid)
 
+    min_end_time = task.execution_info.start_time + timedelta(minutes=1)
+
     cpu_usage_list = []
-    for resource_id in resource_ids:
-        average_cpu = None
-        while average_cpu is None:
-            metrics_data = client.metrics.list(
-                resource_id,
-                timespan="{}/{}".format(start_time, end_time),
-                interval="PT1M",
-                metricnames="Percentage CPU",
-                aggregation="average",
-            )
+    # avoid error for tasks that run less than 1 minute
+    # for client.metrics.list
+    if min_end_time < task.execution_info.end_time:
+        for resource_id in resource_ids:
+            average_cpu = None
+            while average_cpu is None:
+                metrics_data = client.metrics.list(
+                    resource_id,
+                    timespan="{}/{}".format(start_time, end_time),
+                    interval="PT1M",
+                    metricnames="Percentage CPU",
+                    aggregation="average",
+                )
 
-            log.debug(f"Metric data: {metrics_data}")
-            average_cpu = _get_average_value(metrics_data)
-            if average_cpu is None:
-                log.debug("average_cpu is None, retrying...")
+                log.debug(f"Metric data: {metrics_data}")
+                average_cpu = _get_average_value(metrics_data)
+                if average_cpu is None:
+                    log.debug("average_cpu is None, retrying...")
 
-            time.sleep(5)
-
-        cpu_usage_list.append(float(average_cpu))
+            cpu_usage_list.append(float(average_cpu))
+    else:
+        log.warn(
+            f"task {taskid} duration is less than 1 minute, skipping cpu usage check"
+        )
 
     return cpu_usage_list
 
