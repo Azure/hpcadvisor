@@ -37,7 +37,7 @@ def get_dataset_filename():
 def _get_deployment_dir(rg_prefix):
     deployment_dir = os.path.join(hpcadvisor_dir, rg_prefix)
     if not os.path.exists(deployment_dir):
-        log.info("create deployment dir: " + deployment_dir)
+        log.info("Create deployment dir: " + deployment_dir)
         os.makedirs(deployment_dir)
 
     return deployment_dir
@@ -59,7 +59,7 @@ def generate_env_file(rg_prefix, user_data):
     deployment_dir = os.path.join(hpcadvisor_dir, rg_prefix)
 
     if not os.path.exists(deployment_dir):
-        log.info("create deployment dir: " + deployment_dir)
+        log.info("Create deployment dir: " + deployment_dir)
         os.makedirs(deployment_dir)
 
     env_file = os.path.join(deployment_dir, environment_filename)

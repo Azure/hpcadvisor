@@ -511,6 +511,7 @@ def create_compute_task(jobid, number_of_nodes, ppr_perc, sku, appinputs):
     environment_settings = _get_environment_settings(appinputs)
     _append_environment_settings(environment_settings, "NODES", number_of_nodes)
     _append_environment_settings(environment_settings, "PPN", ppn)
+    _append_environment_settings(environment_settings, "SKU", sku)
 
     task = batchmodels.TaskAddParameter(
         id=task_id,
