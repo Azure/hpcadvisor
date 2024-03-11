@@ -30,16 +30,16 @@ poetry shell
 
 #### Run only data collector on CLI
 
-Update `src/sample/cli_input.json` fields, in particular `mysubscription`
+Update `src/samples/cli_input.json` fields, in particular `mysubscription`
 
 To start:
 ```
-./bin/hpcadvisor -u src/sample/cli_input.json
+./bin/hpcadvisor -u src/samples/cli_input.json
 ```
 
 #### Run GUI (browser) so data collector and data exploration can be used
 
-Optional: Copy `src/sample/ui_defaults.json` to
+Optional: Copy `src/samples/ui_defaults.json` to
 `$HOME/.hpcadvisor/ui_defaults.json` and modify it accordingly.
 
 To start:
