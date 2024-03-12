@@ -11,6 +11,7 @@ DNSZONENAME="privatelink.file.core.windows.net"
 STORAGEFILE=data
 
 PROGRESSFILE="env_progress.txt"
+VMJUMPBOXNAME="jumpbox"
 
 get_var() {
 
@@ -37,6 +38,8 @@ setup_vars() {
   # optional
   VPNRG=$(get_var "$ENV_VARS_FILE" "VPNRG")
   VPNVNET=$(get_var "$ENV_VARS_FILE" "VPNVNET")
+  CREATEJUMPBOX=$(get_var "$ENV_VARS_FILE" "CREATEJUMPBOX")
+  PEERVPN=$(get_var "$ENV_VARS_FILE" "PEERVPN")
 
   PROGRESSFILE=$(dirname "$ENV_VARS_FILE")"/${PROGRESSFILE}"
 }
@@ -76,7 +79,7 @@ create_vnet_subnet() {
 create_vm() {
 
   sku=$1
-  vmname="${VMNAMEPREFIX}"$(get_random_code)
+  vmname="${VMJUMPBOXNAME}"$(get_random_code)
   echo "creating $vmname for testing"
 
   cloudinitfile=/tmp/vmcreate.$$
@@ -272,8 +275,10 @@ main() {
   create_resource_group
   create_vnet_subnet
   create_storage_account_files_nfs
-  # peer_vpn
-  # create_vm $TESTVMSKU
+
+  [ "$CREATEJUMPBOX" == "True" ] && create_vm "$TESTVMSKU"
+  [ "$PEERVPN" == "True" ] && peer_vpn
+
   create_batch_account_with_usersubscription
   # login_batch_with_usersubcription
   update_progress "environment created"

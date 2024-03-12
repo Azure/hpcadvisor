@@ -55,6 +55,9 @@ def generate_env_file(rg_prefix, user_data):
     app_setup_url = user_data["appsetupurl"]
     app_run_script = user_data["apprunscript"]
 
+    create_jumpbox = user_data.get("createjumpbox", False)
+    peer_vpn = user_data.get("peervpn", False)
+
     home_directory = os.path.expanduser("~")
     deployment_dir = os.path.join(hpcadvisor_dir, rg_prefix)
 
@@ -76,6 +79,9 @@ def generate_env_file(rg_prefix, user_data):
         f.write("KEYVAULT=" + rg_prefix + "kv\n")
         f.write("VNETNAME=" + rg_prefix + "VNET\n")
         f.write("VSUBNETNAME=" + rg_prefix + "SUBNET\n")
+
+        f.write("CREATEJUMPBOX=" + str(create_jumpbox) + "\n")
+        f.write("PEERVPN=" + str(peer_vpn) + "\n")
 
         # TODO: some thougth is required here
         if "vpnrg" in user_data:

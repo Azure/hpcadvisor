@@ -326,6 +326,15 @@ def _get_subnet_id(subscription_id, resource_group, vnet_name, subnet_name):
     return subnet.id
 
 
+def wrap_commands_in_shell(commands):
+    """Wrap commands in a shell
+    :param list commands: list of commands to wrap
+    :rtype: str
+    :return: a shell wrapping commands
+    """
+    return "/bin/bash -c 'set -e; set -o pipefail; {}; wait'".format(";".join(commands))
+
+
 def create_pool(sku, poolname=None, number_of_nodes=1):
     if poolname is None:
         random_code = utils.get_random_code()
@@ -355,15 +364,32 @@ def create_pool(sku, poolname=None, number_of_nodes=1):
         )
     )
 
-    task_commands = ["/bin/bash -c hostname; env; pwd"]
+    # TODO: need to move to another place
+    #
+    # https://www.eessi.io/docs/getting_access/native_installation/
+    script = """
+    sudo yum install -y https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest.noarch.rpm
+    sudo yum install -y cvmfs
+    sudo yum install -y https://github.com/EESSI/filesystem-layer/releases/download/latest/cvmfs-config-eessi-latest.noarch.rpm
+    sudo echo 'CVMFS_CLIENT_PROFILE="single"' > /etc/cvmfs/default.local
+    sudo echo 'CVMFS_QUOTA_LIMIT=10000' >> /etc/cvmfs/default.local
+    sudo cvmfs_config setup
+    """
+
+    script_array = script.split("\n")
+    filtered_array = [item for item in script_array if item.strip()]
+    single_line_script = wrap_commands_in_shell(filtered_array)
+
+    log.debug(f"Batch StartTask single_line_script: {single_line_script}")
 
     user = batchmodels.AutoUserSpecification(
         scope=batchmodels.AutoUserScope.pool,
         elevation_level=batchmodels.ElevationLevel.admin,
     )
 
+    # command_line=task_commands[0],
     start_task = batchmodels.StartTask(
-        command_line=task_commands[0],
+        command_line=single_line_script,
         user_identity=batchmodels.UserIdentity(auto_user=user),
         wait_for_success=True,
         max_task_retry_count=1,
