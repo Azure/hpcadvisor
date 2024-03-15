@@ -332,7 +332,8 @@ def wrap_commands_in_shell(commands):
     :rtype: str
     :return: a shell wrapping commands
     """
-    return "/bin/bash -c 'set -e; set -o pipefail; {}; wait'".format(";".join(commands))
+    return "/bin/bash -c '{}; wait'".format(";".join(commands))
+    # return "/bin/bash -c 'set -e; set -o pipefail; {}; wait'".format(";".join(commands))
 
 
 def create_pool(sku, poolname=None, number_of_nodes=1):
@@ -374,6 +375,7 @@ def create_pool(sku, poolname=None, number_of_nodes=1):
     sudo echo 'CVMFS_CLIENT_PROFILE="single"' > /etc/cvmfs/default.local
     sudo echo 'CVMFS_QUOTA_LIMIT=10000' >> /etc/cvmfs/default.local
     sudo cvmfs_config setup
+    sudo mount -t cvmfs software.eessi.io /cvmfs/software.eessi.io
     """
 
     script_array = script.split("\n")
@@ -803,12 +805,11 @@ def get_vmss_batch_resource_ids(batch_client, poolid):
             batch_resource_group, vmss.name
         )
         resource_ids = [instance.id for instance in instances]
-        return resource_ids
-
-    return None
+    return resource_ids
 
 
 def _get_monitoring_data(batch_client, poolid, jobid, taskid):
+    collection_attempts = 3
     task = batch_client.task.get(jobid, taskid)
 
     if task.state != batchmodels.TaskState.completed:
@@ -836,15 +837,25 @@ def _get_monitoring_data(batch_client, poolid, jobid, taskid):
     # for client.metrics.list
     if min_end_time < task.execution_info.end_time:
         for resource_id in resource_ids:
+            log.debug("collecting cpu usage data for resource_id={resource_id}")
             average_cpu = None
             while average_cpu is None:
-                metrics_data = client.metrics.list(
-                    resource_id,
-                    timespan="{}/{}".format(start_time, end_time),
-                    interval="PT1M",
-                    metricnames="Percentage CPU",
-                    aggregation="average",
-                )
+                metrics_data = None
+                for i in range(collection_attempts):
+                    log.debug(f"data collection: attempt {i+1}/{collection_attempts}")
+                    try:
+                        metrics_data = client.metrics.list(
+                            resource_id,
+                            timespan="{}/{}".format(start_time, end_time),
+                            interval="PT1M",
+                            metricnames="Percentage CPU",
+                            aggregation="average",
+                        )
+                        break
+                    except Exception as e:
+                        log.error(f"Error getting metrics data: {e}")
+                        time.sleep(5)
+                        continue
 
                 log.debug(f"Metric data: {metrics_data}")
                 average_cpu = _get_average_value(metrics_data)
