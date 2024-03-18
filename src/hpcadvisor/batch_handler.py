@@ -516,7 +516,7 @@ def create_compute_task(jobid, number_of_nodes, ppr_perc, sku, appinputs):
 
     ppn = _get_process_per_node(ppr_perc, sku)
     random_code = utils.get_random_code()
-    task_id = f"mpi-compute-{random_code}"
+    task_id = f"task-compute-{random_code}"
     log.info(f"Creating compute task: {task_id}")
 
     user = batchmodels.UserIdentity(

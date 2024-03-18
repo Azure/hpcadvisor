@@ -9,6 +9,7 @@ environment_filename = "env.conf"
 task_filename = "tasks.json"
 dataset_filename = "dataset.json"
 ui_default_filename = "ui_default.json"
+app_execution_script = "run_app.sh"
 
 hpcadvisor_dir = os.path.join(os.path.expanduser("~"), ".hpcadvisor")
 
@@ -24,6 +25,10 @@ def get_ui_default_filename():
 def get_task_filename(rg_prefix):
     deployment_dir = _get_deployment_dir(rg_prefix)
     return os.path.join(deployment_dir, task_filename)
+
+
+def get_app_execution_script():
+    return app_execution_script
 
 
 # for now, dataset is stored in hpcadvisor dir
@@ -53,7 +58,7 @@ def generate_env_file(rg_prefix, user_data):
     subscription = user_data["subscription"]
     region = user_data["region"]
     app_setup_url = user_data["appsetupurl"]
-    app_run_script = user_data["apprunscript"]
+    app_run_script = app_execution_script
     app_name = user_data["appname"]
     tags = user_data.get("tags", {})
 

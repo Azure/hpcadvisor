@@ -24,7 +24,6 @@ def get_userinput_from_file(user_input_file):
         "ppr",
         "subscription",
         "appsetupurl",
-        "apprunscript",
         "appname",
     ]
 
