@@ -25,6 +25,7 @@ def get_userinput_from_file(user_input_file):
         "subscription",
         "appsetupurl",
         "apprunscript",
+        "appname",
     ]
 
     try:
@@ -79,7 +80,13 @@ def main(user_input_file, env_file, plots, debug):
         log.info(
             f"Env file NOT specified or does not exist. Generating new tasks file {task_filename}."
         )
-        taskset_handler.generate_tasks(task_filename, data_system, data_app_input)
+        taskset_handler.generate_tasks(
+            task_filename,
+            data_system,
+            data_app_input,
+            user_input["appname"],
+            user_input["tags"],
+        )
 
     dataset_filename = utils.get_dataset_filename()
     data_collector.collect_data(task_filename, dataset_filename, env_file)

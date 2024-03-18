@@ -21,6 +21,8 @@ def process_tasks(tasks_file, dataset_file):
         number_of_nodes = task["nnodes"]
         ppr_perc = task["ppr"]
         appinputs = task["appinputs"]
+        appname = task["appname"]
+        tags = task["tags"]
 
         if previous_sku != sku:
             log.debug(f"Got new sku: previous=[{previous_sku}] sku=[{sku}]")
@@ -44,7 +46,7 @@ def process_tasks(tasks_file, dataset_file):
 
         batch_handler.wait_task_completion(jobname, taskid)
         batch_handler.store_task_execution_data(
-            poolname, jobname, taskid, ppr_perc, appinputs, dataset_file
+            poolname, jobname, taskid, ppr_perc, appinputs, dataset_file, appname, tags
         )
         taskset_handler.update_task_status(task["id"], tasks_file)
 

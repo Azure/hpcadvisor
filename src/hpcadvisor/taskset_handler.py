@@ -49,7 +49,7 @@ def reset_alltasks_status(filename, status=TaskStatus.PENDING):
     _store_tasks(tasks, filename)
 
 
-def generate_tasks(filename, var_system, var_appinputs):
+def generate_tasks(filename, var_system, var_appinputs, appname, tags):
     clear_task_file(filename)
 
     main_task_dict = []
@@ -81,6 +81,8 @@ def generate_tasks(filename, var_system, var_appinputs):
         for varname, _ in var_appinputs.items():
             task_dict_entry["appinputs"][varname] = task_dict[varname]
         task_dict_entry["status"] = TaskStatus.PENDING
+        task_dict_entry["appname"] = appname
+        task_dict_entry["tags"] = tags
         main_task_dict.append(task_dict_entry)
         id += 1
 

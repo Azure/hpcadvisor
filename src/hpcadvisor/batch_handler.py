@@ -63,7 +63,9 @@ def _get_batch_endpoint(credentials, subscription_id, resource_group):
         if resource.type == "Microsoft.Batch/batchAccounts":
             return f"https://{resource.name}.{resource.location}.batch.azure.com"
 
-    log.critical("Cannot obtain batch endpoint.")
+    log.critical(
+        f"Cannot obtain batch endpoint: rg={resource_group} subid={subscription_id}"
+    )
 
     return None
 
@@ -887,7 +889,9 @@ def get_task_stdout(batch_client, jobid, taskid):
 
 
 # TODO: may move this to data_collector.py in future
-def store_task_execution_data(poolid, jobid, taskid, ppr_perc, appinputs, dataset_file):
+def store_task_execution_data(
+    poolid, jobid, taskid, ppr_perc, appinputs, dataset_file, appname, tags
+):
     log.info(f"collecting task execution data: {taskid}")
 
     if batch_client is None:
@@ -929,6 +933,10 @@ def store_task_execution_data(poolid, jobid, taskid, ppr_perc, appinputs, datase
     datapoint["appinputs"] = appinputs
     datapoint["deployment"] = env["RG"]
     datapoint["region"] = env["REGION"]
+    datapoint["appname"] = appname
+    datapoint["tags"] = tags
+    datapoint["tags"]["poolid"] = poolid
+    datapoint["tags"]["taskid"] = taskid
 
     log.debug(f"data point = {datapoint}")
     dataset_handler.add_datapoint(dataset_file, datapoint)

@@ -54,6 +54,8 @@ def generate_env_file(rg_prefix, user_data):
     region = user_data["region"]
     app_setup_url = user_data["appsetupurl"]
     app_run_script = user_data["apprunscript"]
+    app_name = user_data["appname"]
+    tags = user_data.get("tags", {})
 
     create_jumpbox = user_data.get("createjumpbox", False)
     peer_vpn = user_data.get("peervpn", False)
@@ -72,6 +74,7 @@ def generate_env_file(rg_prefix, user_data):
         f.write("REGION=" + region + "\n")
         f.write("APPSETUPURL=" + app_setup_url + "\n")
         f.write("APPRUNSCRIPT=" + app_run_script + "\n")
+        f.write("APPNAME=" + app_name + "\n")
 
         f.write("RG=" + rg_prefix + "\n")
         f.write("BATCHACCOUNT=" + rg_prefix + "ba\n")
