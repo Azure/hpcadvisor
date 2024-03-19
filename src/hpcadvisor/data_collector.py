@@ -57,12 +57,13 @@ def process_tasks(tasks_file, dataset_file):
         batch_handler.resize_pool(poolname, 0)
 
 
-def collect_data(tasks_file, dataset_file, env_file):
+def collect_data(tasks_file, dataset_file, env_file, clear_rg=False):
     if batch_handler.setup_environment(env_file):
         log.info("Environment setup completed")
         log.info("Starting tasks...this may take a while")
         process_tasks(tasks_file, dataset_file)
-        batch_handler.delete_environment()
+        if clear_rg:
+            batch_handler.delete_environment()
         log.info("Tasks completed")
     else:
         log.error("Failed to setup environment")

@@ -48,7 +48,7 @@ def get_userinput_from_file(user_input_file):
     return json_data
 
 
-def main(user_input_file, env_file, plots, debug):
+def main(user_input_file, env_file, plots, debug, clear_rg):
     # TODO: stil not a great place to be doing this
     if plots:
         cli_plot_generator.gent_plots()
@@ -88,4 +88,4 @@ def main(user_input_file, env_file, plots, debug):
         )
 
     dataset_filename = utils.get_dataset_filename()
-    data_collector.collect_data(task_filename, dataset_filename, env_file)
+    data_collector.collect_data(task_filename, dataset_filename, env_file, clear_rg)

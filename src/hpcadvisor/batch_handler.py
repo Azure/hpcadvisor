@@ -345,7 +345,7 @@ def create_pool(sku, poolname=None, number_of_nodes=1):
 
     if not batch_client:
         log.critical("batch_client is None")
-        return
+        return None
 
     log.info(f"Create pool: {poolname}")
 
@@ -429,16 +429,27 @@ def create_pool(sku, poolname=None, number_of_nodes=1):
         ),
     )
 
-    try:
-        batch_client.pool.add(new_pool)
-    except batchmodels.BatchErrorException as err:
-        if err.error.code == "PoolExists":
-            log.warning("Pool %s already exists", pool_id)
-        else:
-            log.error(f"CANNOT CREATE POOL {pool_id}. Error code: {err.error.code}")
-            for detail in err.error.values:
-                log.error(detail.key + ": " + detail.value)
-            return None
+    attempts = 5
+    for i in range(attempts):
+        try:
+            batch_client.pool.add(new_pool)
+            log.info(f"Pool {pool_id} created!")
+            break
+        except batchmodels.BatchErrorException as err:
+            if err.error.code == "PoolExists":
+                log.warning("Pool %s already exists", pool_id)
+                break
+            else:
+                log.error(
+                    f"Cannot create pool {pool_id}. Error code: {err.error.code} attempts: {i}/{attempts}"
+                )
+                if err.error.values:
+                    for detail in err.error.values:
+                        log.error(detail.key + ": " + detail.value)
+                if i == attempts - 1:
+                    log.error(f"Cannot create pool {pool_id}. Max attempts reached")
+                    return None
+                time.sleep(5)
 
     return poolname
 
@@ -635,7 +646,7 @@ def delete_environment():
     credential = DefaultAzureCredential()
     subscription_id = env["SUBSCRIPTION"]
 
-    log.debug(f"Deleting resource group {resource_group}")
+    log.info(f"Deleting resource group {resource_group}")
     resource_client = ResourceManagementClient(credential, subscription_id)
 
     rg_result = resource_client.resource_groups.begin_delete(resource_group)

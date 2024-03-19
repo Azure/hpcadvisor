@@ -36,6 +36,14 @@ def _process_arguments():
     )
 
     parser.add_argument(
+        "-c",
+        "--clearrg",
+        help="Clear resource group",
+        action="store_true",
+        default=False,
+    )
+
+    parser.add_argument(
         "-d", "--debug", help="Debug Mode", action="store_true", default=False
     )
 
@@ -52,13 +60,14 @@ def _process_arguments():
     debug = args.debug
     plots = args.plots
     resettasks = args.resettasks
+    clearrg = args.clearrg
 
-    return userinput, envfile, gui, debug, plots, resettasks
+    return userinput, envfile, gui, debug, plots, resettasks, clearrg
 
 
 def main():
     print("HPC Advisor tool starting...")
-    userinput, envfile, gui, debug, plots, resettasks = _process_arguments()
+    userinput, envfile, gui, debug, plots, resettasks, clearrg = _process_arguments()
 
     if debug:
         logger.setup_debug_mode()
@@ -75,7 +84,7 @@ def main():
         print("Using CLI mode")
         from hpcadvisor import main_cli
 
-        main_cli.main(userinput, envfile, plots, debug)
+        main_cli.main(userinput, envfile, plots, debug, clearrg)
 
 
 if __name__ == "__main__":
