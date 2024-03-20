@@ -30,5 +30,5 @@ if __name__ == "__main__":
     batch_handler.setup_environment(env_file)
 
     batch_handler.store_task_execution_data(
-        poolname, jobname, taskid, ppr_perc, appinputs, dataset_file
+        poolname, jobname, taskid, ppr_perc, appinputs, dataset_file, "appname", {}
     )

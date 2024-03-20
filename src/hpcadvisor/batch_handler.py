@@ -30,7 +30,7 @@ from hpcadvisor import dataset_handler, logger, utils
 from hpcadvisor.azure_identity_credential_adapter import AzureIdentityCredentialAdapter
 
 batch_supported_images = "batch_supported_images.txt"
-VMIMAGE = "OpenLogic:CentOS-HPC:7_9-gen2:7.9.2022040101"
+VMIMAGE = "almalinux:almalinux-hpc:8_6-hpc-gen2:latest"
 
 env = {}
 
@@ -161,6 +161,11 @@ def get_file_content(filename):
     return content
 
 
+def _get_image_info(vmimage):
+    publisher, offer, image_sku, version = vmimage.lower().split(":")
+    return publisher, offer, image_sku, version
+
+
 def create_testvm(subscription_id, resource_group, vmname, sku):
     cloudinitfile = "cloud-init.txt"
 
@@ -221,6 +226,7 @@ runcmd:
 
     custom_data = get_file_content(cloudinitfile)
     os_profile.custom_data = b64encode(custom_data)
+    publisher, offer, image_sku, version = _get_image_info(VMIMAGE)
 
     vm_poller = compute_client.virtual_machines.begin_create_or_update(
         resource_group,
@@ -229,10 +235,10 @@ runcmd:
             "location": env["REGION"],
             "storage_profile": {
                 "image_reference": {
-                    "publisher": "OpenLogic",
-                    "offer": "CentOS-HPC",
-                    "sku": "7_9-gen2",
-                    "version": "7.9.2022040101",
+                    "publisher": publisher,
+                    "offer": offer,
+                    "sku": image_sku,
+                    "version": version,
                 }
             },
             "hardware_profile": {"vm_size": sku},
@@ -288,8 +294,8 @@ def create_job(poolid, jobid=None):
 
 
 def _get_node_agent_sku(vm_image):
-    """VMIMAGE=OpenLogic:CentOS-HPC:7_9-gen2:7.9.2022040101
-    example of output=batch.node.centos 7
+    """VMIMAGE=almalinux:almalinux-hpc:8-hpc-gen2:latest
+    example of output=batch.node.el 8
     """
 
     _, offer, sku, _ = vm_image.lower().split(":")
@@ -371,11 +377,13 @@ def create_pool(sku, poolname=None, number_of_nodes=1):
     #
     # https://www.eessi.io/docs/getting_access/native_installation/
     script = """
+    sleep 60
+    sudo dnf upgrade -y almalinux-release
     sudo yum install -y https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest.noarch.rpm
     sudo yum install -y cvmfs
     sudo yum install -y https://github.com/EESSI/filesystem-layer/releases/download/latest/cvmfs-config-eessi-latest.noarch.rpm
-    sudo echo 'CVMFS_CLIENT_PROFILE="single"' > /etc/cvmfs/default.local
-    sudo echo 'CVMFS_QUOTA_LIMIT=10000' >> /etc/cvmfs/default.local
+    sudo bash -c  "echo 'CVMFS_CLIENT_PROFILE=\"single\"' > /etc/cvmfs/default.local"
+    sudo bash -c "echo 'CVMFS_QUOTA_LIMIT=10000' >> /etc/cvmfs/default.local"
     sudo cvmfs_config setup
     sudo mount -t cvmfs software.eessi.io /cvmfs/software.eessi.io
     """
@@ -406,16 +414,18 @@ def create_pool(sku, poolname=None, number_of_nodes=1):
         ),
     )
 
+    publisher, offer, image_sku, version = _get_image_info(VMIMAGE)
+
     new_pool = batchmodels.PoolAddParameter(
         id=pool_id,
         virtual_machine_configuration=batchmodels.VirtualMachineConfiguration(
             image_reference=batchmodels.ImageReference(
-                publisher="OpenLogic",
-                offer="CentOS-HPC",
-                sku="7_9-gen2",
-                version="7.9.2022040101",
+                publisher=publisher,
+                offer=offer,
+                sku=image_sku,
+                version=version,
             ),
-            node_agent_sku_id="batch.node.centos 7",
+            node_agent_sku_id=env["NODEAGENTSKU"],
         ),
         vm_size=sku,
         target_dedicated_nodes=number_of_nodes,
@@ -766,7 +776,17 @@ def _get_batch_resource_group(poolid):
 
     resource_client = ResourceManagementClient(credentials, subscription_id)
 
-    resource_groups = list(resource_client.resource_groups.list())
+    attempts = 3
+    resource_groups = []
+    for i in range(attempts):
+        try:
+            resource_groups = list(resource_client.resource_groups.list())
+        except Exception as e:
+            log.error(f"Error getting resource groups: {e}")
+            if i == attempts - 1:
+                log.error(f"Cannot get resource groups. Max attempts reached")
+                return None
+
     tag_key = "BatchAccountName"
     tag_value = env["BATCHACCOUNT"]
 
@@ -799,6 +819,8 @@ def _get_batch_resource_group(poolid):
 
 def get_vmss_batch_resource_ids(batch_client, poolid):
     batch_resource_group = _get_batch_resource_group(poolid)
+    if not batch_resource_group:
+        return []
 
     resource_ids = []
     credentials = DefaultAzureCredential()

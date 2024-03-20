@@ -3,7 +3,8 @@
 set -ue
 
 TESTVMSKU=Standard_HB120-16rs_v3
-VMIMAGE=OpenLogic:CentOS-HPC:7_9-gen2:7.9.2022040101
+# VMIMAGE=OpenLogic:CentOS-HPC:7_9-gen2:7.9.2022040101
+VMIMAGE="almalinux:almalinux-hpc:8-hpc-gen2:latest"
 # VMIMAGE=microsoft-dsvm:ubuntu-hpc:2204:latest
 
 ADMINUSER=azureuser
