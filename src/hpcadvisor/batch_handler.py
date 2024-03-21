@@ -26,7 +26,7 @@ from azure.mgmt.monitor import MonitorManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient, SubscriptionClient
 
-from hpcadvisor import dataset_handler, logger, utils
+from hpcadvisor import dataset_handler, logger, taskset_handler, utils
 from hpcadvisor.azure_identity_credential_adapter import AzureIdentityCredentialAdapter
 
 batch_supported_images = "batch_supported_images.txt"
@@ -374,11 +374,12 @@ def create_pool(sku, poolname=None, number_of_nodes=1):
     )
 
     # TODO: need to move to another place
+    # TODO: find alternatives for this sleep 60 to prevent rpm lock error
     #
     # https://www.eessi.io/docs/getting_access/native_installation/
     script = """
     sleep 60
-    sudo dnf upgrade -y almalinux-release
+    sudo yum upgrade -y almalinux-release
     sudo yum install -y https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest.noarch.rpm
     sudo yum install -y cvmfs
     sudo yum install -y https://github.com/EESSI/filesystem-layer/releases/download/latest/cvmfs-config-eessi-latest.noarch.rpm
@@ -919,6 +920,49 @@ def get_task_stdout(batch_client, jobid, taskid):
     stream = batch_client.file.get_from_task(jobid, taskid, STANDARD_OUT_FILE_NAME)
     file_text = _read_stream_as_string(stream, DEFAULT_ENCODING)
     return file_text
+
+
+def get_task_status(jobname, taskid):
+    if batch_client is None:
+        log.critical("batch_client is None")
+        return taskset_handler.TaskStatus.UNKNOWN
+
+    task = batch_client.task.get(jobname, taskid)
+    if task.state == batchmodels.TaskState.completed:
+        log.info(f"Task {taskid} completed")
+        return taskset_handler.TaskStatus.COMPLETED
+    elif task.state == batchmodels.TaskState.running:
+        log.info(f"Task {taskid} is running")
+        return taskset_handler.TaskStatus.RUNNING
+    elif task.state == batchmodels.TaskState.failed:
+        log.info(f"Task {taskid} failed")
+        return taskset_handler.TaskStatus.FAILED
+
+    log.info(f"Task {taskid} state={task.state} UNKNOWN")
+    return taskset_handler.TaskStatus.UNKNOWN
+
+
+def get_task_execution_status(jobname, taskid):
+    if batch_client is None:
+        log.critical("batch_client is None")
+        return taskset_handler.TaskStatus.UNKNOWN
+
+    task = batch_client.task.get(jobname, taskid)
+    if (
+        task.state == batchmodels.TaskState.completed
+        and task.execution_info.exit_code != 0
+    ):
+        log.info(f"Task {taskid} completed but failed")
+        return taskset_handler.TaskStatus.FAILED
+    elif (
+        task.state == batchmodels.TaskState.completed
+        and task.execution_info.exit_code == 0
+    ):
+        log.info(f"Task {taskid} completed without error")
+        return taskset_handler.TaskStatus.COMPLETED
+
+    log.warning(f"Task {taskid} unkown state")
+    return taskset_handler.TaskStatus.UNKNOWN
 
 
 # TODO: may move this to data_collector.py in future

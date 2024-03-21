@@ -13,7 +13,10 @@ log = logger.logger
 class TaskStatus(str, Enum):
     PENDING = "pending"
     COMPLETED = "completed"
+    RUNNING = "running"
+    FAILED = "failed"
     ALL = "all"
+    UNKNOWN = "unknown"
 
 
 def clear_task_file(filename):
@@ -35,7 +38,7 @@ def _store_tasks(task_dict, filename):
 
 
 def update_task_status(id, filename, status=TaskStatus.COMPLETED):
-    tasks = get_tasks_from_file(filename, status=TaskStatus.ALL)
+    tasks = get_tasks_from_file(filename, filter_status=TaskStatus.ALL)
     for task in tasks:
         if task["id"] == id:
             task["status"] = status
@@ -43,7 +46,7 @@ def update_task_status(id, filename, status=TaskStatus.COMPLETED):
 
 
 def reset_alltasks_status(filename, status=TaskStatus.PENDING):
-    tasks = get_tasks_from_file(filename, status=TaskStatus.ALL)
+    tasks = get_tasks_from_file(filename, filter_status=TaskStatus.ALL)
     for task in tasks:
         task["status"] = status
     _store_tasks(tasks, filename)
@@ -90,7 +93,7 @@ def generate_tasks(filename, var_system, var_appinputs, appname, tags):
     return main_task_dict
 
 
-def get_tasks_from_file(tasks_file, status=TaskStatus.PENDING):
+def get_tasks_from_file(tasks_file, filter_status=TaskStatus.PENDING):
     if os.path.isfile(tasks_file) == False:
         log.critical(f"Tasks file not found: {tasks_file}")
         return []
@@ -100,7 +103,7 @@ def get_tasks_from_file(tasks_file, status=TaskStatus.PENDING):
 
     filtered_tasks = []
     for task in tasks:
-        if status == TaskStatus.ALL or task["status"] == status:
+        if filter_status == TaskStatus.ALL or task["status"] == filter_status:
             filtered_tasks.append(task)
 
     log.info(f"Loaded {len(filtered_tasks)} tasks from file")
