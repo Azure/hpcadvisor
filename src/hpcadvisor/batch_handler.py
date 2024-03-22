@@ -36,6 +36,7 @@ env = {}
 
 DEFAULT_ENCODING = "utf-8"
 STANDARD_OUT_FILE_NAME = "stdout.txt"
+STANDARD_ERR_FILE_NAME = "stderr.txt"
 
 log = logger.logger
 batch_client = None
@@ -666,6 +667,22 @@ def delete_environment():
     log.info("Environment deleted")
 
 
+def save_task_files(jobid, taskid):
+    file_stdout = get_task_stdout(batch_client, jobid, taskid, STANDARD_OUT_FILE_NAME)
+    file_stderr = get_task_stdout(batch_client, jobid, taskid, STANDARD_ERR_FILE_NAME)
+
+    taskdir = f"output-{taskid}"
+
+    taskdir = utils.get_task_dir(env["RG"], taskdir)
+    stdout = f"{taskdir}/{STANDARD_OUT_FILE_NAME}"
+    stderr = f"{taskdir}/{STANDARD_ERR_FILE_NAME}"
+
+    with open(stdout, "w") as f:
+        f.write(file_stdout)
+    with open(stderr, "w") as f:
+        f.write(file_stderr)
+
+
 def wait_task_completion(jobid, taskid):
     log.info(f"Waiting for task completion {taskid}")
 
@@ -673,12 +690,15 @@ def wait_task_completion(jobid, taskid):
         log.critical("batch_client is None")
         return
 
+    # TODO: need to add a maximum amount of time for task completion
     while True:
         task = batch_client.task.get(jobid, taskid)
         log.info(f"task state={task.state}")
         if task.state == batchmodels.TaskState.completed:
             break
         time.sleep(5)
+
+    save_task_files(jobid, taskid)
 
 
 def _get_total_cores(vm_size):
@@ -916,8 +936,8 @@ def _get_appinputs_str(appinputs):
     return str_appinputs
 
 
-def get_task_stdout(batch_client, jobid, taskid):
-    stream = batch_client.file.get_from_task(jobid, taskid, STANDARD_OUT_FILE_NAME)
+def get_task_stdout(batch_client, jobid, taskid, filename=STANDARD_OUT_FILE_NAME):
+    stream = batch_client.file.get_from_task(jobid, taskid, filename)
     file_text = _read_stream_as_string(stream, DEFAULT_ENCODING)
     return file_text
 
@@ -934,9 +954,6 @@ def get_task_status(jobname, taskid):
     elif task.state == batchmodels.TaskState.running:
         log.info(f"Task {taskid} is running")
         return taskset_handler.TaskStatus.RUNNING
-    elif task.state == batchmodels.TaskState.failed:
-        log.info(f"Task {taskid} failed")
-        return taskset_handler.TaskStatus.FAILED
 
     log.info(f"Task {taskid} state={task.state} UNKNOWN")
     return taskset_handler.TaskStatus.UNKNOWN

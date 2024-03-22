@@ -23,7 +23,7 @@ def get_ui_default_filename():
 
 
 def get_task_filename(rg_prefix):
-    deployment_dir = _get_deployment_dir(rg_prefix)
+    deployment_dir = get_deployment_dir(rg_prefix)
     return os.path.join(deployment_dir, task_filename)
 
 
@@ -39,7 +39,16 @@ def get_dataset_filename():
     return os.path.join(hpcadvisor_dir, dataset_filename)
 
 
-def _get_deployment_dir(rg_prefix):
+def get_task_dir(rg_prefix, task_id):
+    task_dir = os.path.join(get_deployment_dir(rg_prefix), task_id)
+    if not os.path.exists(task_dir):
+        log.info("Create task dir: " + task_dir)
+        os.makedirs(task_dir)
+
+    return task_dir
+
+
+def get_deployment_dir(rg_prefix):
     deployment_dir = os.path.join(hpcadvisor_dir, rg_prefix)
     if not os.path.exists(deployment_dir):
         log.info("Create deployment dir: " + deployment_dir)
