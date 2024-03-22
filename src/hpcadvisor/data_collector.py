@@ -46,9 +46,18 @@ def process_tasks(tasks_file, dataset_file):
 
         batch_handler.wait_task_completion(jobname, taskid)
         task_status = batch_handler.get_task_execution_status(jobname, taskid)
-        batch_handler.store_task_execution_data(
-            poolname, jobname, taskid, ppr_perc, appinputs, dataset_file, appname, tags
-        )
+
+        if task_status == taskset_handler.TaskStatus.COMPLETED:
+            batch_handler.store_task_execution_data(
+                poolname,
+                jobname,
+                taskid,
+                ppr_perc,
+                appinputs,
+                dataset_file,
+                appname,
+                tags,
+            )
 
         taskset_handler.update_task_status(task["id"], tasks_file, task_status)
 
