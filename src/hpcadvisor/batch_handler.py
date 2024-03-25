@@ -649,6 +649,35 @@ def setup_environment(filename):
     return True
 
 
+def delete_vnet_peering():
+    if not batch_client:
+        log.critical("batch_client is None")
+        return
+
+    if "VPNRG" not in env:
+        log.info("No VPN peering to delete")
+        return
+
+    credentials = DefaultAzureCredential()
+    subscription_id = env["SUBSCRIPTION"]
+    resource_group = env["RG"]
+    vnet_name = env["VNETNAME"]
+    vpn_rg = env["VPNRG"]
+    vpn_vnet = env["VPNVNET"]
+
+    network_client = NetworkManagementClient(credentials, subscription_id)
+
+    peerings = network_client.virtual_network_peerings.list(vpn_rg, vpn_vnet)
+
+    for peer in peerings:
+        peering_address = peer.remote_address_space.address_prefixes[0]
+        if env["VNETADDRESS"] in peering_address:
+            log.info(f"Deleting peering {peer.name}")
+            network_client.virtual_network_peerings.begin_delete(
+                vpn_rg, vpn_vnet, peer.name
+            )
+
+
 def delete_environment():
     if not batch_client:
         log.critical("batch_client is None")
@@ -663,6 +692,8 @@ def delete_environment():
 
     rg_result = resource_client.resource_groups.begin_delete(resource_group)
     log.debug(f"resource group deleted result={rg_result}")
+
+    delete_vnet_peering()
 
     log.info("Environment deleted")
 
