@@ -114,6 +114,15 @@ peer_vpn() {
 
   curl -LO https://raw.githubusercontent.com/marconetto/azadventures/main/chapter3/create_peering_vpn.sh
 
+  peername=$(az network vnet peering list --vnet-name "$VPNVNET" --resource-group "$VPNRG" | jq -r --arg vnetip "$VNETADDRESS" '.[] | select(.remoteAddressSpace.addressPrefixes[] | contains($vnetip)) | .name')
+
+  if [ -z "$peername" ]; then
+    echo "No peer found"
+  else
+    echo "Peer found: $peername. Deleting existing peering"
+    az network vnet peering delete --name "$peername" --resource-group "$VPNRG" --vnet-name "$VPNVNET"
+  fi
+
   bash ./create_peering_vpn.sh "$VPNRG" "$VPNVNET" "$RG" "$VNETNAME"
   rm create_peering_vpn.sh
 }
