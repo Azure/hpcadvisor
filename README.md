@@ -49,16 +49,20 @@ To start:
 
 #### Only test data exploration
 
-If you want to only test the data exploration component and has not run any data
-collection:
-
+If you want to only test the data exploration component (i.e. plot generator):
 
 ```
 cp src/samples/dataset.json $HOME/.hpcadvisor/
 ./bin/hpcadvisor -g
 ```
 
-Then click on the data exploration button.
+This will open the browser version. Then click on the data exploration button.
+
+For CLI version:
+
+```
+./bin/hpcadvisor -u ~/.hpcadvisor/ui_defaults.json  -p
+```
 
 
 ---
