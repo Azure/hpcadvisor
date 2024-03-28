@@ -48,10 +48,10 @@ def get_userinput_from_file(user_input_file):
     return json_data
 
 
-def main(user_input_file, env_file, plots, debug, clear_rg):
+def main(user_input_file, env_file, plots, debug, clear_rg, plotfilter):
     # TODO: stil not a great place to be doing this
     if plots:
-        cli_plot_generator.gent_plots()
+        cli_plot_generator.generate_plots(plotfilter)
         sys.exit(0)
 
     user_input = get_userinput_from_file(user_input_file)

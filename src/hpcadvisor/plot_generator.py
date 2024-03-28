@@ -17,16 +17,25 @@ markers = ["o", "s", "^", "D", "*", "+", "x", "|", "_", "."]
 
 
 def _get_appinput_title(appinput):
+    if not appinput:
+        return ""
     return " ".join([f"{key}:{value} " for key, value in appinput.items()])
 
 
-def gen_plot_exectime_vs_numvms(st, datasetfile, appinput, plotfile="plot.png"):
+def get_tick_spacing(max_y, num_ticks=10):
+    tick_spacing = max_y / (num_ticks - 1)
+    order_of_magnitude = 10 ** (len(str(int(tick_spacing))) - 1)
+    tick_spacing = round(tick_spacing / order_of_magnitude) * order_of_magnitude
+    return tick_spacing
+
+
+def gen_plot_exectime_vs_numvms(st, datapoints, dynamic_filter, plotfile="plot.png"):
     style.use("dark_background")
 
     num_vms = []
 
     mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
-        datasetfile, appinput
+        datapoints, dynamic_filter
     )
 
     fig, ax = plt.subplots()
@@ -41,12 +50,14 @@ def gen_plot_exectime_vs_numvms(st, datasetfile, appinput, plotfile="plot.png"):
     ax.set_ylabel("Execution time (seconds)")
     ax.set_xlabel("Number of VMs")
 
-    plt.yticks(np.arange(0, max_exectime * 1.5, 50))
+    ticking_spacing = get_tick_spacing(max_exectime)
+
+    plt.yticks(np.arange(0, max_exectime * 1.5, ticking_spacing))
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles, labels, loc="upper right")
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
-    appinput_title = _get_appinput_title(appinput)
+    appinput_title = _get_appinput_title(dynamic_filter)
     title = f"Execution time (s) per SKU & Num Nodes\n{appinput_title}"
     ax.set_title(title)
 
@@ -56,11 +67,11 @@ def gen_plot_exectime_vs_numvms(st, datasetfile, appinput, plotfile="plot.png"):
     plt.savefig(plotfile)
 
 
-def gen_plot_exectime_vs_cost(st, datasetfile, appinput, plotfile="plot.png"):
+def gen_plot_exectime_vs_cost(st, datapoints, dynamic_filter, plotfile="plot.png"):
     style.use("dark_background")
 
     mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
-        datasetfile, appinput
+        datapoints, dynamic_filter
     )
 
     sku_costs = {}
@@ -74,6 +85,8 @@ def gen_plot_exectime_vs_cost(st, datasetfile, appinput, plotfile="plot.png"):
             exec_costs[key].append(
                 (mydata[key][i] / 3600.0) * sku_costs[key] * num_vms[key][i]
             )
+
+    print("mydata: ", mydata)
 
     fig, ax = plt.subplots()
 
@@ -90,12 +103,15 @@ def gen_plot_exectime_vs_cost(st, datasetfile, appinput, plotfile="plot.png"):
     ax.set_ylabel("Execution time (seconds)")
     ax.set_xlabel("Cost (USD)")
 
-    plt.yticks(np.arange(0, max_exectime * 1.5, 50))
+    ticking_spacing = get_tick_spacing(max_exectime)
+
+    plt.yticks(np.arange(0, max_exectime * 1.5, ticking_spacing))
+
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles, labels, loc="upper right")
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
-    appinput_title = _get_appinput_title(appinput)
+    appinput_title = _get_appinput_title(dynamic_filter)
     title = (
         f"Cost as function of execution time (s) per sku & num nodes\n{appinput_title}"
     )

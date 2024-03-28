@@ -64,6 +64,12 @@ For CLI version:
 ./bin/hpcadvisor -u ~/.hpcadvisor/ui_defaults.json  -p
 ```
 
+or
+
+```
+./bin/hpcadvisor -u ~/.hpcadvisor/ui_defaults.json  -p   -pf plotfilter.json
+```
+
 
 ---
 ### Notes

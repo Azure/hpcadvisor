@@ -968,8 +968,13 @@ def _get_appinputs_str(appinputs):
 
 
 def get_task_stdout(batch_client, jobid, taskid, filename=STANDARD_OUT_FILE_NAME):
-    stream = batch_client.file.get_from_task(jobid, taskid, filename)
-    file_text = _read_stream_as_string(stream, DEFAULT_ENCODING)
+    file_text = ""
+    try:
+        stream = batch_client.file.get_from_task(jobid, taskid, filename)
+        file_text = _read_stream_as_string(stream, DEFAULT_ENCODING)
+    except batchmodels.BatchErrorException as e:
+        log.error(f"Error getting task output: {e}")
+        file_text = f"Error getting task output: {e}"
     return file_text
 
 

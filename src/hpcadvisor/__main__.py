@@ -34,6 +34,14 @@ def _process_arguments():
         action="store_true",
         default=False,
     )
+    parser.add_argument(
+        "-pf",
+        "--plotfilter",
+        help="Plot filter",
+        type=str,
+        action="store",
+        default=None,
+    )
 
     parser.add_argument(
         "-c",
@@ -61,13 +69,24 @@ def _process_arguments():
     plots = args.plots
     resettasks = args.resettasks
     clearrg = args.clearrg
+    plotfilter = args.plotfilter
 
-    return userinput, envfile, gui, debug, plots, resettasks, clearrg
+    return userinput, envfile, gui, debug, plots, resettasks, clearrg, plotfilter
 
 
 def main():
     print("HPC Advisor tool starting...")
-    userinput, envfile, gui, debug, plots, resettasks, clearrg = _process_arguments()
+
+    (
+        userinput,
+        envfile,
+        gui,
+        debug,
+        plots,
+        resettasks,
+        clearrg,
+        plotfilter,
+    ) = _process_arguments()
 
     if debug:
         logger.setup_debug_mode()
@@ -84,7 +103,7 @@ def main():
         print("Using CLI mode")
         from hpcadvisor import main_cli
 
-        main_cli.main(userinput, envfile, plots, debug, clearrg)
+        main_cli.main(userinput, envfile, plots, debug, clearrg, plotfilter)
 
 
 if __name__ == "__main__":

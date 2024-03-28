@@ -1,0 +1,6 @@
+{
+  "deployment": [
+    "mydeployment"
+  ],
+  "appname": "wrf4"
+}
