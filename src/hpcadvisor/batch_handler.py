@@ -388,6 +388,7 @@ def create_pool(sku, poolname=None, number_of_nodes=1):
     sudo bash -c "echo 'CVMFS_QUOTA_LIMIT=10000' >> /etc/cvmfs/default.local"
     sudo cvmfs_config setup
     sudo mount -t cvmfs software.eessi.io /cvmfs/software.eessi.io
+    sudo mount -t cvmfs pilot.eessi-hpc.org /cvmfs/pilot.eessi-hpc.org
     """
 
     script_array = script.split("\n")
@@ -801,6 +802,7 @@ def _get_average_value(metrics_data):
 
     if n == 0:
         log.warn("zero values coming from collected metric data")
+        return float("nan")
     else:
         cut_off_low = numbers[int(0.1 * n)]
         cut_off_high = numbers[int(0.9 * n)]
@@ -924,7 +926,7 @@ def _get_monitoring_data(batch_client, poolid, jobid, taskid):
     # for client.metrics.list
     if min_end_time < task.execution_info.end_time:
         for resource_id in resource_ids:
-            log.debug("collecting cpu usage data for resource_id={resource_id}")
+            log.debug(f"collecting cpu usage data for resource_id={resource_id}")
             average_cpu = None
             while average_cpu is None:
                 metrics_data = None
