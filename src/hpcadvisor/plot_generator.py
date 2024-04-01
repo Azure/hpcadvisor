@@ -86,8 +86,6 @@ def gen_plot_exectime_vs_cost(st, datapoints, dynamic_filter, plotfile="plot.png
                 (mydata[key][i] / 3600.0) * sku_costs[key] * num_vms[key][i]
             )
 
-    print("mydata: ", mydata)
-
     fig, ax = plt.subplots()
 
     for index, key in enumerate(mydata):
