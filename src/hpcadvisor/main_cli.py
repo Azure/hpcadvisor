@@ -64,10 +64,11 @@ def main(user_input_file, env_file, plots, debug, clear_rg, plotfilter):
     data_app_input = user_input["appinputs"]
 
     if env_file and os.path.exists(env_file):
-        log.warning(f"Using existing env file: {env_file}")
         rg_prefix = utils.get_rg_prefix_from_file(env_file)
         task_filename = utils.get_task_filename(rg_prefix)
-        log.info(f"Env file specified. Reusing existing tasks file {task_filename}.")
+        log.info(
+            f"Environment file specified. Reusing existing tasks file {task_filename}."
+        )
     else:
         log.warning("Generating new env file and deploying environment")
         rg_prefix = user_input["rgprefix"] + utils.get_random_code()
@@ -76,9 +77,7 @@ def main(user_input_file, env_file, plots, debug, clear_rg, plotfilter):
         print(f"Environment file: {env_file}")
         utils.execute_env_deployer(env_file, rg_prefix, debug)
         task_filename = utils.get_task_filename(rg_prefix)
-        log.info(
-            f"Env file NOT specified or does not exist. Generating new tasks file {task_filename}."
-        )
+        log.info(f"Generating new tasks file: {task_filename}.")
         taskset_handler.generate_tasks(
             task_filename,
             data_system,

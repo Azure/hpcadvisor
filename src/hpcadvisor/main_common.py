@@ -9,7 +9,7 @@ def reset_tasks(envfile):
     log.info("Resetting status of all tasks")
 
     if not os.path.exists(envfile):
-        log.error(f"Env file {envfile} not found")
+        log.error(f"Environment file {envfile} not found")
         return
 
     deployment_name = os.path.basename(os.path.dirname(envfile))

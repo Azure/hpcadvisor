@@ -1,6 +1,7 @@
 import datetime
 import os
 import random
+import time
 
 from hpcadvisor import logger
 
@@ -138,3 +139,34 @@ def execute_env_deployer(env_file, rg_prefix, debug=False):
         command += " > /dev/null 2>&1"
     log.info(f"Executing: {command}")
     os.system(command)
+
+
+class WAIT_UNTIL_RC:
+    """return codes for wait_until"""
+
+    SUCCESS = True
+    FAILURE = False
+    TIMEOUT = None
+
+
+class WAIT_UNTIL_FUNCTION_RC:
+    """return codes for wait_until_function"""
+
+    SUCCESS = True
+    CONTINUE_WAIT = False
+    CANCEL_WAIT = None
+
+
+def wait_until(wait_until_function, timeout_in_mins=20):
+    wait_time_block = 15
+    count_down = (timeout_in_mins * 60) // wait_time_block
+    while count_down > 0:
+        rc = wait_until_function()
+        if rc is WAIT_UNTIL_FUNCTION_RC.SUCCESS:
+            return WAIT_UNTIL_RC.SUCCESS
+        elif rc is WAIT_UNTIL_FUNCTION_RC.CANCEL_WAIT:
+            return WAIT_UNTIL_RC.FAILURE
+        elif rc is WAIT_UNTIL_FUNCTION_RC.CONTINUE_WAIT:
+            time.sleep(wait_time_block)
+            count_down -= 1
+    return WAIT_UNTIL_RC.TIMEOUT

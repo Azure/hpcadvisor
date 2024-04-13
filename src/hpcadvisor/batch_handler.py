@@ -31,6 +31,7 @@ from hpcadvisor.azure_identity_credential_adapter import AzureIdentityCredential
 
 batch_supported_images = "batch_supported_images.txt"
 VMIMAGE = "almalinux:almalinux-hpc:8_6-hpc-gen2:latest"
+backupnodeagent = "batch.node.el 8"
 
 env = {}
 
@@ -88,8 +89,63 @@ def resource_group_exists(subscription_id, resource_group):
     return False
 
 
+def wait_pool_ready(poolid):
+    if not batch_client:
+        log.critical("batch_client is None")
+        return
+
+    log.info(f"awaiting pool resize: poolid={poolid}")
+    rc = utils.wait_until(
+        lambda: batch_client.pool.get(poolid).allocation_state == "steady"
+    )
+    if rc is utils.WAIT_UNTIL_RC.TIMEOUT:
+        log.error("Timed out waiting for pool resize.")
+    if rc is utils.WAIT_UNTIL_RC.FAILURE:
+        log.error("Pool resize failed.")
+
+    log.info("Pool resize is complete.")
+
+    target_dedicated_nodes = batch_client.pool.get(poolid).target_dedicated_nodes
+
+    def verify_pool():
+        pool_config = batch_client.pool.get(poolid)
+        if pool_config.resize_errors and len(pool_config.resize_errors) > 0:
+            log.error(f"Pool {pool_id} resize failed.")
+            msg = "\n".join(
+                [f"  {e.code}: {e.message}" for e in pool_config.resize_errors]
+            )
+            log.error(f"Resize errors: \n{msg}")
+            return utils.WAIT_UNTIL_CALLBACK_RC.CANCEL_WAIT  # abort
+        count = 0
+        for cn in batch_client.compute_node.list(poolid):
+            lc_state = cn.state.lower()
+            if lc_state in ["idle", "running"]:
+                count += 1
+            elif lc_state in ["unusable", "starttaskfailed", "offline", "unknown"]:
+                log.error(f"Compute node {cn.id} is in {cn.state} state.")
+                return utils.WAIT_UNTIL_FUNCTION_RC.CANCEL_WAIT  # abort
+        if count == (target_dedicated_nodes or 0):
+            return utils.WAIT_UNTIL_FUNCTION_RC.SUCCESS  # done
+        return utils.WAIT_UNTIL_FUNCTION_RC.CONTINUE_WAIT  # continue waiting
+
+    # pool can be in steady state but with nodes that are unusable.
+    # so, we need to check the state of the compute nodes
+    log.info("awaiting compute nodes startup")
+    rc = utils.wait_until(lambda: verify_pool())
+    if rc is utils.WAIT_UNTIL_RC.TIMEOUT:
+        log.error("Timed out waiting for compute nodes to be ready.")
+        return None
+    if rc is utils.WAIT_UNTIL_RC.FAILURE:
+        log.error("Compute nodes failed to start.")
+        return None
+    log.info("Compute nodes are ready.")
+    pool_info = batch_client.pool.get(poolid)
+    log.info(f" pool_info.current_dedicated_nodes={pool_info.current_dedicated_nodes}")
+
+    return True
+
+
 def resize_pool(poolid, target_nodes, wait_resize=True):
-    # TODO: need to add a maximum amount of time for pool resizing
     log.info(f"Resizing pool '{poolid}' to {target_nodes} nodes...")
 
     if not batch_client:
@@ -126,12 +182,7 @@ def resize_pool(poolid, target_nodes, wait_resize=True):
     )
 
     if wait_resize:
-        while True:
-            pool = batch_client.pool.get(poolid)
-            log.debug(f"pool state={pool.allocation_state}")
-            if pool.allocation_state == "steady":
-                break
-            time.sleep(5)
+        return wait_pool_ready(poolid)
 
 
 def _get_batch_client(subscription_id, resource_group):
@@ -307,11 +358,16 @@ def _get_node_agent_sku(vm_image):
 
     supported_images = batch_client.account.list_supported_images()
 
+    result = None
     for image in supported_images:
         if image.image_reference.offer == offer and image.image_reference.sku == sku:
             log.debug(f"Found image: {image.node_agent_sku_id}")
             result = image.node_agent_sku_id
             break
+    if not result:
+        log.warning(f"Cannot find node agent sku for {vm_image}")
+        log.warning(f"Using backup node agent sku: {backupnodeagent}")
+        result = backupnodeagent
 
     # TODO: store the output as file so we can use the result as cache
     # f = open(batch_supported_images)

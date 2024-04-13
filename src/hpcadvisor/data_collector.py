@@ -7,6 +7,24 @@ from hpcadvisor import batch_handler, logger, taskset_handler
 log = logger.logger
 
 
+def resize_pool(poolname, number_of_nodes):
+    attempts = 3
+    while attempts > 0:
+        rc = batch_handler.resize_pool(poolname, number_of_nodes)
+        if not rc:
+            log.warning(
+                f"Failed to resize pool: {poolname} to {number_of_nodes}. Attempts left: {attempts}"
+            )
+            batch_handler.resize_pool(poolname, 0)
+            attempts -= 1
+        else:
+            return True
+
+    log.warning(f"Failed to resize pool: {poolname} to {number_of_nodes}")
+    batch_handler.resize_pool(poolname, 0)
+    return False
+
+
 def process_tasks(tasks_file, dataset_file):
     tasks = taskset_handler.get_tasks_from_file(tasks_file)
     previous_sku = ""
@@ -38,7 +56,13 @@ def process_tasks(tasks_file, dataset_file):
             jobname = batch_handler.create_job(poolname)
             batch_handler.create_setup_task(jobname)
 
-        batch_handler.resize_pool(poolname, number_of_nodes)
+        log.info(f"Resizing pool: {poolname} to {number_of_nodes}")
+
+        # TODO: think if task should go to failed or keep pending state
+        if not resize_pool(poolname, number_of_nodes):
+            log.error(f"Failed to resize pool: {poolname} to {number_of_nodes}")
+            log.error(f"Moving to another task")
+            continue
 
         taskid = batch_handler.create_compute_task(
             jobname, number_of_nodes, ppr_perc, sku, appinputs
