@@ -1,7 +1,13 @@
-## HPC Advisor: Overview
+## HPC Advisor
 
-The goal of this tool is to assist users in selecting the cluster configuraton
-based on actual application executions.
+### Goal and overview
+
+The goal of this tool is to assist users in selecting a cluster configuration
+based on actual application executions. Underneath, the execution of the
+application is based on resources provisioned by [Azure
+Batch](https://learn.microsoft.com/en-us/azure/batch/); but the data collected
+can be used to make decisions for other environments including Azure CycleCloud,
+Azure VMSS, Azure VMs, AKS, etc.
 
 For now the tool focuses on testing:
 - SKUs
@@ -9,77 +15,120 @@ For now the tool focuses on testing:
 - Processes per node
 - Application input parameters
 
-For next versions we will explore other factors such as storage, gpus and
-network.
+For next versions we will explore other factors such as storage and gpus in
+addition to other features related to avoiding scenarios to optimize unnecessary
+tests.
 
-#### Warning: This repo is still going through major changes!
+The tool offers three operations:
+
+**1.** **Data collector.** Run the application under multiple scenarios to
+collect execution times and other metric data (for now cpu usage).
+
+**2.** **Plot generator.** Generate several plots considering the collected
+data, including exec time as a function of skus and number of nodes, cost as
+a function of skus and number of nodes. In addition, plots all of these metrics
+as a function of the application input parameters.
+
+**3.** **Recommendation generator.** Generate the pareto front considering
+execution time and costs. We leave to the user to make the final decision that
+balances both metrics, as users may be willing to sacrifice execution time in
+favor of cost for instance. We also provide as output the best time and best
+cost.
+
+
+It also has two execution modes, one via CLI (Command Line Interface) and the
+other via web browser (GUI).
+
+
+In this code we have examples to run tests with actual applications, including
+WRF, OpenFOAM, NAMD, and GROMACS. Other apps will become available on the way.
 
 ---
 
-### Execution using poetry
+#### Warning: This tool is still under major changes.
 
-Poetry installation: <https://python-poetry.org/docs/>
+---
 
-Using terminal go inside the hpcadvisor root directory:
+### Setup
 
-#### Install and create python virtual environment
+The hpcadvisor setup is based on python poetry to handle dependencies and
+a python virtual environment.
+
+Check poetry installation guidelines [HERE](<https://python-poetry.org/docs/>).
+Once poetry is installed run the following commands in your terminal to install
+and create python virtual environment.
+
 ```
+git clone https://github.com/Azure/hpcadvisor.git
+cd hpcadvisor
 poetry install
 poetry shell
+cd bin
 ```
 
-#### Run only data collector on CLI
+---
 
-Update `src/samples/cli_input.json` fields, in particular `mysubscription`
+### Getting started
 
-To start:
+Follow the matrix multiplication example here for detailed instructions.
+
+##### CLI-based execution
+
+Once the setup above (via poetry) is done, for the matrix multiplication
+example, you just need to update `examples/matrixmult/ui_defaults.json` with
+your preferences. For this example, you only need to update `subscription`,
+and you should be good to go:
+
 ```
-./bin/hpcadvisor -u src/samples/cli_input.json
-```
-
-#### Run GUI (browser) so data collector and data exploration can be used
-
-Optional: Copy `src/samples/ui_defaults.json` to
-`$HOME/.hpcadvisor/ui_defaults.json` and modify it accordingly.
-
-To start:
-```
-./bin/hpcadvisor -g
+./hpcadvisor -u ../examples/matrixmult/ui_defaults.json
 ```
 
-#### Only test data exploration
-
-If you want to only test the data exploration component (i.e. plot generator):
+If you want to only test the plot generator component, skipping the data
+collection, you need to copy a dataset file to hpcadvisor directory:
 
 ```
 cp src/samples/dataset.json $HOME/.hpcadvisor/
-./bin/hpcadvisor -g
+./hpcadvisor -u ../examples/matrixmult/ui_defaults.json  \
+                 -p \
+                 -pf ../examples/matrixmult/plotfilter.json
 ```
 
-This will open the browser version. Then click on the data exploration button.
+To get the recommendation (pareto-front), just replace the flag `-p` (plot) to
+`-r` (recommendation).
 
-For CLI version:
+##### GUI-based execution (browser)
 
-```
-./bin/hpcadvisor -u ~/.hpcadvisor/ui_defaults.json  -p
-```
-
-or
+One can use the browser version and click the buttons for the different
+operations. To pre-fill user input, specify the input file as showed below:
 
 ```
-./bin/hpcadvisor -u ~/.hpcadvisor/ui_defaults.json  -p   -pf plotfilter.json
+./hpcadvisor -g -u ../examples/matrixmult/ui_defaults.json
 ```
+
+---
+
+### Examples
+
+Examples of applications to be tested using hpcadvisor:
+
+- [Matrix Multiplication (Hello World)](examples/matrixmult)
+- [Weather Research & Forecasting Model (WRF)](examples/wrf)
+- [GROningen MAchine for Chemical Simulations (GROMACS)](examples/gromacs)
+- [Open Field Operation and Manipulation (OpenFOAM)](examples/openfoam)
+- [Nanoscale Molecular Dynamics (NAMD)](examples/namd)
+
+
+### Configuration files
 
 
 ---
 ### Notes
 
-1) fix the process for data collection is interrupted, resources will not be
-deleted automatically.
+1) If there is a problem while collecting data, resources may not be
+auto-deleted. Watch out for that.
 
 ---
 ### Generate standalone binary
-
 
 You can generate a standalone binary file using:
 - poetry (https://python-poetry.org/docs/)
