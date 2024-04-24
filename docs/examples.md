@@ -13,7 +13,7 @@ As a starting example, here we have a matrix multiplication application. This
 (dimension) and number of times such multiplication should happen (e.g. only
 once, or 10, or 100, etc).
 
-The files for this example are in the [examples folder](../examples/matrixmult),
+The files for this example are in the [examples folder](../tree/main/examples/matrixmult),
 which has three files:
 
 - `mpi_matrix_mult.c`: which contains the source code of the application.
