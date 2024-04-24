@@ -21,4 +21,17 @@ fields:
 
 ## Plot filter
 
-to-be-added
+Plot filter specify which parts of the dataset one wants to use for plotting
+graphs or getting the recommendations (pareto-front). You can specify the
+application name, and the deployment environments, which can be useful in case
+data was collected using a few deployments but one does not want to consider all
+deployments for that particular application.
+
+```
+{
+  "deployment": [
+    "myresourcegroup"
+  ],
+  "appname": "wrf4"
+}
+```
