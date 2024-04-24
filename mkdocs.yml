@@ -1,0 +1,45 @@
+site_name: HPCAdvisor
+markdown_extensions:
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+theme:
+  name: material
+  icon:
+    logo: material/atom
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+  palette:
+    - scheme: slate
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to light mode
+      primary: indigo
+      accent: indigo
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
+      primary: indigo
+      accent: indigo
+plugins:
+  - search
+extra:
+  generator: false
+copyright: |
+  &copy; Copyright 2024, Microsoft
+nav:
+  - HPCAdvisor: index.md
+  - Quickstart: quickstart.md
+  - Examples: examples.md
+  - Configuration Files: configfiles.md
