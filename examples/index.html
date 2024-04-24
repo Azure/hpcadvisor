@@ -485,18 +485,38 @@
 
 <h1 id="examples">Examples</h1>
 <p>Examples of applications to be tested using hpcadvisor:</p>
+<h2 id="matrix-multiplication">Matrix Multiplication</h2>
+<p>As a starting example, here we have a matrix multiplication application. This
+"hello world" application receives two parameters: size of the squared matrix
+(dimension) and number of times such multiplication should happen (e.g. only
+once, or 10, or 100, etc).</p>
+<p>The files for this example are in the <a href="../examples/matrixmult">examples folder</a>,
+which has three files:</p>
 <ul>
-<li><a href="examples/matrixmult">Matrix Multiplication (Hello World)</a></li>
+<li><code>mpi_matrix_mult.c</code>: which contains the source code of the application.</li>
+<li><code>appsetup_matrix.sh</code>: which is a shell script that downloads the source file,
+  compiles it, and generates the application run script that will be used for
+  each execution scenario.</li>
+<li><code>plotfilter_matrixmult.json</code>: which is a filter to get consider only data for
+  this application when generating the plots and the recommendation
+  (pareto-front data).</li>
+</ul>
+<h2 id="wrf">WRF</h2>
+<ul>
 <li><a href="examples/wrf">Weather Research &amp; Forecasting Model (WRF)</a></li>
+</ul>
+<h2 id="gromacs">GROMACS</h2>
+<ul>
 <li><a href="examples/gromacs">GROningen MAchine for Chemical Simulations (GROMACS)</a></li>
+</ul>
+<h2 id="openfoam">OpenFOAM</h2>
+<ul>
 <li><a href="examples/openfoam">Open Field Operation and Manipulation (OpenFOAM)</a></li>
+</ul>
+<h2 id="namd">NAMD</h2>
+<ul>
 <li><a href="examples/namd">Nanoscale Molecular Dynamics (NAMD)</a></li>
 </ul>
-<h2 id="matrix-multiplication">Matrix Multiplication</h2>
-<h2 id="wrf">WRF</h2>
-<h2 id="gromacs">GROMACS</h2>
-<h2 id="openfoam">OpenFOAM</h2>
-<h2 id="namd">NAMD</h2>
 
 
 
