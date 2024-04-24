@@ -1,6 +1,8 @@
 # Examples
 
+
 Examples of applications to be tested using hpcadvisor:
+
 
 - [Matrix Multiplication (Hello World)](examples/matrixmult)
 - [Weather Research & Forecasting Model (WRF)](examples/wrf)

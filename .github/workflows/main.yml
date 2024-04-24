@@ -7,6 +7,8 @@ on:
       - "**.md"
       - "mkdocs.yml"
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   docs:
     runs-on: ubuntu-latest
