@@ -499,7 +499,18 @@ fields:</p>
   interactions for the matrix multiplication application)</li>
 </ul>
 <h2 id="plot-filter">Plot filter</h2>
-<p>to-be-added</p>
+<p>Plot filter specify which parts of the dataset one wants to use for plotting
+graphs or getting the recommendations (pareto-front). You can specify the
+application name, and the deployment environments, which can be useful in case
+data was collected using a few deployments but one does not want to consider all
+deployments for that particular application.</p>
+<pre><code>{
+  &quot;deployment&quot;: [
+    &quot;myresourcegroup&quot;
+  ],
+  &quot;appname&quot;: &quot;wrf4&quot;
+}
+</code></pre>
 
 
 
