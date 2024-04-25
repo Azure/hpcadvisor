@@ -60,6 +60,10 @@ which has three files:
 }
 ```
 
+``` title="ui_defaults.json"
+--8<-- "https://raw.githubusercontent.com/Azure/hpcadvisor/main/examples/matrixmult/ui_defaults.json"
+```
+
 
 ## WRF
 
