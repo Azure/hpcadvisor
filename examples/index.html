@@ -562,6 +562,37 @@ which has three files:</p>
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="w">  </span><span class="p">}</span>
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="p">}</span>
 </code></pre></div>
+<div class="highlight"><span class="filename">ui_defaults.json</span><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>{
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  &quot;subscription&quot;: &quot;mysubscription&quot;,
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  &quot;skus&quot;: [
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    &quot;Standard_HC44rs&quot;,
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    &quot;Standard_HB120rs_v2&quot;,
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    &quot;Standard_HB120rs_v3&quot;
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  ],
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>  &quot;rgprefix&quot;: &quot;nettoaha&quot;,
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>  &quot;appsetupurl&quot;: &quot;https://raw.githubusercontent.com/Azure/hpcadvisor/main/examples/matrixmult/appsetup_matrix.sh&quot;,
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>  &quot;nnodes&quot;: [
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    2,
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    3,
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    4
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>  ],
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>  &quot;appname&quot;: &quot;matrixmult&quot;,
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>  &quot;tags&quot;: {
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>    &quot;appname&quot;: &quot;matrixmult&quot;,
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    &quot;version&quot;: &quot;v1&quot;
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>  },
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>  &quot;region&quot;: &quot;southcentralus&quot;,
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>  &quot;createjumpbox&quot;: true,
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>  &quot;ppr&quot;: 100,
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>  &quot;appinputs&quot;: {
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>    &quot;appinteractions&quot;: &quot;3&quot;,
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    &quot;appmatrixsize&quot;: [
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>      &quot;4000&quot;,
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>      &quot;7000&quot;
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a>    ]
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a>  }
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>}
+</code></pre></div>
 <h2 id="wrf">WRF</h2>
 <ul>
 <li><a href="examples/wrf">Weather Research &amp; Forecasting Model (WRF)</a></li>
