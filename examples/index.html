@@ -511,6 +511,10 @@
 
 
 <h1 id="examples">Examples</h1>
+<p>Here we have a few examples how to use HPCAdvisor. For each example, we have
+different mechanisms to setup the application. As the application setup is based
+on bash script, users can install in different ways, using for instance source
+code, binary download, easybuild, EESSI, spack, etc..</p>
 <p>Examples of applications to be tested using hpcadvisor:</p>
 <h2 id="matrix-multiplication">Matrix Multiplication</h2>
 <p>As a starting example, here we have a matrix multiplication application. This
@@ -563,21 +567,39 @@ which has three files:</p>
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="p">}</span>
 </code></pre></div>
 <h2 id="wrf">WRF</h2>
-<ul>
-<li><a href="examples/wrf">Weather Research &amp; Forecasting Model (WRF)</a></li>
-</ul>
+<p>The Weather Research and Forecasting (WRF) Model is a well known system for
+meteorologists and researchers to simulate and predict weather patterns at
+various spatial and temporal scales. WRF can simulate atmospheric processes,
+including dynamics, thermodynamics, and microphysical processes. The model can
+be configured for different domains, resolutions, and parameterizations, and it
+is widely used for benchmarking HPC systems.</p>
+<p>The example for this app (<a href="https://github.com/Azure/hpcadvisor/tree/main/wrf/">files
+here</a>) is based on
+installation using <a href="https://www.eessi.io/">EESSI</a>.</p>
 <h2 id="gromacs">GROMACS</h2>
-<ul>
-<li><a href="examples/gromacs">GROningen MAchine for Chemical Simulations (GROMACS)</a></li>
-</ul>
+<p>The GROMACS (GROningen MAchine for Chemical Simulations) project originally
+began in 1991 at Department of Biophysical Chemistry, University of Groningen,
+Netherlands. GROMACS is widely used in computational chemistry, biochemistry,
+and related fields for simulating the behavior of molecules at the atomic level.</p>
+<p>The example for this app (<a href="https://github.com/Azure/hpcadvisor/tree/main/gromacs/">files
+here</a>) is based on
+installation using <a href="https://www.eessi.io/">EESSI</a>.</p>
 <h2 id="openfoam">OpenFOAM</h2>
-<ul>
-<li><a href="examples/openfoam">Open Field Operation and Manipulation (OpenFOAM)</a></li>
-</ul>
+<p>OpenFOAM (Open Field Operation and Manipulation) is a free, open-source computational fluid dynamics (CFD) software package developed by the OpenFOAM Foundation. OpenFOAM has an extensive range of features to solve anything from complex fluid flows involving chemical reactions, turbulence and heat transfer, to acoustics, solid mechanics and electromagnetics. OpenFOAM uses the finite volume method to discretize and solve the governing equations of fluid flow and other related physical phenomena. OpenFOAM is used in several industries including automotive, aerospace, energy, environmental engineering, chemical processing, and academic research. OpenFOAM is professionally released every six months to include customer sponsored developments and contributions from the community. It is written in C++ is modular, which allows customizations.</p>
+<p>The example for this app (<a href="https://github.com/Azure/hpcadvisor/tree/main/openfoam/">files
+here</a>) is based on
+installation using <a href="https://www.eessi.io/">EESSI</a>.</p>
 <h2 id="namd">NAMD</h2>
-<ul>
-<li><a href="examples/namd">Nanoscale Molecular Dynamics (NAMD)</a></li>
-</ul>
+<p>Nanoscale Molecular Dynamics (NAMD) is a parallel molecular dynamics code
+designed for high-performance simulation of large biomolecular systems,
+including proteins, nucleic acids, and membranes, at the atomic level over
+time.It is particularly valuable for understanding processes such as protein
+folding, biomolecular recognition, and drug binding, among others. NAMD is
+developed and maintained by the Theoretical and Computational Biophysics Group
+at the University of Illinois at Urbana-Champaign.</p>
+<p>The example for this app (<a href="https://github.com/Azure/hpcadvisor/tree/main/openfoam/">files
+here</a>) is based on
+installation using the binary from NAMD official website.</p>
 
 
 
