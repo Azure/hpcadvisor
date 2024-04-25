@@ -28,39 +28,6 @@ which has three files:
   setup application, scenarios to be explored.
 
 ```json title="ui_defaults.json"
-{
-  "subscription": "mysubscription",
-  "skus": [
-    "Standard_HC44rs",
-    "Standard_HB120rs_v2",
-    "Standard_HB120rs_v3"
-  ],
-  "rgprefix": "nettoaha",
-  "appsetupurl": "https://raw.githubusercontent.com/Azure/hpcadvisor/main/examples/matrixmult/appsetup_matrix.sh",
-  "nnodes": [
-    2,
-    3,
-    4
-  ],
-  "appname": "matrixmult",
-  "tags": {
-    "appname": "matrixmult",
-    "version": "v1"
-  },
-  "region": "southcentralus",
-  "createjumpbox": true,
-  "ppr": 100,
-  "appinputs": {
-    "appinteractions": "3",
-    "appmatrixsize": [
-      "4000",
-      "7000"
-    ]
-  }
-}
-```
-
-```json title="ui_defaults.json"
 --8<-- "https://raw.githubusercontent.com/Azure/hpcadvisor/main/examples/matrixmult/ui_defaults.json"
 ```
 
