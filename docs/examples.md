@@ -44,7 +44,7 @@ be configured for different domains, resolutions, and parameterizations, and it
 is widely used for benchmarking HPC systems.
 
 The example for this app ([files
-here](https://github.com/Azure/hpcadvisor/tree/main/wrf/)) is based on
+here](https://github.com/Azure/hpcadvisor/tree/main/examples/wrf/)) is based on
 installation using [EESSI](https://www.eessi.io/).
 
 
@@ -56,7 +56,7 @@ Netherlands. GROMACS is widely used in computational chemistry, biochemistry,
 and related fields for simulating the behavior of molecules at the atomic level.
 
 The example for this app ([files
-here](https://github.com/Azure/hpcadvisor/tree/main/gromacs/)) is based on
+here](https://github.com/Azure/hpcadvisor/tree/main/examples/gromacs/)) is based on
 installation using [EESSI](https://www.eessi.io/).
 
 ## OpenFOAM
@@ -64,7 +64,7 @@ installation using [EESSI](https://www.eessi.io/).
 OpenFOAM (Open Field Operation and Manipulation) is a free, open-source computational fluid dynamics (CFD) software package developed by the OpenFOAM Foundation. OpenFOAM has an extensive range of features to solve anything from complex fluid flows involving chemical reactions, turbulence and heat transfer, to acoustics, solid mechanics and electromagnetics. OpenFOAM uses the finite volume method to discretize and solve the governing equations of fluid flow and other related physical phenomena. OpenFOAM is used in several industries including automotive, aerospace, energy, environmental engineering, chemical processing, and academic research. OpenFOAM is professionally released every six months to include customer sponsored developments and contributions from the community. It is written in C++ is modular, which allows customizations.
 
 The example for this app ([files
-here](https://github.com/Azure/hpcadvisor/tree/main/openfoam/)) is based on
+here](https://github.com/Azure/hpcadvisor/tree/main/examples/openfoam/)) is based on
 installation using [EESSI](https://www.eessi.io/).
 
 
@@ -79,6 +79,6 @@ developed and maintained by the Theoretical and Computational Biophysics Group
 at the University of Illinois at Urbana-Champaign.
 
 The example for this app ([files
-here](https://github.com/Azure/hpcadvisor/tree/main/openfoam/)) is based on
+here](https://github.com/Azure/hpcadvisor/tree/main/examples/namd/)) is based on
 installation using the binary from NAMD official website.
 
