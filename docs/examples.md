@@ -27,7 +27,7 @@ which has three files:
 - `ui_defaults.json`: user input to create the environment,
   setup application, scenarios to be explored.
 
-```json
+```json title="ui_defaults.json"
 {
   "subscription": "mysubscription",
   "skus": [
