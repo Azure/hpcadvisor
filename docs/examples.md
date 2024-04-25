@@ -17,13 +17,48 @@ The files for this example are in the [examples
 folder](https://github.com/Azure/hpcadvisor/tree/main/examples/matrixmult)
 which has three files:
 
-- `mpi_matrix_mult.c`: which contains the source code of the application.
-- `appsetup_matrix.sh`: which is a shell script that downloads the source file,
+- `mpi_matrix_mult.c`: source code of the application.
+- `appsetup_matrix.sh`: shell script that downloads the source file,
   compiles it, and generates the application run script that will be used for
   each execution scenario.
-- `plotfilter_matrixmult.json`: which is a filter to get consider only data for
+- `plotfilter_matrixmult.json`: filter to get consider only data for
   this application when generating the plots and the recommendation
   (pareto-front data).
+- `ui_defaults.json`: user input to create the environment,
+  setup application, scenarios to be explored.
+
+```json
+{
+  "subscription": "mysubscription",
+  "skus": [
+    "Standard_HC44rs",
+    "Standard_HB120rs_v2",
+    "Standard_HB120rs_v3"
+  ],
+  "rgprefix": "nettoaha",
+  "appsetupurl": "https://raw.githubusercontent.com/Azure/hpcadvisor/main/examples/matrixmult/appsetup_matrix.sh",
+  "nnodes": [
+    2,
+    3,
+    4
+  ],
+  "appname": "matrixmult",
+  "tags": {
+    "appname": "matrixmult",
+    "version": "v1"
+  },
+  "region": "southcentralus",
+  "createjumpbox": true,
+  "ppr": 100,
+  "appinputs": {
+    "appinteractions": "3",
+    "appmatrixsize": [
+      "4000",
+      "7000"
+    ]
+  }
+}
+```
 
 
 ## WRF
