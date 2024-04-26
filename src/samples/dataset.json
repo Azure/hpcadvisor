@@ -1,66 +1,456 @@
 {
   "datapoints": [
     {
-      "sku": "Standard_HB120-32rs_v3",
-      "exec_time": 120,
+      "timestamp": "2024-04-26-15-45",
+      "sku": "standard_hc44rs",
       "nnodes": 2,
+      "total_cores": 88,
+      "ppr_perc": 100,
+      "cpu_usage": [],
+      "exec_time": 51,
       "appinputs": {
-        "APPMATRIXSIZE": "4000",
-        "APPINTERACTIONS": "10"
+        "appinteractions": "3",
+        "appmatrixsize": "4000"
+      },
+      "deployment": "nettoaha042615313564",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042615398232",
+        "taskid": "task-compute-042615449417"
       }
     },
     {
-      "sku": "Standard_HB120-32rs_v3",
-      "exec_time": 200,
-      "nnodes": 4,
-      "appinputs": {
-        "APPMATRIXSIZE": "4000",
-        "APPINTERACTIONS": "10"
-      }
-    },
-    {
-      "sku": "Standard_HB120-32rs_v3",
-      "exec_time": 50,
-      "nnodes": 8,
-      "appinputs": {
-        "APPMATRIXSIZE": "4000",
-        "APPINTERACTIONS": "10"
-      }
-    },
-    {
-      "sku": "Standard_HB120-32rs_v2",
-      "exec_time": 220,
+      "timestamp": "2024-04-26-15-47",
+      "sku": "standard_hc44rs",
       "nnodes": 2,
+      "total_cores": 88,
+      "ppr_perc": 100,
+      "cpu_usage": [
+        39.779886363636365,
+        57.60272727272728
+      ],
+      "exec_time": 126,
       "appinputs": {
-        "APPMATRIXSIZE": "4000",
-        "APPINTERACTIONS": "10"
+        "appinteractions": "3",
+        "appmatrixsize": "7000"
+      },
+      "deployment": "nettoaha042615313564",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042615398232",
+        "taskid": "task-compute-042615454108"
       }
     },
     {
-      "sku": "Standard_HB120-32rs_v2",
-      "exec_time": 300,
+      "timestamp": "2024-04-26-12-12",
+      "sku": "standard_hc44rs",
+      "nnodes": 3,
+      "total_cores": 132,
+      "ppr_perc": 100,
+      "cpu_usage": [],
+      "exec_time": 56,
+      "appinputs": {
+        "appinteractions": "3",
+        "appmatrixsize": "4000"
+      },
+      "deployment": "nettoaha042611076086",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042612059676",
+        "taskid": "task-compute-042612102618"
+      }
+    },
+    {
+      "timestamp": "2024-04-26-12-14",
+      "sku": "standard_hc44rs",
+      "nnodes": 3,
+      "total_cores": 132,
+      "ppr_perc": 100,
+      "cpu_usage": [
+        54.64176136363636,
+        54.525,
+        61.06625
+      ],
+      "exec_time": 129,
+      "appinputs": {
+        "appinteractions": "3",
+        "appmatrixsize": "7000"
+      },
+      "deployment": "nettoaha042611076086",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042612059676",
+        "taskid": "task-compute-042612121326"
+      }
+    },
+    {
+      "timestamp": "2024-04-26-12-20",
+      "sku": "standard_hc44rs",
       "nnodes": 4,
+      "total_cores": 176,
+      "ppr_perc": 100,
+      "cpu_usage": [],
+      "exec_time": 53,
       "appinputs": {
-        "APPMATRIXSIZE": "4000",
-        "APPINTERACTIONS": "10"
+        "appinteractions": "3",
+        "appmatrixsize": "4000"
+      },
+      "deployment": "nettoaha042611076086",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042612059676",
+        "taskid": "task-compute-042612194087"
       }
     },
     {
-      "sku": "Standard_HB120-32rs_v2",
-      "exec_time": 250,
-      "nnodes": 8,
+      "timestamp": "2024-04-26-12-22",
+      "sku": "standard_hc44rs",
+      "nnodes": 4,
+      "total_cores": 176,
+      "ppr_perc": 100,
+      "cpu_usage": [
+        58.49517045454545,
+        50.89375,
+        62.82244318181818,
+        66.02375
+      ],
+      "exec_time": 135,
       "appinputs": {
-        "APPMATRIXSIZE": "4000",
-        "APPINTERACTIONS": "10"
+        "appinteractions": "3",
+        "appmatrixsize": "7000"
+      },
+      "deployment": "nettoaha042611076086",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042612059676",
+        "taskid": "task-compute-042612207579"
       }
     },
     {
-      "sku": "Standard_HB120-32rs_v2",
-      "exec_time": 250,
-      "nnodes": 8,
+      "timestamp": "2024-04-26-12-31",
+      "sku": "standard_hb120rs_v2",
+      "nnodes": 2,
+      "total_cores": 240,
+      "ppr_perc": 100,
+      "cpu_usage": [],
+      "exec_time": 59,
       "appinputs": {
-        "APPMATRIXSIZE": "4000",
-        "APPINTERACTIONS": "10"
+        "appinteractions": "3",
+        "appmatrixsize": "4000"
+      },
+      "deployment": "nettoaha042611076086",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042612246375",
+        "taskid": "task-compute-042612297522"
+      }
+    },
+    {
+      "timestamp": "2024-04-26-12-33",
+      "sku": "standard_hb120rs_v2",
+      "nnodes": 2,
+      "total_cores": 240,
+      "ppr_perc": 100,
+      "cpu_usage": [
+        48.73602083333333,
+        50.235666666666674
+      ],
+      "exec_time": 135,
+      "appinputs": {
+        "appinteractions": "3",
+        "appmatrixsize": "7000"
+      },
+      "deployment": "nettoaha042611076086",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042612246375",
+        "taskid": "task-compute-042612311943"
+      }
+    },
+    {
+      "timestamp": "2024-04-26-12-39",
+      "sku": "standard_hb120rs_v2",
+      "nnodes": 3,
+      "total_cores": 360,
+      "ppr_perc": 100,
+      "cpu_usage": [
+        0.034437499999999996,
+        0.0330625,
+        0.6825
+      ],
+      "exec_time": 69,
+      "appinputs": {
+        "appinteractions": "3",
+        "appmatrixsize": "4000"
+      },
+      "deployment": "nettoaha042611076086",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042612246375",
+        "taskid": "task-compute-042612378365"
+      }
+    },
+    {
+      "timestamp": "2024-04-26-12-42",
+      "sku": "standard_hb120rs_v2",
+      "nnodes": 3,
+      "total_cores": 360,
+      "ppr_perc": 100,
+      "cpu_usage": [
+        47.67777083333333,
+        63.427319444444436,
+        62.74295833333334
+      ],
+      "exec_time": 151,
+      "appinputs": {
+        "appinteractions": "3",
+        "appmatrixsize": "7000"
+      },
+      "deployment": "nettoaha042611076086",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042612246375",
+        "taskid": "task-compute-042612393197"
+      }
+    },
+    {
+      "timestamp": "2024-04-26-12-48",
+      "sku": "standard_hb120rs_v2",
+      "nnodes": 4,
+      "total_cores": 480,
+      "ppr_perc": 100,
+      "cpu_usage": [
+        0.017604166666666664,
+        0.017729166666666664,
+        1.1365416666666666,
+        null
+      ],
+      "exec_time": 69,
+      "appinputs": {
+        "appinteractions": "3",
+        "appmatrixsize": "4000"
+      },
+      "deployment": "nettoaha042611076086",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042612246375",
+        "taskid": "task-compute-042612461364"
+      }
+    },
+    {
+      "timestamp": "2024-04-26-12-51",
+      "sku": "standard_hb120rs_v2",
+      "nnodes": 4,
+      "total_cores": 480,
+      "ppr_perc": 100,
+      "cpu_usage": [
+        65.28316666666666,
+        64.39101388888889,
+        63.38330555555556,
+        61.848958333333336
+      ],
+      "exec_time": 175,
+      "appinputs": {
+        "appinteractions": "3",
+        "appmatrixsize": "7000"
+      },
+      "deployment": "nettoaha042611076086",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042612246375",
+        "taskid": "task-compute-042612485385"
+      }
+    },
+    {
+      "timestamp": "2024-04-26-12-58",
+      "sku": "standard_hb120rs_v3",
+      "nnodes": 2,
+      "total_cores": 240,
+      "ppr_perc": 100,
+      "cpu_usage": [
+        0.31595833333333334,
+        null
+      ],
+      "exec_time": 60,
+      "appinputs": {
+        "appinteractions": "3",
+        "appmatrixsize": "4000"
+      },
+      "deployment": "nettoaha042611076086",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042612524476",
+        "taskid": "task-compute-042612577156"
+      }
+    },
+    {
+      "timestamp": "2024-04-26-13-01",
+      "sku": "standard_hb120rs_v3",
+      "nnodes": 2,
+      "total_cores": 240,
+      "ppr_perc": 100,
+      "cpu_usage": [
+        71.98154166666667,
+        null
+      ],
+      "exec_time": 136,
+      "appinputs": {
+        "appinteractions": "3",
+        "appmatrixsize": "7000"
+      },
+      "deployment": "nettoaha042611076086",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042612524476",
+        "taskid": "task-compute-042612584496"
+      }
+    },
+    {
+      "timestamp": "2024-04-26-13-06",
+      "sku": "standard_hb120rs_v3",
+      "nnodes": 3,
+      "total_cores": 360,
+      "ppr_perc": 100,
+      "cpu_usage": [
+        0.08629166666666667,
+        null,
+        null
+      ],
+      "exec_time": 68,
+      "appinputs": {
+        "appinteractions": "3",
+        "appmatrixsize": "4000"
+      },
+      "deployment": "nettoaha042611076086",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042612524476",
+        "taskid": "task-compute-042613051398"
+      }
+    },
+    {
+      "timestamp": "2024-04-26-13-09",
+      "sku": "standard_hb120rs_v3",
+      "nnodes": 3,
+      "total_cores": 360,
+      "ppr_perc": 100,
+      "cpu_usage": [
+        77.7005,
+        81.11691666666667,
+        89.29375
+      ],
+      "exec_time": 149,
+      "appinputs": {
+        "appinteractions": "3",
+        "appmatrixsize": "7000"
+      },
+      "deployment": "nettoaha042611076086",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042612524476",
+        "taskid": "task-compute-042613071388"
+      }
+    },
+    {
+      "timestamp": "2024-04-26-13-15",
+      "sku": "standard_hb120rs_v3",
+      "nnodes": 4,
+      "total_cores": 480,
+      "ppr_perc": 100,
+      "cpu_usage": [
+        0.014541666666666668,
+        null,
+        null,
+        0.386375
+      ],
+      "exec_time": 68,
+      "appinputs": {
+        "appinteractions": "3",
+        "appmatrixsize": "4000"
+      },
+      "deployment": "nettoaha042611076086",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042612524476",
+        "taskid": "task-compute-042613149911"
+      }
+    },
+    {
+      "timestamp": "2024-04-26-13-18",
+      "sku": "standard_hb120rs_v3",
+      "nnodes": 4,
+      "total_cores": 480,
+      "ppr_perc": 100,
+      "cpu_usage": [
+        67.57540277777778,
+        68.75558333333333,
+        46.88333333333333,
+        61.153236111111106
+      ],
+      "exec_time": 175,
+      "appinputs": {
+        "appinteractions": "3",
+        "appmatrixsize": "7000"
+      },
+      "deployment": "nettoaha042611076086",
+      "region": "southcentralus",
+      "appname": "matrixmult",
+      "tags": {
+        "appname": "matrixmult",
+        "version": "v1",
+        "poolid": "pool-042612524476",
+        "taskid": "task-compute-042613159684"
       }
     }
   ]
