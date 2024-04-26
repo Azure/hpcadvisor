@@ -105,7 +105,7 @@ def static_filter_matches(datapoint, static_filters):
 def dynamic_filter_matches(datapoint, dynamic_filters):
     if len(dynamic_filters) == 0:
         return True
-    for value in dynamic_filters:
+    for value in dynamic_filters.values():
         if datapoint["appinputs"] != value:
             return False
 
