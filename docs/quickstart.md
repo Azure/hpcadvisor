@@ -55,7 +55,8 @@ If you want to only test the plot generator component, skipping the data
 collection, you need to copy a dataset file to hpcadvisor directory:
 
 ```
-cp src/samples/dataset.json $HOME/.hpcadvisor/
+mkdir $HOME/.hpcadvisor/
+cp ../examples/matrixmult/dataset.json $HOME/.hpcadvisor/
 ./hpcadvisor plot -df ../examples/matrixmult/plotfilter.json
 ```
 
