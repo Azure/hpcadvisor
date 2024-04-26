@@ -33,8 +33,6 @@ def get_plotfilter(plotfilter_file):
         for key, value in plotfilter.items():
             if not isinstance(value, list):
                 plotfilter[key] = [value]
-        print("Plotfilter from file: " + str(plotfilter))
-
     else:
         log.warning("Plotfilter file not provided. Consuming entire dataset")
     return plotfilter

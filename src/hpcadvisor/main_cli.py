@@ -5,6 +5,7 @@ import os
 import sys
 
 from hpcadvisor import (
+    batch_handler,
     cli_plot_generator,
     data_collector,
     logger,
@@ -48,12 +49,56 @@ def get_userinput_from_file(user_input_file):
     return json_data
 
 
-def main(user_input_file, env_file, plots, debug, clear_rg, plotfilter):
-    # TODO: stil not a great place to be doing this
-    if plots:
-        cli_plot_generator.generate_plots(plotfilter)
-        sys.exit(0)
+def main_shutdown_deployment(name):
+    env_file = utils.get_deployments_file(name)
+    log.debug(f"Deployment file: {env_file}")
 
+    if not os.path.exists(env_file):
+        log.error(f"Deployment file not found: {name}")
+        return
+
+    print(f"Shutting down deployment: {name}")
+
+    if batch_handler.setup_environment(env_file):
+        batch_handler.delete_environment()
+    else:
+        log.error("Failed to setup environment.")
+
+
+def main_list_deployments():
+    deployments = utils.list_deployments()
+
+    if deployments:
+        print("Deployments:")
+        for deployment in deployments:
+            print(deployment)
+
+
+def main_create_deployment(name, user_input_file, debug):
+    user_input = get_userinput_from_file(user_input_file)
+
+    if name:
+        rg_prefix = name
+    else:
+        rg_prefix = user_input["rgprefix"] + utils.get_random_code()
+
+    env_file = utils.generate_env_file(rg_prefix, user_input)
+
+    print(f"Deployment name: {rg_prefix}")
+    print(f"Deployment details: {env_file}")
+    print("This operation may take a few minutes...")
+
+    utils.execute_env_deployer(env_file, rg_prefix, debug)
+
+
+def main_plot(plotfilter):
+    log.info("Generating plots...")
+    cli_plot_generator.generate_plots(plotfilter)
+
+
+def main_collect_data(
+    deployment_name, user_input_file, clear_deployment=False, clear_tasks=False
+):
     user_input = get_userinput_from_file(user_input_file)
 
     data_system = {}
@@ -63,21 +108,9 @@ def main(user_input_file, env_file, plots, debug, clear_rg, plotfilter):
 
     data_app_input = user_input["appinputs"]
 
-    if env_file and os.path.exists(env_file):
-        rg_prefix = utils.get_rg_prefix_from_file(env_file)
-        task_filename = utils.get_task_filename(rg_prefix)
-        log.info(
-            f"Environment file specified. Reusing existing tasks file {task_filename}."
-        )
-    else:
-        log.warning("Generating new env file and deploying environment")
-        rg_prefix = user_input["rgprefix"] + utils.get_random_code()
-        print(f"Resource group (deployment) name: {rg_prefix}")
-        env_file = utils.generate_env_file(rg_prefix, user_input)
-        print(f"Environment file: {env_file}")
-        utils.execute_env_deployer(env_file, rg_prefix, debug)
-        task_filename = utils.get_task_filename(rg_prefix)
-        log.info(f"Generating new tasks file: {task_filename}.")
+    task_filename = utils.get_task_filename(deployment_name)
+    if clear_tasks or not os.path.exists(task_filename):
+        log.info(f"Generating new tasks file: {task_filename}")
         taskset_handler.generate_tasks(
             task_filename,
             data_system,
@@ -86,5 +119,8 @@ def main(user_input_file, env_file, plots, debug, clear_rg, plotfilter):
             user_input["tags"],
         )
 
+    env_file = utils.get_deployments_file(deployment_name)
     dataset_filename = utils.get_dataset_filename()
-    data_collector.collect_data(task_filename, dataset_filename, env_file, clear_rg)
+    data_collector.collect_data(
+        task_filename, dataset_filename, env_file, clear_deployment
+    )

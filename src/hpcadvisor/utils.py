@@ -52,10 +52,16 @@ def get_task_dir(rg_prefix, task_id):
 def get_deployment_dir(rg_prefix):
     deployment_dir = os.path.join(hpcadvisor_dir, rg_prefix)
     if not os.path.exists(deployment_dir):
-        log.info("Create deployment dir: " + deployment_dir)
+        log.debug("Create deployment dir: " + deployment_dir)
         os.makedirs(deployment_dir)
 
     return deployment_dir
+
+
+def get_deployments_file(name):
+    deployment_dir = os.path.join(hpcadvisor_dir, name)
+    deployment_file = os.path.join(deployment_dir, "env.conf")
+    return deployment_file
 
 
 def get_random_code():
@@ -79,7 +85,7 @@ def generate_env_file(rg_prefix, user_data):
     deployment_dir = os.path.join(hpcadvisor_dir, rg_prefix)
 
     if not os.path.exists(deployment_dir):
-        log.info("Create deployment dir: " + deployment_dir)
+        log.debug("Create deployment dir: " + deployment_dir)
         os.makedirs(deployment_dir)
 
     env_file = os.path.join(deployment_dir, environment_filename)
@@ -127,6 +133,24 @@ def get_rg_prefix_from_file(env_file):
     return None
 
 
+def list_deployments():
+    if not os.path.exists(hpcadvisor_dir):
+        log.warning("No deployments found")
+        return []
+
+    folders = [
+        f
+        for f in os.listdir(hpcadvisor_dir)
+        if os.path.isdir(os.path.join(hpcadvisor_dir, f))
+    ]
+
+    if len(folders) == 0:
+        log.warning("No deployments found")
+        return []
+
+    return folders
+
+
 def execute_env_deployer(env_file, rg_prefix, debug=False):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     script_path = os.path.join(current_dir, "../scripts", "env_deployer.sh")
@@ -137,7 +161,7 @@ def execute_env_deployer(env_file, rg_prefix, debug=False):
     command = f"bash {script_path} {env_file}"
     if not debug:
         command += " > /dev/null 2>&1"
-    log.info(f"Executing: {command}")
+    log.debug(f"Executing: {command}")
     os.system(command)
 
 

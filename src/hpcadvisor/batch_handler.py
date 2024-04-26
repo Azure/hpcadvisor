@@ -82,7 +82,7 @@ def resource_group_exists(subscription_id, resource_group):
 
     for item in client.resource_groups.list():
         if item.name == resource_group:
-            log.info(f"Resource group {resource_group} exists")
+            log.debug(f"Resource group {resource_group} exists")
             return True
 
     log.critical(f"Resource group {resource_group} does not exist")
@@ -365,8 +365,8 @@ def _get_node_agent_sku(vm_image):
             result = image.node_agent_sku_id
             break
     if not result:
-        log.warning(f"Cannot find node agent sku for {vm_image}")
-        log.warning(f"Using backup node agent sku: {backupnodeagent}")
+        log.debug(f"Cannot find node agent sku for {vm_image}")
+        log.debug(f"Using backup node agent sku: {backupnodeagent}")
         result = backupnodeagent
 
     # TODO: store the output as file so we can use the result as cache
@@ -701,8 +701,8 @@ def setup_environment(filename):
     env["NODEAGENTSKU"] = _get_node_agent_sku(VMIMAGE)
 
     # TODO: need to check if environment is indeed setup
+    log.debug(f"Environment setup finished: {env}")
 
-    log.info(f"Environment setup finished: {env}")
     return True
 
 

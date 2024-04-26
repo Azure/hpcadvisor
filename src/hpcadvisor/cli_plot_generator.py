@@ -24,7 +24,7 @@ def generate_plots(plotfilter_file):
     plotfilter = dataset_handler.get_plotfilter(plotfilter_file)
 
     dataset_file = utils.get_dataset_filename()
-    print("Generating plots from dataset file: " + dataset_file)
+    log.debug("Generating plots from dataset file: " + dataset_file)
 
     appinputs = []
     if not os.path.exists(dataset_file):

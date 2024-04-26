@@ -38,6 +38,10 @@ def gen_plot_exectime_vs_numvms(st, datapoints, dynamic_filter, plotfile="plot.p
         datapoints, dynamic_filter
     )
 
+    if len(mydata) == 0:
+        log.error("No datapoints found. Check dataset and plotfilter files")
+        return
+
     fig, ax = plt.subplots()
 
     markers = ["o", "s", "^", "D", "*", "+", "x", "|", "_", "."]
@@ -63,7 +67,7 @@ def gen_plot_exectime_vs_numvms(st, datapoints, dynamic_filter, plotfile="plot.p
 
     if st:
         st.pyplot(fig)
-    log.info("Generating plot: " + plotfile)
+    log.info("Saving file: " + plotfile)
     plt.savefig(plotfile)
 
 
@@ -73,6 +77,10 @@ def gen_plot_exectime_vs_cost(st, datapoints, dynamic_filter, plotfile="plot.png
     mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
         datapoints, dynamic_filter
     )
+
+    if len(mydata) == 0:
+        log.error("No datapoints found. Check dataset and plotfilter files")
+        return
 
     sku_costs = {}
     for key in mydata:
@@ -118,5 +126,5 @@ def gen_plot_exectime_vs_cost(st, datapoints, dynamic_filter, plotfile="plot.png
     if st:
         st.pyplot(fig)
 
-    log.info("Generating plot: " + plotfile)
+    log.info("Saving file: " + plotfile)
     plt.savefig(plotfile)

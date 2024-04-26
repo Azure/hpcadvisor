@@ -43,6 +43,7 @@ local_css(style_css_path)
 st.session_state["executionOn"] = False
 
 debug = False
+userinput = None
 
 
 def wait_execution(execution_placeholder):
@@ -386,6 +387,10 @@ def show_datageneration(app):
 
 def main_gui():
     current_action = None
+
+    if "--userinput" in sys.argv:
+        userinput = sys.argv[sys.argv.index("--userinput") + 1]
+
     if "currentaction" not in st.session_state:
         st.session_state.currentaction = None
 
@@ -489,8 +494,13 @@ if __name__ == "__main__":
     main_gui()
 
 
-def main(debug):
+def main(debug, userinput):
     log.info("Starting HPC Advisor GUI")
 
     sys.argv = ["streamlit", "run", __file__]
+    if userinput:
+        sys.argv.append("--")
+        sys.argv.append("--userinput")
+        sys.argv.append(userinput)
+
     sys.exit(stcli.main())
