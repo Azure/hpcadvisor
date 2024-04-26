@@ -10,24 +10,24 @@ Examples of applications to be tested using hpcadvisor:
 
 ## Matrix Multiplication
 
-As a starting example, here we have a matrix multiplication application. This
-"hello world" application receives two parameters: size of the squared matrix
-(dimension) and number of times such multiplication should happen (e.g. only
-once, or 10, or 100, etc).
+As a "Hello World" example, we are gonna use matrix multiplication application,
+which receives two parameters: size of the squared matrix (dimension) and number
+of times such multiplication should happen (e.g. only once, 10 times, 100 times,
+and so on).
 
 The files for this example are in the [examples
 folder](https://github.com/Azure/hpcadvisor/tree/main/examples/matrixmult)
 which has three files:
 
 - `mpi_matrix_mult.c`: source code of the application.
-- `appsetup_matrix.sh`: shell script that downloads the source file,
-  compiles it, and generates the application run script that will be used for
-  each execution scenario.
-- `plotfilter_matrixmult.json`: filter to get consider only data for
-  this application when generating the plots and the recommendation
-  (pareto-front data).
-- `ui_defaults.json`: user input to create the environment,
-  setup application, scenarios to be explored.
+- `appsetup_matrix.sh`: shell script that downloads the source file, compiles
+  it, and generates the application run script that will be used for each
+  execution scenario.
+- `plotfilter_matrixmult.json`: filter to consider only data for this
+  application when generating the plots and the recommendation (pareto-front
+  data).
+- `ui_defaults.json`: user input to create the environment, setup application,
+  and define scenarios to be explored.
 
 ```json title="ui_defaults.json"
 --8<-- "https://raw.githubusercontent.com/Azure/hpcadvisor/main/examples/matrixmult/ui_defaults.json"
