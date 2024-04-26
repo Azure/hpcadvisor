@@ -47,7 +47,8 @@ your preferences. For this example, you only need to update `subscription`,
 and you should be good to go:
 
 ```
-./hpcadvisor -u ../examples/matrixmult/ui_defaults.json
+./hpcadvisor deploy create -u ../examples/matrixmult/ui_defaults.json
+./hpcadvisor collect <deploymentname> -u ../examples/matrixmult/ui_defaults.json
 ```
 
 If you want to only test the plot generator component, skipping the data
@@ -55,9 +56,7 @@ collection, you need to copy a dataset file to hpcadvisor directory:
 
 ```
 cp src/samples/dataset.json $HOME/.hpcadvisor/
-./hpcadvisor -u ../examples/matrixmult/ui_defaults.json  \
-                 -p \
-                 -pf ../examples/matrixmult/plotfilter.json
+./hpcadvisor plot -df ../examples/matrixmult/plotfilter.json
 ```
 
 To get the recommendation (pareto-front), just replace the flag `-p` (plot) to
@@ -69,7 +68,7 @@ One can use the browser version and click the buttons for the different
 operations. To pre-fill user input, specify the input file as showed below:
 
 ```
-./hpcadvisor -g -u ../examples/matrixmult/ui_defaults.json
+./hpcadvisor gui -u ../examples/matrixmult/ui_defaults.json
 ```
 
 ---
