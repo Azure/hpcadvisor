@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import time
 
 import matplotlib.pyplot as plt
@@ -29,7 +30,9 @@ def get_tick_spacing(max_y, num_ticks=10):
     return tick_spacing
 
 
-def gen_plot_exectime_vs_numvms(st, datapoints, dynamic_filter, plotfile="plot.png"):
+def gen_plot_exectime_vs_numvms(
+    st, datapoints, dynamic_filter, plotdir, plotfile="plot.png"
+):
     style.use("dark_background")
 
     num_vms = []
@@ -67,11 +70,14 @@ def gen_plot_exectime_vs_numvms(st, datapoints, dynamic_filter, plotfile="plot.p
 
     if st:
         st.pyplot(fig)
+    plotfile = os.path.join(plotdir, plotfile)
     log.info("Saving file: " + plotfile)
     plt.savefig(plotfile)
 
 
-def gen_plot_exectime_vs_cost(st, datapoints, dynamic_filter, plotfile="plot.png"):
+def gen_plot_exectime_vs_cost(
+    st, datapoints, dynamic_filter, plotdir, plotfile="plot.png"
+):
     style.use("dark_background")
 
     mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
@@ -126,5 +132,6 @@ def gen_plot_exectime_vs_cost(st, datapoints, dynamic_filter, plotfile="plot.png
     if st:
         st.pyplot(fig)
 
+    plotfile = os.path.join(plotdir, plotfile)
     log.info("Saving file: " + plotfile)
     plt.savefig(plotfile)

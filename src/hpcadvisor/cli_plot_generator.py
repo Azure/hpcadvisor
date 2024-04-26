@@ -6,21 +6,21 @@ from hpcadvisor import dataset_handler, logger, plot_generator, utils
 log = logger.logger
 
 
-def gen_core_plots(plot_id, datapoints, dynamic_filters):
+def gen_core_plots(plot_id, datapoints, dynamic_filters, plotdir):
     plot_file = "plot_" + str(plot_id) + "_exectime_vs_numvms.pdf"
 
     plot_generator.gen_plot_exectime_vs_numvms(
-        None, datapoints, dynamic_filters, plot_file
+        None, datapoints, dynamic_filters, plotdir, plot_file
     )
     plot_id += 1
     plot_file = "plot_" + str(plot_id) + "_exectime_vs_cost.pdf"
 
     plot_generator.gen_plot_exectime_vs_cost(
-        None, datapoints, dynamic_filters, plot_file
+        None, datapoints, dynamic_filters, plotdir, plot_file
     )
 
 
-def generate_plots(plotfilter_file):
+def generate_plots(plotfilter_file, plotdir):
     plotfilter = dataset_handler.get_plotfilter(plotfilter_file)
 
     dataset_file = utils.get_dataset_filename()
@@ -49,7 +49,7 @@ def generate_plots(plotfilter_file):
 
     if dynamic_filter_items:
         for dynamic_filter in dynamic_filter_items:
-            gen_core_plots(plot_id, datapoints, dynamic_filter)
+            gen_core_plots(plot_id, datapoints, dynamic_filter, plotdir)
             plot_id += 2
     else:
-        gen_core_plots(plot_id, datapoints, dynamic_filter_items)
+        gen_core_plots(plot_id, datapoints, dynamic_filter_items, plotdir)

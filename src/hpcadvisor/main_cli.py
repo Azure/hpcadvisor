@@ -93,7 +93,8 @@ def main_create_deployment(name, user_input_file, debug):
 
 def main_plot(plotfilter):
     log.info("Generating plots...")
-    cli_plot_generator.generate_plots(plotfilter)
+    plotdir = utils.get_plot_dir()
+    cli_plot_generator.generate_plots(plotfilter, plotdir)
 
 
 def main_collect_data(

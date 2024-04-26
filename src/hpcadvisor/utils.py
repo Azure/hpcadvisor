@@ -151,6 +151,16 @@ def list_deployments():
     return folders
 
 
+def get_plot_dir():
+    suffix = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    plot_dir = os.path.join("./" + "plots_" + suffix)
+    if not os.path.exists(plot_dir):
+        log.debug("Create plot dir: " + plot_dir)
+        os.makedirs(plot_dir)
+
+    return plot_dir
+
+
 def execute_env_deployer(env_file, rg_prefix, debug=False):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     script_path = os.path.join(current_dir, "../scripts", "env_deployer.sh")
