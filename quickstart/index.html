@@ -594,8 +594,9 @@ and you should be good to go:</p>
 </code></pre></div>
 <p>If you want to only test the plot generator component, skipping the data
 collection, you need to copy a dataset file to hpcadvisor directory:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>cp src/samples/dataset.json $HOME/.hpcadvisor/
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>./hpcadvisor plot -df ../examples/matrixmult/plotfilter.json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>mkdir $HOME/.hpcadvisor/
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>cp ../examples/matrixmult/dataset.json $HOME/.hpcadvisor/
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>./hpcadvisor plot -df ../examples/matrixmult/plotfilter.json
 </code></pre></div>
 <p>To get the recommendation (pareto-front), just replace the flag <code>-p</code> (plot) to
 <code>-r</code> (recommendation).</p>
