@@ -12,8 +12,7 @@ function setup_app_and_data {
 
   source /etc/profile.d/modules.sh
 
-  module load gcc-9.2.0
-  module load mpi/hpcx
+  module load mpi/openmpi
 
   CODEURL=https://raw.githubusercontent.com/marconetto/testbed/main/mpi_matrix_mult.c
 
@@ -49,8 +48,7 @@ APPMATRIXSIZE=\${APPMATRIXSIZE}
 
 source /etc/profile.d/modules.sh
 
-module load gcc-9.2.0
-module load mpi/hpcx
+module load mpi/openmpi
 
 # Create host file
 batch_hosts=hosts.batch
