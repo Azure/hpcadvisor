@@ -554,23 +554,23 @@ on bash script, users can install in different ways, using for instance source
 code, binary download, easybuild, EESSI, spack, etc..</p>
 <p>Examples of applications to be tested using hpcadvisor:</p>
 <h2 id="matrix-multiplication">Matrix Multiplication</h2>
-<p>As a starting example, here we have a matrix multiplication application. This
-"hello world" application receives two parameters: size of the squared matrix
-(dimension) and number of times such multiplication should happen (e.g. only
-once, or 10, or 100, etc).</p>
+<p>As a "Hello World" example, we are gonna use matrix multiplication application,
+which receives two parameters: size of the squared matrix (dimension) and number
+of times such multiplication should happen (e.g. only once, 10 times, 100 times,
+and so on).</p>
 <p>The files for this example are in the <a href="https://github.com/Azure/hpcadvisor/tree/main/examples/matrixmult">examples
 folder</a>
 which has three files:</p>
 <ul>
 <li><code>mpi_matrix_mult.c</code>: source code of the application.</li>
-<li><code>appsetup_matrix.sh</code>: shell script that downloads the source file,
-  compiles it, and generates the application run script that will be used for
-  each execution scenario.</li>
-<li><code>plotfilter_matrixmult.json</code>: filter to get consider only data for
-  this application when generating the plots and the recommendation
-  (pareto-front data).</li>
-<li><code>ui_defaults.json</code>: user input to create the environment,
-  setup application, scenarios to be explored.</li>
+<li><code>appsetup_matrix.sh</code>: shell script that downloads the source file, compiles
+  it, and generates the application run script that will be used for each
+  execution scenario.</li>
+<li><code>plotfilter_matrixmult.json</code>: filter to consider only data for this
+  application when generating the plots and the recommendation (pareto-front
+  data).</li>
+<li><code>ui_defaults.json</code>: user input to create the environment, setup application,
+  and define scenarios to be explored.</li>
 </ul>
 <div class="highlight"><span class="filename">ui_defaults.json</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;subscription&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;mysubscription&quot;</span><span class="p">,</span>
