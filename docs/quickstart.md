@@ -57,6 +57,11 @@ collection, you need to copy a dataset file to hpcadvisor directory:
 ```bash
 mkdir $HOME/.hpcadvisor/
 cp ../examples/matrixmult/dataset.json $HOME/.hpcadvisor/
+```
+
+Then request the plot generation:
+
+```
 ./hpcadvisor plot -df ../examples/matrixmult/plotfilter_matrixmult.json
 ```
 
