@@ -588,7 +588,9 @@ and create python virtual environment.</p>
 <p>Once the setup above (via poetry) is done, for the matrix multiplication
 example, you just need to update <code>examples/matrixmult/ui_defaults.json</code> with
 your preferences. For this example, you only need to update <code>subscription</code>,
-and you should be good to go:</p>
+and you should be good to go.</p>
+<p>The follow two lines deploy a computing environment specified in ui defaults
+file and start the data collection, respectively:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>./hpcadvisor<span class="w"> </span>deploy<span class="w"> </span>create<span class="w"> </span>-u<span class="w"> </span>../examples/matrixmult/ui_defaults.json
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>./hpcadvisor<span class="w"> </span>collect<span class="w"> </span>&lt;deploymentname&gt;<span class="w"> </span>-u<span class="w"> </span>../examples/matrixmult/ui_defaults.json
 </code></pre></div>
