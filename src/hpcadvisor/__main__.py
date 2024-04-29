@@ -57,7 +57,11 @@ def plot_handler(args):
 
 
 def advice_handler(args):
-    print("TO BE IMPLEMENTED")
+    datafilter = args.datafilter
+
+    from hpcadvisor import main_cli
+
+    main_cli.main_advice(datafilter)
 
 
 def _process_arguments():

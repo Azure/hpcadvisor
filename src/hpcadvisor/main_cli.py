@@ -6,6 +6,7 @@ import sys
 
 from hpcadvisor import (
     batch_handler,
+    cli_advice_generator,
     cli_plot_generator,
     data_collector,
     logger,
@@ -95,6 +96,12 @@ def main_plot(plotfilter):
     log.info("Generating plots...")
     plotdir = utils.get_plot_dir()
     cli_plot_generator.generate_plots(plotfilter, plotdir)
+
+
+def main_advice(datafilter):
+    log.info("Generating advice...")
+    # plotdir = utils.get_plot_dir()
+    cli_advice_generator.generate_advice(datafilter)
 
 
 def main_collect_data(

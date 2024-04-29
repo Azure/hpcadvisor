@@ -8,6 +8,7 @@ from hpcadvisor import logger
 log = logger.logger
 
 
+# TODO: Add cache
 # TODO: Add support for multiple SKUs so a single query is made
 def get_price(selected_region, selected_sku):
     api_url = (
