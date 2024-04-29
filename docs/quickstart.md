@@ -46,8 +46,8 @@ example, you just need to update `examples/matrixmult/ui_defaults.json` with
 your preferences. For this example, you only need to update `subscription`,
 and you should be good to go.
 
-The follow two lines deploy a computing environment specified in ui defaults
-file and start the data collection, respectively:
+The follow two lines **deploy** a computing environment specified in ui defaults
+file and start the data **collection** (i.e. run the jobs), respectively:
 
 ```bash
 ./hpcadvisor deploy create -u ../examples/matrixmult/ui_defaults.json
