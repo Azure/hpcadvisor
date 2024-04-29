@@ -594,17 +594,17 @@ and you should be good to go:</p>
 </code></pre></div>
 <p>If you want to only test the plot generator component, skipping the data
 collection, you need to copy a dataset file to hpcadvisor directory:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>mkdir $HOME/.hpcadvisor/
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>cp ../examples/matrixmult/dataset.json $HOME/.hpcadvisor/
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>./hpcadvisor plot -df ../examples/matrixmult/plotfilter_matrixmult.json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>mkdir<span class="w"> </span><span class="nv">$HOME</span>/.hpcadvisor/
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>cp<span class="w"> </span>../examples/matrixmult/dataset.json<span class="w"> </span><span class="nv">$HOME</span>/.hpcadvisor/
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>./hpcadvisor<span class="w"> </span>plot<span class="w"> </span>-df<span class="w"> </span>../examples/matrixmult/plotfilter_matrixmult.json
 </code></pre></div>
 <p>To get the advice (based on pareto-front calculation):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>./hpcadvisor advice -df examples/matrixmult/plotfilter_matrixmult.json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>./hpcadvisor<span class="w"> </span>advice<span class="w"> </span>-df<span class="w"> </span>examples/matrixmult/plotfilter_matrixmult.json
 </code></pre></div>
 <h3 id="gui-based-execution">GUI-based execution</h3>
 <p>One can use the browser version and click the buttons for the different
 operations. To pre-fill user input, specify the input file as showed below:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>./hpcadvisor gui -u ../examples/matrixmult/ui_defaults.json
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>./hpcadvisor<span class="w"> </span>gui<span class="w"> </span>-u<span class="w"> </span>../examples/matrixmult/ui_defaults.json
 </code></pre></div>
 <hr />
 
