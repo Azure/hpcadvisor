@@ -46,7 +46,7 @@ example, you just need to update `examples/matrixmult/ui_defaults.json` with
 your preferences. For this example, you only need to update `subscription`,
 and you should be good to go:
 
-```
+```bash
 ./hpcadvisor deploy create -u ../examples/matrixmult/ui_defaults.json
 ./hpcadvisor collect <deploymentname> -u ../examples/matrixmult/ui_defaults.json
 ```
