@@ -54,7 +54,7 @@ and you should be good to go:
 If you want to only test the plot generator component, skipping the data
 collection, you need to copy a dataset file to hpcadvisor directory:
 
-```
+```bash
 mkdir $HOME/.hpcadvisor/
 cp ../examples/matrixmult/dataset.json $HOME/.hpcadvisor/
 ./hpcadvisor plot -df ../examples/matrixmult/plotfilter_matrixmult.json
@@ -62,7 +62,7 @@ cp ../examples/matrixmult/dataset.json $HOME/.hpcadvisor/
 
 To get the advice (based on pareto-front calculation):
 
-```
+```bash
 ./hpcadvisor advice -df examples/matrixmult/plotfilter_matrixmult.json
 ```
 
@@ -71,7 +71,7 @@ To get the advice (based on pareto-front calculation):
 One can use the browser version and click the buttons for the different
 operations. To pre-fill user input, specify the input file as showed below:
 
-```
+```bash
 ./hpcadvisor gui -u ../examples/matrixmult/ui_defaults.json
 ```
 
