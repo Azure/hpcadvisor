@@ -57,11 +57,14 @@ collection, you need to copy a dataset file to hpcadvisor directory:
 ```
 mkdir $HOME/.hpcadvisor/
 cp ../examples/matrixmult/dataset.json $HOME/.hpcadvisor/
-./hpcadvisor plot -df ../examples/matrixmult/plotfilter.json
+./hpcadvisor plot -df ../examples/matrixmult/plotfilter_matrixmult.json
 ```
 
-To get the recommendation (pareto-front), just replace the flag `-p` (plot) to
-`-r` (recommendation).
+To get the advice (based on pareto-front calculation):
+
+```
+./hpcadvisor advice -df examples/matrixmult/plotfilter_matrixmult.json
+```
 
 ### GUI-based execution
 
