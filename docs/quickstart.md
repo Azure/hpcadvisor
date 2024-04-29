@@ -44,7 +44,10 @@ Follow the matrix multiplication example here for detailed instructions.
 Once the setup above (via poetry) is done, for the matrix multiplication
 example, you just need to update `examples/matrixmult/ui_defaults.json` with
 your preferences. For this example, you only need to update `subscription`,
-and you should be good to go:
+and you should be good to go.
+
+The follow two lines deploy a computing environment specified in ui defaults
+file and start the data collection, respectively:
 
 ```bash
 ./hpcadvisor deploy create -u ../examples/matrixmult/ui_defaults.json
