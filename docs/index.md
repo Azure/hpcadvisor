@@ -68,7 +68,7 @@ CLI execution. Here is an example of plot generated for the "Hello World" matrix
 multiplication example.
 
 
-<p float="left">
+<p float="center">
 <img src="./figs/example_exectime_vs_numnodes.png" title="HPCAdvisor plot" alt="alt text" width="400" />
 <img src="./figs/example_exectime_vs_cost.png" title="HPCAdvisor plot" alt="alt text" width="400" />
 </p>
