@@ -18,9 +18,9 @@ markers = ["o", "s", "^", "D", "*", "+", "x", "|", "_", "."]
 
 
 def _get_appinput_title(appinput):
-    if not appinput:
+    if not appinput or not "appinputs" in appinput:
         return ""
-    return " ".join([f"{key}:{value} " for key, value in appinput.items()])
+    return " ".join([f"{key}={value} " for key, value in appinput["appinputs"].items()])
 
 
 def get_tick_spacing(max_y, num_ticks=10):
@@ -113,7 +113,7 @@ def gen_plot_exectime_vs_cost(
         )
 
     ax.set_ylabel("Execution time (seconds)")
-    ax.set_xlabel("Cost (USD)")
+    ax.set_xlabel("Cost (USD/hour)")
 
     ticking_spacing = get_tick_spacing(max_exectime)
 

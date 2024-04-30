@@ -45,21 +45,52 @@ cost.
 In this code we have examples to run tests with actual applications, including
 WRF, OpenFOAM, NAMD, and GROMACS. Other apps will become available on the way.
 
-## Execution modes (CLI/GUI)
+## User interaction (CLI/GUI)
 
-It also has two execution modes, one via CLI (Command Line Interface) and the
-other via web browser (GUI).
+It also has two execution modes (user interaction), one via CLI (Command Line
+Interface) and the other via web browser (GUI).
 
 
-CLI screenshot:
+#### CLI screenshot
 
 <img src="./figs/screenshot_cli.png" title="HPCAdvisor CLI" alt="alt text" style="display: block; margin: auto;" />
 
 
-GUI (browser) screenshot:
+#### GUI (browser) screenshot
 
 <img src="./figs/screenshot_gui.png" title="HPCAdvisor GUI" alt="alt text" style="display: block; margin: auto;" />
 
+
+#### Auto-generated plot
+
+Plots are auto-generated and can be seen in the GUI or as files generated via
+CLI execution. Here is an example of plot generated for the "Hello World" matrix
+multiplication example.
+
+
+<p float="left">
+<img src="./figs/example_exectime_vs_numnodes.png" title="HPCAdvisor plot" alt="alt text" width="400" />
+<img src="./figs/example_exectime_vs_cost.png" title="HPCAdvisor plot" alt="alt text" width="400" />
+</p>
+
+
+#### Auto-generated advice
+
+Advices are represented as tables, which comes from calculation of the
+pareto-front considering execution time and costs.
+
+Example of output for the "Hello World" matrix multiplication example.
+
+```
+Generating advice...
+Appinputs: appinteractions=3  appmatrixsize=4000
+Exectime(s)  Cost($/h)    Nodes  SKU
+51           0.0898       2      standard_hc44rs
+
+Appinputs: appinteractions=3  appmatrixsize=7000
+Exectime(s)  Cost($/h)    Nodes  SKU
+126          0.2218       2      standard_hc44rs
+```
 
 
 
