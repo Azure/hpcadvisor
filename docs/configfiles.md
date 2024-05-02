@@ -1,9 +1,11 @@
-# Configuration Files
+# Files and Dirs
 
 ## UI defaults
 
-For now the file there has these
-fields:
+This JSON file is used as input for both CLI and GUI to deploy environments,
+collect data, plot graphs, and get advice.
+
+It currently has these fields:
 
 - `subscription`: subscription used to provision resources
 - `rgprefix`: prefix of resource group name used to host all resources
@@ -19,10 +21,10 @@ fields:
 
 
 
-## Plot filter
+## Data filter
 
-Plot filter specify which parts of the dataset one wants to use for plotting
-graphs or getting the recommendations (pareto-front). You can specify the
+This JSON file specifies which parts of the dataset one wants to use for plotting
+graphs or getting advice (pareto-front). You can specify the
 application name, and the deployment environments, which can be useful in case
 data was collected using a few deployments but one does not want to consider all
 deployments for that particular application.
@@ -34,4 +36,33 @@ deployments for that particular application.
   ],
   "appname": "wrf4"
 }
+```
+
+##  Main HPCAdvisor dir
+
+All files related to deployment, dataset, task output, among others are stored
+in the main HPCAdvisor folder, located at:
+
+```
+$HOME/.hpcadvisor/
+```
+
+
+## Deployment dirs
+
+Every deployment contains a directory located at:
+
+```
+$HOME/.hpcadvisor/<deploymentname>
+```
+
+## Task stderr and stdout
+
+For each task executed, two files are collected:
+
+Standard error and standard output:
+
+```
+$HOME/.hpcadvisor/<deploymentname/output-<taskname>/stderr.txt
+$HOME/.hpcadvisor/<deploymentname/output-<taskname>/stdout.txt
 ```
