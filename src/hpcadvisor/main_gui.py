@@ -15,8 +15,15 @@ import streamlit.web.cli as stcli
 from matplotlib import cm
 from matplotlib.patches import Rectangle
 
-from hpcadvisor import (advice_generator, data_collector, dataset_handler,
-                        logger, plot_generator, taskset_handler, utils)
+from hpcadvisor import (
+    advice_generator,
+    data_collector,
+    dataset_handler,
+    logger,
+    plot_generator,
+    taskset_handler,
+    utils,
+)
 
 log = logger.logger
 
@@ -450,7 +457,7 @@ def start_datacollection(user_input_file):
                 data_app_input[key] = value.split(",")
         #
         appname = userinput["appname"]
-        tags = []
+        tags = {}
         data = taskset_handler.generate_tasks(
             task_filename, data_system, data_app_input, appname, tags
         )
