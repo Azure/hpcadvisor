@@ -549,8 +549,8 @@
 <p>There are five hpcadvisor commands:</p>
 <ul>
 <li><code>deploy</code>: operations related to a deployment</li>
-<li><code>plot</code>: operation(s) related to generation of plots</li>
 <li><code>collect</code>: operation(s) related to data collection (i.e. execution of tasks)</li>
+<li><code>plot</code>: operation(s) related to generation of plots</li>
 <li><code>advice</code>: operations(s) related to generation of advice</li>
 <li><code>gui</code>: trigger of the graphical user interface (gui) via browser</li>
 </ul>
@@ -571,13 +571,48 @@ deployment (optional):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>./hpcadvisor deploy shutdown -n &lt;name&gt;
 </code></pre></div>
 <h2 id="collect">collect</h2>
-<p>to-be-documented</p>
+<p>Collect data (i.e. run jobs). The option <code>cleardeployment</code> is to delete all
+resources and resource group once the collection is completed and option
+<code>cleartasks</code> is to run all new tasks that are created, as some tasks may have
+already been completed for another data collection operation on the same
+deployment.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>./hpcadvisor collect [-h] -n NAME -u USERINPUT [-cd CLEARDEPLOYMENT] [-ct CLEARTASKS]
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>options:
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>  -h, --help            show this help message and exit
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>  -n NAME, --name NAME  Deployment name
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>  -u USERINPUT, --userinput USERINPUT
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>                        User input
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>  -cd CLEARDEPLOYMENT, --cleardeployment CLEARDEPLOYMENT
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>                        Clear deployment
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>  -ct CLEARTASKS, --cleartasks CLEARTASKS
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>                        Clear tasks
+</code></pre></div>
 <h2 id="plot">plot</h2>
-<p>to-be-documented</p>
+<p>Generate plots.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>./hpcadvisor plot [-h] -df DATAFILTER
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>options:
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>  -df DATAFILTER, --datafilter DATAFILTER
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>                        Data filter
+</code></pre></div>
 <h2 id="advice">advice</h2>
-<p>to-be-documented</p>
+<p>Generate advice (pareto-front).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>hpcadvisor advice [-h] [-n NAME] [-df DATAFILTER]
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>options:
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>  -n NAME, --name NAME  Deployment name
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>  -df DATAFILTER, --datafilter DATAFILTER
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>                        Data filter
+</code></pre></div>
 <h2 id="gui">gui</h2>
-<p>to-be-documented</p>
+<p>Run the hpcadvisor using browser (GUI).</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>./hpcadvisor gui [-h] [-u USERINPUT]
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>options:
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>  -u USERINPUT, --userinput USERINPUT
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>                        User input
+</code></pre></div>
 <hr />
 
 
