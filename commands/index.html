@@ -554,7 +554,7 @@
 <li><code>advice</code>: operations(s) related to generation of advice</li>
 <li><code>gui</code>: trigger of the graphical user interface (gui) via browser</li>
 </ul>
-<p>These commands can use the debug mode via <code>-d</code> flag.</p>
+<p>These commands can use the debug mode via <code>-d</code> flag and show help using <code>-h</code>.</p>
 <p>A deployment is a resource group that contains all computing resources.</p>
 <p>So in general the usage of the hpcadvisor is gonna be:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>./hpcadvisor [-d] &lt;command&gt; [ &lt;command parameters&gt; ]
@@ -562,7 +562,13 @@
 <h2 id="deploy">deploy</h2>
 <p>Create a new deployment using user input from file (mandatory) and name of the
 deployment (optional):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>./hpcadvisor deploy create -u &lt;ui_defaults_file&gt; [-n &lt;name&gt;]
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>./hpcadvisor deploy create [-h] [-n NAME] [-u USERINPUT] operation
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>options:
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>  -n NAME, --name NAME  Deployment name
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  -u USERINPUT, --userinput USERINPUT
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>                        User input
 </code></pre></div>
 <p>List deployments:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>./hpcadvisor deploy list
