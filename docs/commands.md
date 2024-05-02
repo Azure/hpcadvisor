@@ -9,7 +9,7 @@ There are five hpcadvisor commands:
 - `advice`: operations(s) related to generation of advice
 - `gui`: trigger of the graphical user interface (gui) via browser
 
-These commands can use the debug mode via `-d` flag.
+These commands can use the debug mode via `-d` flag and show help using `-h`.
 
 A deployment is a resource group that contains all computing resources.
 
@@ -26,7 +26,13 @@ Create a new deployment using user input from file (mandatory) and name of the
 deployment (optional):
 
 ```
-./hpcadvisor deploy create -u <ui_defaults_file> [-n <name>]
+./hpcadvisor deploy create [-h] [-n NAME] [-u USERINPUT] operation
+
+
+options:
+  -n NAME, --name NAME  Deployment name
+  -u USERINPUT, --userinput USERINPUT
+                        User input
 ```
 
 List deployments:
