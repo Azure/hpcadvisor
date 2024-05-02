@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 import random
+import string
 import sys
 import time
 
@@ -67,9 +68,10 @@ def get_deployments_file(name):
 
 
 def get_random_code():
-    random_number = random.randint(1000, 9999)
-    timestamp = datetime.datetime.now().strftime("%m%d%H%M")
-    return f"{timestamp}{random_number}"
+    #    random_number = random.randint(1000, 9999)
+    random_letters = "".join(random.sample(string.ascii_lowercase, 3))
+    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    return f"{timestamp}{random_letters}"
 
 
 def generate_env_file(rg_prefix, user_data):
