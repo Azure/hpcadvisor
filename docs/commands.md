@@ -59,7 +59,6 @@ deployment.
 ./hpcadvisor collect [-h] -n NAME -u USERINPUT [-cd CLEARDEPLOYMENT] [-ct CLEARTASKS]
 
 options:
-  -h, --help            show this help message and exit
   -n NAME, --name NAME  Deployment name
   -u USERINPUT, --userinput USERINPUT
                         User input
