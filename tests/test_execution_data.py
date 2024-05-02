@@ -14,7 +14,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     userinput_file = sys.argv[1]
-    user_input = main_cli.get_userinput_from_file(userinput_file)
+    user_input = utils.get_userinput_from_file(userinput_file)
 
     env_file = sys.argv[2]
     poolname = sys.argv[3]
@@ -30,5 +30,5 @@ if __name__ == "__main__":
     batch_handler.setup_environment(env_file)
 
     batch_handler.store_task_execution_data(
-        poolname, jobname, taskid, ppr_perc, appinputs, dataset_file, "appname", {}
+        poolname, jobname, taskid, ppr_perc, appinputs, dataset_file, "appname", []
     )

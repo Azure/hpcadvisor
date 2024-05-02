@@ -1111,6 +1111,8 @@ def store_task_execution_data(
 
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
 
+    if tags is not None or len(tags) == 0:
+        tags = {}
     datapoint["timestamp"] = timestamp
     datapoint["sku"] = sku
     datapoint["nnodes"] = number_of_nodes
