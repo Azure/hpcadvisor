@@ -70,9 +70,10 @@ def gen_plot_exectime_vs_numvms(
 
     if st:
         st.pyplot(fig)
-    plotfile = os.path.join(plotdir, plotfile)
-    log.info("Saving file: " + plotfile)
-    plt.savefig(plotfile)
+    else:
+        plotfile = os.path.join(plotdir, plotfile)
+        log.info("Saving file: " + plotfile)
+        plt.savefig(plotfile)
 
 
 def gen_plot_exectime_vs_cost(
@@ -131,7 +132,7 @@ def gen_plot_exectime_vs_cost(
 
     if st:
         st.pyplot(fig)
-
-    plotfile = os.path.join(plotdir, plotfile)
-    log.info("Saving file: " + plotfile)
-    plt.savefig(plotfile)
+    else:
+        plotfile = os.path.join(plotdir, plotfile)
+        log.info("Saving file: " + plotfile)
+        plt.savefig(plotfile)

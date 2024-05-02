@@ -1,6 +1,8 @@
 import datetime
+import json
 import os
 import random
+import sys
 import time
 
 from hpcadvisor import logger
@@ -133,6 +135,39 @@ def get_rg_prefix_from_file(env_file):
     return None
 
 
+def get_userinput_from_file(user_input_file):
+    required_variables = [
+        "region",
+        "skus",
+        "nnodes",
+        "appinputs",
+        "ppr",
+        "subscription",
+        "appsetupurl",
+        "appname",
+    ]
+
+    try:
+        with open(user_input_file, "r") as json_file:
+            json_data = json.load(json_file)
+    except json.JSONDecodeError:
+        log.critical(f"User input not valid json file: " + user_input_file)
+        sys.exit(1)
+    except FileNotFoundError:
+        log.critical("File not found: " + user_input_file)
+        sys.exit(1)
+
+    missing_variables = [var for var in required_variables if var not in json_data]
+
+    if missing_variables:
+        log.critical("Missing variables in user input file:")
+        for var in missing_variables:
+            log.critical(f"missing variable: {var}")
+        sys.exit(1)
+
+    return json_data
+
+
 def list_deployments():
     if not os.path.exists(hpcadvisor_dir):
         log.warning("No deployments found")
@@ -140,7 +175,7 @@ def list_deployments():
 
     folders = [
         f
-        for f in os.listdir(hpcadvisor_dir)
+        for f in sorted(os.listdir(hpcadvisor_dir), reverse=True)
         if os.path.isdir(os.path.join(hpcadvisor_dir, f))
     ]
 

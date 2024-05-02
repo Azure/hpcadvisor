@@ -15,18 +15,14 @@ import streamlit.web.cli as stcli
 from matplotlib import cm
 from matplotlib.patches import Rectangle
 
-from hpcadvisor import (
-    data_collector,
-    dataset_handler,
-    logger,
-    plot_generator,
-    taskset_handler,
-    utils,
-)
+from hpcadvisor import (advice_generator, data_collector, dataset_handler,
+                        logger, plot_generator, taskset_handler, utils)
 
 log = logger.logger
 
-# TODO: this entire code needs to be refactored
+# TODO: this entire code needs to be refactored!!
+# TODO: this entire code needs to be refactored!!
+# TODO: this entire code needs to be refactored!!
 
 execution_tracker_filename = "progress.txt"
 
@@ -63,105 +59,278 @@ def wait_execution(execution_placeholder):
         execution_placeholder.write(last_line)
 
 
-def show_advise(current_goal, app):
-    if current_goal == "Primary: Performance":
-        return "hbv4/hx"
-    if current_goal == "Primary: Cost":
-        return "hbv2"
-    else:
-        return "hbv4, hbv3"
-
-
 def disable(b):
     st.session_state["disabled"] = b
 
 
-def show_recommendation(app):
-    st.write("# Application: ", app)
+def create_deployment(user_input_file):
+    st.write("### Create Deployments ")
+
+    #   defaults = _get_defaults()
+
+    user_input = utils.get_userinput_from_file(user_input_file)
+    text_subscription = st.text_input("Azure subscription", user_input["subscription"])
+    text_region = st.text_input("Azure region", user_input["region"])
+    text_deployname = st.text_input("Deployment name (optional)")
+
+    if (
+        "run_createdeploy_button" in st.session_state
+        and st.session_state.run_createdeploy_button == True
+    ):
+        st.session_state.running = True
+    else:
+        st.session_state.running = False
+
+    if st.button(
+        "Create deployment",
+        disabled=st.session_state.running,
+        key="run_createdeploy_button",
+    ):
+        st.write("## Deployment ")
+        if (
+            not "deployExecutionOn" in st.session_state
+            or st.session_state["deployExecutionOn"] == False
+        ):
+            st.session_state["deployExecutionOn"] = True
+
+            if text_deployname:
+                rg_prefix = text_deployname
+            else:
+                rg_prefix = user_input["rgprefix"] + utils.get_random_code()
+
+            st.text(f"Creating deployment: {rg_prefix}")
+            st.text("This will take a while. Please wait...")
+
+            env_file = utils.generate_env_file(rg_prefix, user_input)
+
+            utils.execute_env_deployer(env_file, rg_prefix, debug)
+
+            st.session_state["deployExecutionOn"] = False
+            st.session_state.output = "output generated"
+            st.rerun()
+
+            if "output" in st.session_state:
+                st.success("Deployment environment created")
+                st.text("Go to view deployment button for details.")
+                time.sleep(5)
+            st.session_state["executionOn"] = False
+
+
+def view_deployments():
+    st.write("## Deployments ")
+
+    deployments = utils.list_deployments()
+
+    label = f"Select deployment (total = {len(deployments)}): "
+
+    selected_item = st.selectbox(label, deployments)
+
+
+def gen_advice_table(datapoints, datafilter_input):
+    pareto_front = advice_generator.gen_advice_exectime_vs_cost(
+        None, datapoints, datafilter_input
+    )
+
+    if pareto_front is None:
+        log.error("No advice generated")
+        return
+
+    title = "noappinput"
+
+    if datafilter_input:
+        appinputs = datafilter_input["appinputs"]
+        title = " ".join([f"{key}={value} " for key, value in appinputs.items()])
+
+    return title, pareto_front
+
+
+def view_advice():
+    st.write("### Advice ")
+
+    st.text("")
+    uploaded_file = st.file_uploader(
+        "Choose data filter file (optional)", accept_multiple_files=False, type=["json"]
+    )
+
+    datafilter_file = None
+    if uploaded_file:
+        bytes_data = uploaded_file.read()
+        datafilter_file = json.loads(bytes_data)
+
+    # st.write("loaded data filter file:", uploaded_file.name)
+
+    appname = None
+    deployment = None
+    # TODO support multiple deployments via GUI
+
+    if datafilter_file:
+        if "appname" in datafilter_file:
+            appname = datafilter_file["appname"]
+        if "deployment" in datafilter_file:
+            deployment = datafilter_file["deployment"]
+
+    appname = st.text_input("Application name", appname)
+    deployment = st.text_input("Deployment (optional)", deployment)
+
+    datafilter = {}
+    if appname:
+        datafilter["appname"] = appname
+    if deployment:
+        datafilter["deployment"] = deployment
+
+    dataset_file = utils.get_dataset_filename()
+
+    appinputs = []
+    if not os.path.exists(dataset_file):
+        log.error("Dataset file not found: " + dataset_file)
+        return
+
+    datapoints = dataset_handler.get_datapoints(dataset_file, datafilter)
+
+    if not datapoints:
+        log.error("No datapoints found. Check dataset and datafilter files")
+        return
+
+    appinputs = dataset_handler.get_appinput_combinations(datapoints)
+
+    datafilter_appinputs = []
+    for appinput in appinputs:
+        filter = {}
+        filter["appinputs"] = appinput
+        datafilter_appinputs.append(filter)
+
+    if st.button(
+        "Get advice",
+        key="run_createadvice_button",
+    ):
+        st.write("## Advice ")
+        st.write("This will take a while. Please wait...")
+        advice_data = {}
+        if datafilter_appinputs:
+            for datafilter_appinput_entry in datafilter_appinputs:
+                title, pareto_front = gen_advice_table(
+                    datapoints, datafilter_appinput_entry
+                )
+                advice_data[title] = pareto_front
+        else:
+            title, pareto_front = gen_advice_table(
+                table_id, datapoints, datafilter_appinputs
+            )
+
+        for title, pareto_front in advice_data.items():
+            if title != "noappinput":
+                st.markdown(f"##### Appinput: {title}")
+
+            df = pd.DataFrame(
+                pareto_front, columns=["Exectime", "Cost", "Nodes", "SKU"]
+            )
+            st.table(df)
 
     st.text("")
     st.text("")
     st.text("")
-    st.markdown("### What are the application highlights?")
-    with st.expander("Highlights"):
-        st.markdown("###### - Memory intensive")
-        st.markdown("###### - Tightly coupled: benefits from high-speed network")
-        st.markdown("###### - Scale well until 100 VMs")
+
+
+def gen_core_plots(st, plot_id, datapoints, dynamic_filters, plotdir):
+    plot_file = "plot_" + str(plot_id) + "_exectime_vs_numvms.pdf"
+
+    plot_generator.gen_plot_exectime_vs_numvms(
+        st, datapoints, dynamic_filters, plotdir, plot_file
+    )
+    plot_id += 1
+    plot_file = "plot_" + str(plot_id) + "_exectime_vs_cost.pdf"
+
+    plot_generator.gen_plot_exectime_vs_cost(
+        st, datapoints, dynamic_filters, plotdir, plot_file
+    )
+
+
+def show_plot_files(st, datapoints, dynamic_filter_items):
+    plot_id = 0
+    plotdir = None
+
+    if dynamic_filter_items:
+        for dynamic_filter in dynamic_filter_items:
+            gen_core_plots(st, plot_id, datapoints, dynamic_filter, plotdir)
+            plot_id += 2
+    else:
+        gen_core_plots(st, plot_id, datapoints, dynamic_filter_items, plotdir)
+
+
+def view_plot():
+    st.write("### Plots ")
 
     st.text("")
     st.text("")
     st.text("")
 
-    markdown_text = f"### What is your goal?"
-    st.markdown(markdown_text)
-
-    with st.expander("Setup goal"):
-        goal = st.radio(
-            "🔍 Select",
-            [
-                None,
-                "Primary: Performance",
-                "Primary: Cost",
-                "Balance Performance and Cost",
-            ],
-            index=0,
-        )
-
-    current_goal = goal
-    if current_goal is not None:
-        st.text(current_goal)
-
     st.text("")
-    st.text("")
-    st.text("")
+    uploaded_file = st.file_uploader(
+        "Choose data filter file (optional)",
+        key="fileupload_view_plot",
+        accept_multiple_files=False,
+        type=["json"],
+    )
 
-    st.markdown("### Resource selection advise ")
+    datafilter_file = None
+    if uploaded_file:
+        bytes_data = uploaded_file.read()
+        datafilter_file = json.loads(bytes_data)
 
-    with st.expander("More details"):
-        st.markdown(
-            "###### - Data available for the following SKUs: hbv4/hx, hbv3, hbv2"
-        )
-        st.markdown("###### - Common bottlenext: CPU and network")
-        st.markdown("###### - Max # of VMs executed: 120")
-        st.markdown("###### - Application input tested: conus 2.5km")
-    possibilities = f"Possible SKUs: { show_advise(current_goal, app)}"
-    st.markdown(possibilities)
+    # st.write("loaded data filter file:", uploaded_file.name)
 
-    st.text("")
-    st.text("")
-    st.text("")
+    appname = None
+    deployment = None
+    # TODO support multiple deployments via GUI
 
+    if datafilter_file:
+        if "appname" in datafilter_file:
+            appname = datafilter_file["appname"]
+        if "deployment" in datafilter_file:
+            deployment = datafilter_file["deployment"]
 
-def show_plot_files(st, deployment_name):
-    dataset_filename = utils.get_dataset_filename()
+    appname = st.text_input(
+        "Application name", appname, key="textinput_viewplot_appname"
+    )
+    deployment = st.text_input(
+        "Deployment (optional)", deployment, key="textinput=viewplot_deployment"
+    )
 
-    if os.path.exists(dataset_filename):
-        appinputs = dataset_handler.get_appinput_combinations(dataset_filename)
-        for appinput in appinputs:
-            plot_generator.gen_plot_exectime_vs_numvms(st, dataset_filename, appinput)
-            plot_generator.gen_plot_exectime_vs_cost(st, dataset_filename, appinput)
+    datafilter = {}
+    if appname:
+        datafilter["appname"] = appname
+    if deployment:
+        datafilter["deployment"] = deployment
 
+    dataset_file = utils.get_dataset_filename()
 
-def show_dataexploration(app):
-    st.write("# Application: ", app)
+    appinputs = []
+    if not os.path.exists(dataset_file):
+        log.error("Dataset file not found: " + dataset_file)
+        return
 
-    st.text("")
-    st.text("")
-    st.text("")
+    datapoints = dataset_handler.get_datapoints(dataset_file, datafilter)
 
-    st.markdown("### Data exploration ")
-    with st.expander("Setup"):
-        deployment_name = st.text_input(
-            "Deployment",
-            "",
-            key="deployment_id",
-        )
+    if not datapoints:
+        log.error("No datapoints found. Check dataset and datafilter files")
+        return
 
-    genplots_button = st.button("Generate Plots")
+    appinputs = dataset_handler.get_appinput_combinations(datapoints)
 
-    if genplots_button:
-        with st.expander("data points"):
-            show_plot_files(st, deployment_name)
+    datafilter_appinputs = []
+    for appinput in appinputs:
+        filter = {}
+        filter["appinputs"] = appinput
+        datafilter_appinputs.append(filter)
+
+    if st.button(
+        "Get plots",
+        key="run_createplot_button",
+    ):
+        st.write("## Plots ")
+        st.write("Generating plots. Please wait...")
+
+        show_plot_files(st, datapoints, datafilter_appinputs)
 
     st.text("")
     st.text("")
@@ -169,18 +338,6 @@ def show_dataexploration(app):
     st.text("")
     st.text("")
     st.text("")
-
-
-def load_data_gen_defaults():
-    data_gen_defaults = {}
-
-    defaults_file = utils.get_ui_default_filename()
-
-    if os.path.exists(defaults_file):
-        with open(defaults_file) as f:
-            data_gen_defaults = json.load(f)
-
-    return data_gen_defaults
 
 
 def _get_str(data):
@@ -188,38 +345,6 @@ def _get_str(data):
         return ",".join(str(x) for x in data)
     else:
         return str(data)
-
-
-def _get_defaults():
-    defaults = {}
-    data_gen_defaults = load_data_gen_defaults()
-
-    for key in (
-        "subscription",
-        "region",
-        "rgprefix",
-        "skus",
-        "nnodes",
-        "ppr",
-        "appsetupurl",
-        "apprunscript",
-    ):
-        if key in data_gen_defaults:
-            defaults[key] = _get_str(data_gen_defaults[key])
-        else:
-            defaults[key] = ""
-
-    appinputs = ""
-    if "appinputs" in data_gen_defaults:
-        for key, value in data_gen_defaults["appinputs"].items():
-            appinputs += f"{key.upper()}={_get_str(value)}\n"
-
-    defaults["appinputs"] = appinputs
-
-    if defaults["rgprefix"] == "":
-        defaults["rgprefix"] = "hpcadvisor"
-
-    return defaults
 
 
 def _get_app_inputs(appinputs):
@@ -232,153 +357,143 @@ def _get_app_inputs(appinputs):
     return data_app_input
 
 
-def show_datageneration(app):
-    st.write("# Application: ", app)
+def get_str_from_userinput_list(userinput, key):
+    if key in userinput:
+        if type(userinput[key]) is not list:
+            return str(userinput[key])
+        return ",".join(str(x) for x in userinput[key])
+    else:
+        return ""
+
+
+def get_textfield_from_appinput(userinput):
+    if "appinputs" not in userinput:
+        return ""
+
+    appinputs = userinput["appinputs"]
+    appinput_str = ""
+    for key, value in appinputs.items():
+        appinput_str += f"{key.upper()}={_get_str(value)}\n"
+
+    return appinput_str
+
+
+def get_json_from_input(text_input):
+    # transfor a,b,c into ["a", "b", "c"]
+    if "," in text_input:
+        return text_input.split(",")
+    else:
+        return [text_input]
+
+
+def start_datacollection(user_input_file):
+    st.write("### Data Collector ")
 
     st.text("")
     st.text("")
     st.text("")
 
-    defaults = _get_defaults()
+    userinput = utils.get_userinput_from_file(user_input_file)
 
-    st.markdown("### Data generator ")
     task_filename = ""
-    with st.expander("Setup"):
-        text_subscription = st.text_input(
-            "Azure subscription", defaults["subscription"]
+
+    deployments = utils.list_deployments()
+
+    label = f"Select deployment (total = {len(deployments)}): "
+
+    deployment = st.selectbox(label, deployments)
+
+    str_skus = get_str_from_userinput_list(userinput, "skus")
+    print("str_skus=", str_skus)
+    str_nnodes = get_str_from_userinput_list(userinput, "nnodes")
+    str_ppr = get_str_from_userinput_list(userinput, "ppr")
+    text_skus = st.text_input("SKUs", str_skus, key="field_sku")
+    text_nnodes = st.text_input("Number of nodes", str_nnodes, key="field_nnodes")
+    text_ppr = st.text_input("Processes per resource (%)", str_ppr, key="field_ppr")
+
+    textfield_appinput = get_textfield_from_appinput(userinput)
+    text_appinput = st.text_area(
+        "Application input per line (<variable=value>)",
+        textfield_appinput,
+        key="appinput_info",
+    )
+
+    field_appsetup = st.text_input(
+        "App setup script (git URL)",
+        userinput["appsetupurl"],
+        key="app_url_setup",
+    )
+
+    if "gentasks_key" not in st.session_state:
+        st.session_state.gentasks_key = False
+
+    button_show_tasks = st.button("Show/Hide Tasks", key="button_show_tasks")
+
+    if button_show_tasks and st.session_state.gentasks_key == False:
+        st.session_state.gentasks_key = True
+    elif button_show_tasks and st.session_state.gentasks_key == True:
+        st.session_state.gentasks_key = False
+
+    if st.session_state.gentasks_key:
+        task_filename = utils.get_task_filename(deployment)
+        st.session_state["task_filename"] = task_filename
+
+        data_system = {}
+        data_system["sku"] = text_skus.split(",")
+        data_system["nnodes"] = text_nnodes.split(",")
+        data_system["ppr"] = text_ppr.split(",")
+
+        data_app_input = {}
+        for line in text_appinput.splitlines():
+            if line.strip():
+                key, value = line.split("=")
+                data_app_input[key] = value.split(",")
+        #
+        appname = userinput["appname"]
+        tags = []
+        data = taskset_handler.generate_tasks(
+            task_filename, data_system, data_app_input, appname, tags
         )
-        text_region = st.text_input("Azure region", defaults["region"])
-        text_skus = st.text_input("SKUs", defaults["skus"], key="field_sku")
-        text_nnodes = st.text_input(
-            "Number of nodes", defaults["nnodes"], key="field_nnodes"
+        df = pd.DataFrame(data)
+        df = df.set_index("id")
+
+        df.index.name = "task"
+
+        st.dataframe(df, height=200, width=700)
+
+    if (
+        "run_datacollector_button" in st.session_state
+        and st.session_state.run_datacollector_button == True
+    ):
+        st.session_state.running_collection = True
+    else:
+        st.session_state.running_collection = False
+
+    if st.button(
+        "Start Data Collection",
+        disabled=st.session_state.running_collection,
+        key="run_datacollector_button",
+    ):
+        execution_placeholder = st.empty()
+
+        st.text("This will take a while. Please wait...")
+        st.session_state["executionCollectionOn"] = True
+
+        task_filename = utils.get_task_filename(deployment)
+
+        env_file = utils.get_deployments_file(deployment)
+        dataset_filename = utils.get_dataset_filename()
+        data_collector.collect_data(
+            task_filename, dataset_filename, env_file, clear_deployment=False
         )
-        text_ppr = st.text_input(
-            "Processes per resource (%)", defaults["ppr"], key="field_ppr"
-        )
 
-        text_appinput = st.text_area(
-            "Application input per line (<variable=value>)",
-            defaults["appinputs"],
-            key="app_info",
-        )
+        log.info(f"finish execution for {deployment}")
+        st.success("Benchmark data generated!")
+        st.session_state.output = "output generated"
+        st.rerun()
 
-        field_appsetup = st.text_input(
-            "App setup script (git URL)",
-            defaults["appsetupurl"],
-            key="app_url_setup",
-        )
-        field_apprun = st.text_input(
-            "App execution script in storage account",
-            defaults["apprunscript"],
-            key="app_url_run",
-        )
-
-        if "app_" in st.session_state and st.session_state.run_button == True:
-            st.session_state.running = True
-        else:
-            st.session_state.running = False
-
-        gentasks_key = "gentasks_button"
-
-        # TODO: fix show/hide tasks button
-
-        if gentasks_key not in st.session_state:
-            st.session_state[gentasks_key] = False
-
-        if st.session_state[gentasks_key]:
-            rg_prefix = defaults["rgprefix"] + utils.get_random_code()
-            st.session_state["rg_prefix"] = rg_prefix
-            task_filename = utils.get_task_filename(rg_prefix)
-            st.session_state["task_filename"] = task_filename
-
-            data_system = {}
-            data_system["sku"] = text_skus.split(",")
-            data_system["nnodes"] = text_nnodes.split(",")
-            data_system["ppr"] = text_ppr.split(",")
-
-            data_app_input = {}
-            for line in text_appinput.splitlines():
-                if line.strip():
-                    key, value = line.split("=")
-                    data_app_input[key] = value.split(",")
-
-            data = taskset_handler.generate_tasks(
-                task_filename, data_system, data_app_input
-            )
-
-            df = pd.DataFrame(data)
-
-            st.button("Hide Tasks")
-            st.session_state[gentasks_key] = False
-            df.index.name = "task"
-
-            st.dataframe(df, height=200, width=700)
-
-        else:
-            gentasks_button = st.button("Show Tasks")
-            st.session_state[gentasks_key] = True
-
-        if (
-            "run_datacollector_button" in st.session_state
-            and st.session_state.run_datacollector_button == True
-        ):
-            st.session_state.running = True
-        else:
-            st.session_state.running = False
-
-        if st.button(
-            "START DATA COLLECTION",
-            disabled=st.session_state.running,
-            key="run_datacollector_button",
-        ):
-            execution_placeholder = st.empty()
-
-            if st.session_state["executionOn"] == False:
-                st.text("This will take a while. Please wait...")
-                st.session_state["executionOn"] = True
-                rg_prefix = st.session_state["rg_prefix"]
-                user_data = {}
-                user_data["subscription"] = text_subscription
-                user_data["region"] = text_region
-                user_data["rgprefix"] = rg_prefix
-                user_data["skus"] = text_skus
-                user_data["nnodes"] = text_nnodes
-                user_data["ppr"] = text_ppr
-                user_data["appinputs"] = text_appinput
-                user_data["ppr"] = text_ppr
-                user_data["appsetupurl"] = field_appsetup
-                user_data["apprunscript"] = field_apprun
-
-                data_system = {}
-                data_system["sku"] = user_data["skus"].split(",")
-                data_system["nnodes"] = user_data["nnodes"].split(",")
-                data_system["ppr"] = user_data["ppr"].split(",")
-
-                data_app_input = _get_app_inputs(user_data["appinputs"])
-
-                env_file = utils.generate_env_file(rg_prefix, user_data)
-                utils.execute_env_deployer(env_file, rg_prefix, debug)
-
-                task_filename = utils.get_task_filename(rg_prefix)
-                taskset_handler.generate_tasks(
-                    task_filename, data_system, data_app_input
-                )
-                log.info(f"task_filename={task_filename} generated for {rg_prefix}")
-
-                dataset_filename = utils.get_dataset_filename()
-                data_collector.collect_data(task_filename, dataset_filename, env_file)
-                time.sleep(3.00)
-                st.text("DONE.")
-
-                log.info(f"finish execution for {rg_prefix}")
-
-                st.success("Benchmark data generated successfully!")
-                st.session_state.output = "output generated"
-                st.rerun()
-
-                if "output" in st.session_state:
-                    st.success("Benchmark data generated successfully!")
-                st.session_state["executionOn"] = False
+        st.session_state["executionCollectionOn"] = False
+        st.session_state["running_collection"] = True
 
     st.text("")
     st.text("")
@@ -387,6 +502,7 @@ def show_datageneration(app):
 
 def main_gui():
     current_action = None
+    userinput = None
 
     if "--userinput" in sys.argv:
         userinput = sys.argv[sys.argv.index("--userinput") + 1]
@@ -395,90 +511,80 @@ def main_gui():
         st.session_state.currentaction = None
 
     with st.sidebar:
-        st.title("⚙️  AzHPCAdvisor \n Azure HPC Resource Selection Advisor")
+        st.title("HPCAdvisor")
+        st.divider()
+
+        button_newdeploy = st.button("Create Deployment", key="button_newdeploy")
         st.text("")
+
+        button_viewdeploy = st.button("View Deployment", key="button_viewdeploy")
         st.text("")
+
+        button_newcollect = st.button("Run Scenarios", key="button_newcollect")
         st.text("")
-        st.markdown("**APPLICATIONS**")
 
-        newapp_clicked = st.button("New")
+        button_newplot = st.button("View Plots", key="button_newplot")
+        st.text("")
 
-        # workaround to hide first selection in radio
-        # https://discuss.streamlit.io/t/remove-the-preselection-of-radio-buttons/25702/4
-        st.markdown(
-            """
-    <style>
-        div[role=radiogroup] label:first-of-type {
-            visibility: hidden;
-            height: 0px;
-        }
-    </style>
-    """,
-            unsafe_allow_html=True,
-        )
-
-        app = st.radio(
-            "🔍 Selection",
-            [None, "MATRIX", "WRF", "GROMACS", "NAMD", "OPENFOAM"],
-            index=0,
-        )
-
-        #######################################################################################
-        st.write("Operations")
-
-        disable_buttons = False
-        if app == None:
-            disable_buttons = True
-        button_recommendation = st.button(
-            "Recommendation",
-            disabled=True,
-            help="Discover the right infrastructure to run your application",
-        )
-        button_dataexploration = st.button(
-            "Data Exploration",
-            disabled=disable_buttons,
-            help="Get more insights by understanding existing data",
-        )
-        button_datageneration = st.button(
-            "Data Generation",
-            disabled=disable_buttons,
-            use_container_width=False,
-            help="Generate more data to get better insights",
-        )
-
-    #######################################################################################
+        button_newadvice = st.button("Get Advice", key="button_newadvice")
+        st.divider()
 
     if (
-        not button_recommendation
-        and not button_datageneration
-        and not button_dataexploration
+        not button_newdeploy
+        and not button_viewdeploy
+        and not button_newcollect
+        and not button_newplot
+        and not button_newadvice
         and st.session_state.currentaction == None
     ):
-        #  if not button_recommendation and not button_dataexploration and not button_datageneration:
-        st.title("Welcome to the AzHPCAdvisor")
+        st.markdown("### HPC Resource Selection Advisor")
         st.text("")
         st.text("")
         st.write(" **What you can do**")
-        st.text("🔸 Have advise from existing application")
-        st.text("🔸 Explore existing data to get more insights yourself")
         st.text("🔸 Generate new data for better decision making")
+        st.text("🔸 Explore existing data to get more insights yourself")
+        st.text("🔸 Have advise from existing application")
 
-    if app == "MATRIX" and button_recommendation:
-        st.session_state.currentaction = "recommend"
-        show_recommendation(app)
-
-    if app == "MATRIX" and (
-        button_dataexploration or st.session_state.currentaction == "dataexplore"
+    if button_newdeploy:
+        st.session_state.currentaction = "create_deploy"
+        create_deployment(userinput)
+    elif button_viewdeploy:
+        st.session_state.currentaction = "view_deploy"
+        view_deployments()
+    elif button_newcollect:
+        st.session_state.currentaction = "create_collect"
+        start_datacollection(userinput)
+    elif button_newplot:
+        st.session_state.currentaction = "create_plot"
+        view_plot()
+    elif button_newadvice:
+        st.session_state.currentaction = "create_advice"
+        view_advice()
+    elif (
+        "currentaction" in st.session_state
+        and st.session_state.currentaction == "create_deploy"
     ):
-        st.session_state.currentaction = "dataexplore"
-        if button_datageneration == False:
-            show_dataexploration(app)
-
-    if app == "MATRIX" and (
-        button_datageneration or st.session_state.currentaction == "datagen"
+        create_deployment(userinput)
+    elif (
+        "currentaction" in st.session_state
+        and st.session_state.currentaction == "view_deploy"
     ):
-        st.session_state.currentaction = "datagen"
-        show_datageneration(app)
+        view_deployments()
+    elif (
+        "currentaction" in st.session_state
+        and st.session_state.currentaction == "create_collect"
+    ):
+        start_datacollection(userinput)
+    elif (
+        "currentaction" in st.session_state
+        and st.session_state.currentaction == "create_plot"
+    ):
+        view_plot()
+    elif (
+        "currentaction" in st.session_state
+        and st.session_state.currentaction == "create_advice"
+    ):
+        view_advice()
 
     # remove streamlit bottom info
     hide_streamlit_style = """

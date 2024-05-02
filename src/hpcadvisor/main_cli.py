@@ -17,37 +17,37 @@ from hpcadvisor import (
 log = logger.logger
 
 
-def get_userinput_from_file(user_input_file):
-    required_variables = [
-        "region",
-        "skus",
-        "nnodes",
-        "appinputs",
-        "ppr",
-        "subscription",
-        "appsetupurl",
-        "appname",
-    ]
-
-    try:
-        with open(user_input_file, "r") as json_file:
-            json_data = json.load(json_file)
-    except json.JSONDecodeError:
-        log.critical(f"User input not valid json file: " + user_input_file)
-        sys.exit(1)
-    except FileNotFoundError:
-        log.critical("File not found: " + user_input_file)
-        sys.exit(1)
-
-    missing_variables = [var for var in required_variables if var not in json_data]
-
-    if missing_variables:
-        log.critical("Missing variables in user input file:")
-        for var in missing_variables:
-            log.critical(f"missing variable: {var}")
-        sys.exit(1)
-
-    return json_data
+# def get_userinput_from_file(user_input_file):
+#     required_variables = [
+#         "region",
+#         "skus",
+#         "nnodes",
+#         "appinputs",
+#         "ppr",
+#         "subscription",
+#         "appsetupurl",
+#         "appname",
+#     ]
+#
+#     try:
+#         with open(user_input_file, "r") as json_file:
+#             json_data = json.load(json_file)
+#     except json.JSONDecodeError:
+#         log.critical(f"User input not valid json file: " + user_input_file)
+#         sys.exit(1)
+#     except FileNotFoundError:
+#         log.critical("File not found: " + user_input_file)
+#         sys.exit(1)
+#
+#     missing_variables = [var for var in required_variables if var not in json_data]
+#
+#     if missing_variables:
+#         log.critical("Missing variables in user input file:")
+#         for var in missing_variables:
+#             log.critical(f"missing variable: {var}")
+#         sys.exit(1)
+#
+#     return json_data
 
 
 def main_shutdown_deployment(name):
@@ -76,7 +76,7 @@ def main_list_deployments():
 
 
 def main_create_deployment(name, user_input_file, debug):
-    user_input = get_userinput_from_file(user_input_file)
+    user_input = utils.get_userinput_from_file(user_input_file)
 
     if name:
         rg_prefix = name
@@ -107,7 +107,7 @@ def main_advice(datafilter):
 def main_collect_data(
     deployment_name, user_input_file, clear_deployment=False, clear_tasks=False
 ):
-    user_input = get_userinput_from_file(user_input_file)
+    user_input = utils.get_userinput_from_file(user_input_file)
 
     data_system = {}
     data_system["sku"] = user_input["skus"]

@@ -253,6 +253,12 @@ create_batch_account_with_usersubscription() {
     --location "$REGION" \
     --keyvault "$KEYVAULT"
   # --storage-account $STORAGEACCOUNT    # does not support azure fileshare
+  error=$?
+  if [ $error -ne 0 ]; then
+    echo "Error creating batch account"
+    update_progress "error creating batch account"
+    exit 1
+  fi
   update_progress "created batch account"
 }
 

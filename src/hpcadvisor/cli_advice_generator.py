@@ -31,7 +31,7 @@ def generate_advice(datafilter_file):
     datafilter = dataset_handler.get_plotfilter(datafilter_file)
 
     dataset_file = utils.get_dataset_filename()
-    log.debug("Generating plots from dataset file: " + dataset_file)
+    log.debug("Generating advice from dataset file: " + dataset_file)
 
     appinputs = []
     if not os.path.exists(dataset_file):
