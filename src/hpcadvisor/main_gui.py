@@ -76,7 +76,9 @@ def create_deployment(user_input_file):
     #   defaults = _get_defaults()
 
     user_input = utils.get_userinput_from_file(user_input_file)
-    text_subscription = st.text_input("Azure subscription", user_input["subscription"])
+    text_subscription = st.text_input(
+        "Azure subscription", user_input["subscription"], type="password"
+    )
     text_region = st.text_input("Azure region", user_input["region"])
     text_deployname = st.text_input("Deployment name (optional)")
 
@@ -231,6 +233,7 @@ def view_advice():
             df = pd.DataFrame(
                 pareto_front, columns=["Exectime", "Cost", "Nodes", "SKU"]
             )
+            df["Cost"] = df["Cost"].astype(float).apply(lambda x: round(x, 4))
             st.table(df)
 
     st.text("")
