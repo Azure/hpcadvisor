@@ -222,9 +222,8 @@ def view_advice():
                 )
                 advice_data[title] = pareto_front
         else:
-            title, pareto_front = gen_advice_table(
-                table_id, datapoints, datafilter_appinputs
-            )
+            title, pareto_front = gen_advice_table(datapoints, datafilter_appinputs)
+            advice_data[title] = pareto_front
 
         for title, pareto_front in advice_data.items():
             if title != "noappinput":
