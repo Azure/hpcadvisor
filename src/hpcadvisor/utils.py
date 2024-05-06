@@ -70,7 +70,7 @@ def get_deployments_file(name):
 def get_random_code():
     #    random_number = random.randint(1000, 9999)
     random_letters = "".join(random.sample(string.ascii_lowercase, 3))
-    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    timestamp = datetime.datetime.now().strftime("%y%m%d%H%M")
     return f"{timestamp}{random_letters}"
 
 
