@@ -65,7 +65,7 @@ echo "NODES=\$NODES PPN=\$PPN"
 echo "hostprocmap=\$hostprocmap"
 
 APP_EXE=\$(which gmx_mpi)
-echo "Running GROMACS with \$NP processes ..."
+echo "Running OpenFOAM with \$NP processes ..."
 export UCX_NET_DEVICES=mlx5_ib0:1
 
 #export OMP_NUM_THREADS=1
