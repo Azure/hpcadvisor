@@ -91,6 +91,7 @@ foamDictionary -entry "hierarchicalCoeffs/n" -set "( \$X \$Y \$Z )" system/decom
 foamDictionary -entry blocks -set "( hex ( 0 1 2 3 4 5 6 7 ) ( \$BLOCKMESH_DIMENSIONS ) simpleGrading ( 1 1 1 ) )" system/blockMeshDict
 
 time ./Allrun
+reconstructPar -constant
 #############################################################################
 
 
@@ -98,6 +99,7 @@ time ./Allrun
 LOGFILE="log.foamRun"
 if [[ -f \$LOGFILE && \$(tail -n 1 "\$LOGFILE") == 'Finalising parallel run' ]]; then
   echo "Simulation completed"
+  touch case.foam
   exit 0
 else
   echo "Simulation failed"
