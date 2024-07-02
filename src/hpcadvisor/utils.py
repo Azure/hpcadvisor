@@ -77,15 +77,10 @@ def get_random_code():
 def generate_env_file(rg_prefix, user_data):
     subscription = user_data["subscription"]
     region = user_data["region"]
-    app_setup_url = user_data["appsetupurl"]
-    app_run_script = app_execution_script
-    app_name = user_data["appname"]
-    tags = user_data.get("tags", {})
 
     create_jumpbox = user_data.get("createjumpbox", False)
     peer_vpn = user_data.get("peervpn", False)
 
-    home_directory = os.path.expanduser("~")
     deployment_dir = os.path.join(hpcadvisor_dir, rg_prefix)
 
     if not os.path.exists(deployment_dir):
@@ -97,9 +92,6 @@ def generate_env_file(rg_prefix, user_data):
     with open(env_file, "w") as f:
         f.write("SUBSCRIPTION=" + subscription + "\n")
         f.write("REGION=" + region + "\n")
-        f.write("APPSETUPURL=" + app_setup_url + "\n")
-        f.write("APPRUNSCRIPT=" + app_run_script + "\n")
-        f.write("APPNAME=" + app_name + "\n")
 
         f.write("RG=" + rg_prefix + "\n")
         f.write("BATCHACCOUNT=" + rg_prefix + "ba\n")

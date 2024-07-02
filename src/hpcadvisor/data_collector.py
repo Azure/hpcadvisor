@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
 
 from hpcadvisor import batch_handler, logger, taskset_handler
 
@@ -41,6 +40,8 @@ def process_tasks(tasks_file, dataset_file):
         appinputs = task["appinputs"]
         appname = task["appname"]
         tags = task["tags"]
+        appsetupurl = task["appsetupurl"]
+        apprunscript = task["apprunscript"]
 
         if previous_sku != sku:
             log.debug(f"Got new sku: previous=[{previous_sku}] sku=[{sku}]")
@@ -54,7 +55,7 @@ def process_tasks(tasks_file, dataset_file):
                 log.error(f"Moving to another task")
                 continue
             jobname = batch_handler.create_job(poolname)
-            batch_handler.create_setup_task(jobname)
+            batch_handler.create_setup_task(jobname, appsetupurl)
 
         log.info(f"Resizing pool: {poolname} to {number_of_nodes}")
 
@@ -65,7 +66,7 @@ def process_tasks(tasks_file, dataset_file):
             continue
 
         taskid = batch_handler.create_compute_task(
-            jobname, number_of_nodes, ppr_perc, sku, appinputs
+            jobname, number_of_nodes, ppr_perc, sku, appinputs, apprunscript
         )
 
         batch_handler.wait_task_completion(jobname, taskid)

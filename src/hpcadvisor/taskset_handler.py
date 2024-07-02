@@ -5,7 +5,7 @@ import json
 import os
 from enum import Enum
 
-from hpcadvisor import logger
+from hpcadvisor import logger, utils
 
 log = logger.logger
 
@@ -52,7 +52,7 @@ def reset_alltasks_status(filename, status=TaskStatus.PENDING):
     _store_tasks(tasks, filename)
 
 
-def generate_tasks(filename, var_system, var_appinputs, appname, tags):
+def generate_tasks(filename, var_system, var_appinputs, appname, tags, appsetupurl):
     clear_task_file(filename)
 
     main_task_dict = []
@@ -86,6 +86,8 @@ def generate_tasks(filename, var_system, var_appinputs, appname, tags):
         task_dict_entry["status"] = TaskStatus.PENDING
         task_dict_entry["appname"] = appname
         task_dict_entry["tags"] = tags
+        task_dict_entry["appsetupurl"] = appsetupurl
+        task_dict_entry["apprunscript"] = utils.get_app_execution_script()
         main_task_dict.append(task_dict_entry)
         id += 1
 

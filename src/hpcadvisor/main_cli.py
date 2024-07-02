@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-import json
 import os
-import sys
 
 from hpcadvisor import (
     batch_handler,
@@ -15,40 +13,6 @@ from hpcadvisor import (
 )
 
 log = logger.logger
-
-
-# def get_userinput_from_file(user_input_file):
-#     required_variables = [
-#         "region",
-#         "skus",
-#         "nnodes",
-#         "appinputs",
-#         "ppr",
-#         "subscription",
-#         "appsetupurl",
-#         "appname",
-#     ]
-#
-#     try:
-#         with open(user_input_file, "r") as json_file:
-#             json_data = json.load(json_file)
-#     except json.JSONDecodeError:
-#         log.critical(f"User input not valid json file: " + user_input_file)
-#         sys.exit(1)
-#     except FileNotFoundError:
-#         log.critical("File not found: " + user_input_file)
-#         sys.exit(1)
-#
-#     missing_variables = [var for var in required_variables if var not in json_data]
-#
-#     if missing_variables:
-#         log.critical("Missing variables in user input file:")
-#         for var in missing_variables:
-#             log.critical(f"missing variable: {var}")
-#         sys.exit(1)
-#
-#     return json_data
-
 
 def main_shutdown_deployment(name):
     env_file = utils.get_deployments_file(name)
@@ -125,7 +89,10 @@ def main_collect_data(
             data_app_input,
             user_input["appname"],
             user_input["tags"],
+            user_input["appsetupurl"]
         )
+    else:
+        log.info(f"Using existing tasks file: {task_filename}")
 
     env_file = utils.get_deployments_file(deployment_name)
     dataset_filename = utils.get_dataset_filename()
