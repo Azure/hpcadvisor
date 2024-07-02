@@ -145,7 +145,8 @@ create_storage_account_files_nfs() {
     --location "$REGION" \
     --kind FileStorage \
     --sku Premium_LRS \
-    --output none
+    --output none \
+    --allow-shared-key-access false
 
   # disable secure transfer is required for nfs support
   az storage account update --https-only false \
@@ -255,7 +256,7 @@ create_batch_account_with_usersubscription() {
     --keyvault "$KEYVAULT"
   # --storage-account $STORAGEACCOUNT    # does not support azure fileshare
   error=$?
-  if [ $error -ne 0 ]; then
+  if [ "$error" -ne 0 ]; then
     echo "Error creating batch account"
     update_progress "error creating batch account"
     exit 1
