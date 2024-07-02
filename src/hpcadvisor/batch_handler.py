@@ -2,7 +2,6 @@
 
 import datetime
 import io
-import json
 import os
 import time
 from datetime import timedelta
@@ -13,21 +12,17 @@ from azure.batch import BatchServiceClient
 from azure.cli.core.util import b64encode
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.compute import ComputeManagementClient
-from azure.mgmt.compute.models import (
-    DiskCreateOption,
-    LinuxConfiguration,
-    OSProfile,
-    SshConfiguration,
-    SshPublicKey,
-    VirtualMachine,
-    VirtualMachineImage,
-)
+from azure.mgmt.compute.models import (DiskCreateOption, LinuxConfiguration,
+                                       OSProfile, SshConfiguration,
+                                       SshPublicKey, VirtualMachine,
+                                       VirtualMachineImage)
 from azure.mgmt.monitor import MonitorManagementClient
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient, SubscriptionClient
 
 from hpcadvisor import dataset_handler, logger, taskset_handler, utils
-from hpcadvisor.azure_identity_credential_adapter import AzureIdentityCredentialAdapter
+from hpcadvisor.azure_identity_credential_adapter import \
+    AzureIdentityCredentialAdapter
 
 batch_supported_images = "batch_supported_images.txt"
 VMIMAGE = "almalinux:almalinux-hpc:8_6-hpc-gen2:latest"
@@ -436,6 +431,8 @@ def create_pool(sku, poolname=None, number_of_nodes=1):
     # https://www.eessi.io/docs/getting_access/native_installation/
     script = """
     sleep 60
+    sudo chown _azbatch:_azbatchgrp /mnt/batch/tasks/fsmounts/data
+    sudo rpm --import https://repo.almalinux.org/almalinux/RPM-GPG-KEY-AlmaLinux
     sudo yum upgrade -y almalinux-release
     sudo yum install -y https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest.noarch.rpm
     sudo yum install -y cvmfs
@@ -523,14 +520,14 @@ def create_pool(sku, poolname=None, number_of_nodes=1):
     return poolname
 
 
-def create_setup_task(jobid):
+def create_setup_task(jobid, appsetupurl):
     log.info(f"Creating setup task for jobid={jobid}")
 
     if not batch_client:
         log.critical("batch_client is None")
         return
 
-    app_setup_url = env["APPSETUPURL"]
+    app_setup_url = appsetupurl
     log.debug(f"application setup url: {app_setup_url}")
 
     random_code = utils.get_random_code()
@@ -589,7 +586,7 @@ def _get_environment_settings(appinputs):
     return environment_settings
 
 
-def create_compute_task(jobid, number_of_nodes, ppr_perc, sku, appinputs):
+def create_compute_task(jobid, number_of_nodes, ppr_perc, sku, appinputs, apprunscript):
     if not batch_client:
         log.critical("batch_client is None")
         return
@@ -606,7 +603,7 @@ def create_compute_task(jobid, number_of_nodes, ppr_perc, sku, appinputs):
         )
     )
 
-    app_run_script = env["APPRUNSCRIPT"]
+    app_run_script = apprunscript
     task_commands = [
         f"/bin/bash -c '$AZ_BATCH_NODE_MOUNTS_DIR/data/{app_run_script}'",
     ]
@@ -674,9 +671,7 @@ def setup_environment(filename):
         "STORAGEACCOUNT",
         "VNETNAME",
         "VSUBNETNAME",
-        "REGION",
-        "APPSETUPURL",
-        "APPRUNSCRIPT",
+        "REGION"
     ]
 
     for var in required_env_vars:
