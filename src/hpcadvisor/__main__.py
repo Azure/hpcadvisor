@@ -89,7 +89,9 @@ def _process_arguments():
     collect.add_argument(
         "-cd", "--cleardeployment", help="Clear deployment", required=False
     )
-    collect.add_argument("-ct", "--cleartasks", help="Clear tasks", required=False)
+    collect.add_argument(
+        "-ct", "--cleartasks", help="Clear tasks", required=False, action="store_true"
+    )
     collect.set_defaults(func=collect_handler)
 
     plot = subparsers.add_parser("plot", help="Plot generator help")
