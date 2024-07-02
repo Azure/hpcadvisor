@@ -51,7 +51,7 @@ file and start the data **collection** (i.e. run the jobs), respectively:
 
 ```bash
 ./hpcadvisor deploy create -u ../examples/matrixmult/ui_defaults.json
-./hpcadvisor collect <deploymentname> -u ../examples/matrixmult/ui_defaults.json
+./hpcadvisor collect -n <deploymentname> -u ../examples/matrixmult/ui_defaults.json
 ```
 
 If you want to only test the plot generator component, skipping the data

@@ -7,7 +7,7 @@ collect data, plot graphs, and get advice.
 
 It currently has these fields:
 
-- `subscription`: subscription used to provision resources
+- `subscription`: subscription name used to provision resources
 - `rgprefix`: prefix of resource group name used to host all resources
 - `region`: Azure geographical region of deployment (e.g. eastus,
   southcentralus,...)
@@ -18,6 +18,12 @@ It currently has these fields:
 - `ppr`: percentage of processes per resource
 - `appinputs`: application inputs (e.g. matrix size and number of execution
   interactions for the matrix multiplication application)
+- `vpnrg` (optional): existing resource group that contains a vpn setup
+- `vpnvnet` (optional): existing vnet name for the vpn setup
+- `peervpn` (optional): boolean for peering with vpn resource group / vnet
+- `createjumpbox` (optional): boolean for creating a VM in the same resource
+group
+
 
 
 
