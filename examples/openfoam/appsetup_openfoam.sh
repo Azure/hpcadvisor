@@ -42,18 +42,26 @@ echo "Execution directory: \$execdir"
 
 pwd
 
-[[ -z \$PPN ]] && echo "PPN not defined"
-PPN=\$PPN
+#[[ -z \$PPN ]] && echo "PPN not defined"
+#PPN=\$PPN
+echo "PPN=\$PPN"
+
+
+
 
 # Create host file
-batch_hosts=hosts.batch
+batch_hosts=hostfile
 rm -rf \$batch_hosts
 
 hostprocmap=""
 for host in "\${ADDR[@]}"; do
-    echo \$host >> \$batch_hosts
+    echo "\$host slots=\${PPN}" >> \$batch_hosts
     hostprocmap="\$hostprocmap,\$host:\${PPN}"
 done
+
+echo "hostfile start"
+cat \$batch_hosts
+echo "hostfile end"
 
 #hostprocmap="\${hostprocmap:1}"
 
@@ -71,13 +79,22 @@ export UCX_NET_DEVICES=mlx5_ib0:1
 #export OMP_NUM_THREADS=\$PPN
 export OMPI_MCA_pml=ucx
 
+# allow flags to be added to the mpirun command through FOAM_MPIRUN_FLAGS environment variable
+sed -i '/RunFunctions/a source <(declare -f runParallel | sed "s/mpirun/mpirun \\\\\\\$FOAM_MPIRUN_FLAGS/g")' Allrun
+
+sed -i 's#/bin/sh#/bin/bash#g' Allrun
+sed -i '/bash/a set -x' Allrun
+
+
+#export FOAM_MPIRUN_FLAGS="-mca pml ucx $(env | grep 'WM_\|FOAM_' | cut -d'=' -f1 | sed 's/^/-x /g' | tr '\n' ' ') -x MPI_BUFFER_SIZE -x UCX_IB_MLX5_DEVX=n -x UCX_POSIX_USE_PROC_LINK=n -x PATH -x LD_LIBRARY_PATH --oversubscribe"
+
+export FOAM_MPIRUN_FLAGS="--hostfile \$batch_hosts \$(env | grep 'WM_\|FOAM_' | cut -d'=' -f1 | sed 's/^/-x /g' | tr '\n' ' ') -x PATH -x LD_LIBRARY_PATH -x MPI_BUFFER_SIZE -x UCX_IB_MLX5_DEVX=n -x UCX_POSIX_USE_PROC_LINK=n --report-bindings --verbose --map-by core --bind-to core "
+echo \$FOAM_MPIRUN_FLAGS
 
 ########################### APP EXECUTION #####################################
-BLOCKMESH_DIMENSIONS="20 8 8" # 0.35M cells
+BLOCKMESH_DIMENSIONS="40 16 16"
+#BLOCKMESH_DIMENSIONS="20 8 8" # 0.35M cells
 
-mpiopts="\$mpiopts -np \$NP --hostfile \$batch_hosts"
-
-TASKS_PER_NODE=\$SLURM_NTASKS_PER_NODE
 NTASKS=\$NP
 
 X=\$((\$NTASKS / 4))
@@ -90,8 +107,8 @@ foamDictionary -entry "hierarchicalCoeffs/n" -set "( \$X \$Y \$Z )" system/decom
 
 foamDictionary -entry blocks -set "( hex ( 0 1 2 3 4 5 6 7 ) ( \$BLOCKMESH_DIMENSIONS ) simpleGrading ( 1 1 1 ) )" system/blockMeshDict
 
+cat Allrun
 time ./Allrun
-reconstructPar -constant
 #############################################################################
 
 
@@ -99,6 +116,7 @@ reconstructPar -constant
 LOGFILE="log.foamRun"
 if [[ -f \$LOGFILE && \$(tail -n 1 "\$LOGFILE") == 'Finalising parallel run' ]]; then
   echo "Simulation completed"
+#  reconstructPar -constant
   touch case.foam
   exit 0
 else
