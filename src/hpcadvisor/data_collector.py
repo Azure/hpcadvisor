@@ -30,8 +30,7 @@ def process_tasks(tasks_file, dataset_file):
     jobname = ""
     poolname = ""
 
-    taskcounter = 0
-    for task in tasks:
+    for taskcounter, task in enumerate(tasks, start=1):
         print(f"Processing task: {taskcounter}/{len(tasks)}")
         log.info(f"Processing task: {task}")
         sku = task["sku"]
@@ -87,7 +86,6 @@ def process_tasks(tasks_file, dataset_file):
         taskset_handler.update_task_status(task["id"], tasks_file, task_status)
 
         previous_sku = sku
-        taskcounter += 1
 
     if poolname != "":
         batch_handler.resize_pool(poolname, 0)
