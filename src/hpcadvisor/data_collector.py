@@ -65,7 +65,7 @@ def process_tasks(tasks_file, dataset_file):
             continue
 
         taskid = batch_handler.create_compute_task(
-            jobname, number_of_nodes, ppr_perc, sku, appinputs, apprunscript
+            poolname, jobname, number_of_nodes, ppr_perc, sku, appinputs, apprunscript
         )
 
         batch_handler.wait_task_completion(jobname, taskid)

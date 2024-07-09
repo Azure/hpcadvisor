@@ -585,8 +585,34 @@ def _get_environment_settings(appinputs):
 
     return environment_settings
 
+def get_pool_ipaddresses(poolid):
+    if not batch_client:
+        log.critical("batch_client is None")
+        return
 
-def create_compute_task(jobid, number_of_nodes, ppr_perc, sku, appinputs, apprunscript):
+    compute_nodes = batch_client.compute_node.list(poolname)
+
+    ip_addresses = []
+
+    for node in compute_nodes:
+        ip_addresses.append(node.ip_address)
+
+    return ip_addresses
+
+def get_hostname_ppn_list_str(poolid, ppn):
+    if not batch_client:
+        log.critical("batch_client is None")
+        return
+
+    ip_addresses = get_pool_ipaddresses(poolid)
+
+    hostname_ppn_list = []
+    for ip in ip_addresses:
+        hostname_ppn_list.append(f"{ip}:{ppn}")
+
+    return ",".join(hostname_ppn_list)
+
+def create_compute_task(poolid, jobid, number_of_nodes, ppr_perc, sku, appinputs, apprunscript):
     if not batch_client:
         log.critical("batch_client is None")
         return
@@ -615,10 +641,13 @@ def create_compute_task(jobid, number_of_nodes, ppr_perc, sku, appinputs, apprun
         coordination_command_line="/bin/bash -c env",
     )
 
+
+    list_nodes_ppn = get_hostname_ppn_list_str(poolid, ppn)
     environment_settings = _get_environment_settings(appinputs)
     _append_environment_settings(environment_settings, "NODES", number_of_nodes)
     _append_environment_settings(environment_settings, "PPN", ppn)
     _append_environment_settings(environment_settings, "SKU", sku)
+    _append_environment_settings(environment_settings, "AZ_LIST_NODES_PPN", sku)
 
     task = batchmodels.TaskAddParameter(
         id=task_id,
