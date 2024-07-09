@@ -636,18 +636,36 @@ def create_compute_task(poolid, jobid, number_of_nodes, ppr_perc, sku, appinputs
 
     log.debug(f"task command: {task_commands}")
 
+    taskrundir = f"run{random_code}"
+    fulltaskrundir = f"/mnt/batch/tasks/fsmounts/data/{taskrundir}"
+    hostfile_path = f"{fulltaskrundir}/hostfile.txt"
+
     multi_instance_settings = batchmodels.MultiInstanceSettings(
         number_of_instances=number_of_nodes,
-        coordination_command_line="/bin/bash -c env",
+        coordination_command_line = (
+            "/bin/bash -c 'env ; mkdir $AZ_TASKRUN_DIR  ; leaderhost=$(echo $AZ_BATCH_HOST_LIST | cut -d\",\" -f1);"
+                "myhost=$(hostname -I | awk \"{print \\$1}\");"
+                "if [ \"$myhost\" == \"$leaderhost\" ]; then "
+                "IFS=','; "
+                "for host in $AZ_BATCH_HOST_LIST; do "
+                "echo \"${host} slots=$PPN\" >> $AZ_HOSTFILE_PATH; "
+                "done; "
+                "fi'"
+
+        ),
     )
 
-
+                                      # "/bin/bash -c 'env ; mkdir $AZ_TASKRUN_DIR ; hostlist=$(echo $AZ_BATCH_HOST_LIST | tr \",\" \" \") ;  for host in $hostlist; do "
+                                      # "echo \"${host} slots=$PPN $(hostname)\" >> $AZ_HOSTFILE_PATH; "
+                                      # "done ; echo \"$AZ_BATCH_HOST_LIST\" > $AZ_TASKRUN_DIR/hostlist2.txt'"
     list_nodes_ppn = get_hostname_ppn_list_str(poolid, ppn)
     environment_settings = _get_environment_settings(appinputs)
     _append_environment_settings(environment_settings, "NODES", number_of_nodes)
     _append_environment_settings(environment_settings, "PPN", ppn)
     _append_environment_settings(environment_settings, "SKU", sku)
     _append_environment_settings(environment_settings, "AZ_HOST_LIST_PPN", list_nodes_ppn)
+    _append_environment_settings(environment_settings, "AZ_TASKRUN_DIR", fulltaskrundir)
+    _append_environment_settings(environment_settings, "AZ_HOSTFILE_PATH",hostfile_path)
 
     task = batchmodels.TaskAddParameter(
         id=task_id,
