@@ -590,7 +590,7 @@ def get_pool_ipaddresses(poolid):
         log.critical("batch_client is None")
         return
 
-    compute_nodes = batch_client.compute_node.list(poolname)
+    compute_nodes = batch_client.compute_node.list(poolid)
 
     ip_addresses = []
 
@@ -647,7 +647,7 @@ def create_compute_task(poolid, jobid, number_of_nodes, ppr_perc, sku, appinputs
     _append_environment_settings(environment_settings, "NODES", number_of_nodes)
     _append_environment_settings(environment_settings, "PPN", ppn)
     _append_environment_settings(environment_settings, "SKU", sku)
-    _append_environment_settings(environment_settings, "AZ_LIST_NODES_PPN", sku)
+    _append_environment_settings(environment_settings, "AZ_HOST_LIST_PPN", list_nodes_ppn)
 
     task = batchmodels.TaskAddParameter(
         id=task_id,
