@@ -18,9 +18,13 @@ app_execution_script = "run_app.sh"
 hpcadvisor_dir = os.path.join(os.path.expanduser("~"), ".hpcadvisor")
 
 
+
 def get_hpcadvisor_dir():
     return hpcadvisor_dir
 
+
+def get_price_cache_filename():
+    return os.path.join(hpcadvisor_dir, "price_cache.json")
 
 def get_ui_default_filename():
     return os.path.join(hpcadvisor_dir, "ui_defaults.json")
