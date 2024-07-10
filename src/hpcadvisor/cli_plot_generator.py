@@ -1,5 +1,4 @@
 import os
-import sys
 
 from hpcadvisor import dataset_handler, logger, plot_generator, utils
 
@@ -20,7 +19,7 @@ def gen_core_plots(plot_id, datapoints, dynamic_filters, plotdir):
     )
 
 
-def generate_plots(plotfilter_file, plotdir):
+def generate_plots(plotfilter_file, plotdir, showtable):
     plotfilter = dataset_handler.get_plotfilter(plotfilter_file)
 
     dataset_file = utils.get_dataset_filename()
@@ -45,7 +44,17 @@ def generate_plots(plotfilter_file, plotdir):
         filter["appinputs"] = appinput
         dynamic_filter_items.append(filter)
 
+    if showtable:
+        log.info("Generating table...")
+        if dynamic_filter_items:
+            for dynamic_filter in dynamic_filter_items:
+                plot_generator.gen_data_table(datapoints, dynamic_filter)
+        else:
+           plot_generator.gen_data_table(datapoints, dynamic_filter_items)
+        return
+
     plot_id = 0
+    log.info("Generating plots...")
 
     if dynamic_filter_items:
         for dynamic_filter in dynamic_filter_items:

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import time
 
 import matplotlib.pyplot as plt
 import matplotlib.style as style
@@ -28,6 +27,24 @@ def get_tick_spacing(max_y, num_ticks=10):
     order_of_magnitude = 10 ** (len(str(int(tick_spacing))) - 1)
     tick_spacing = round(tick_spacing / order_of_magnitude) * order_of_magnitude
     return tick_spacing
+
+
+def gen_data_table(datapoints, dynamic_filter):
+
+    print(f"{'SKU':<30}{'Num Nodes':<20}{'Num Cores':<20}{'Exec Time':<20}{'Cost':<20}")
+
+    for datapoint in datapoints:
+        matched_dynamic_filter = dataset_handler.dynamic_filter_matches(
+            datapoint, dynamic_filter
+        )
+        if not matched_dynamic_filter:
+            continue
+        exectime = datapoint["exec_time"]
+        num_vms = datapoint["nnodes"]
+        sku = datapoint["sku"]
+        cost = price_puller.get_price("eastus", sku) * num_vms
+        num_cores = datapoint["total_cores"]
+        print(f"{sku:<30}{num_vms:<20}{num_cores:<20}{exectime:<20}{cost:<20}")
 
 
 def gen_plot_exectime_vs_numvms(

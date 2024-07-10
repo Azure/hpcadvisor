@@ -2,15 +2,9 @@
 
 import os
 
-from hpcadvisor import (
-    batch_handler,
-    cli_advice_generator,
-    cli_plot_generator,
-    data_collector,
-    logger,
-    taskset_handler,
-    utils,
-)
+from hpcadvisor import (batch_handler, cli_advice_generator,
+                        cli_plot_generator, data_collector, logger,
+                        taskset_handler, utils)
 
 log = logger.logger
 
@@ -56,10 +50,9 @@ def main_create_deployment(name, user_input_file, debug):
     utils.execute_env_deployer(env_file, rg_prefix, debug)
 
 
-def main_plot(plotfilter):
-    log.info("Generating plots...")
+def main_plot(plotfilter, showtable):
     plotdir = utils.get_plot_dir()
-    cli_plot_generator.generate_plots(plotfilter, plotdir)
+    cli_plot_generator.generate_plots(plotfilter, plotdir, showtable)
 
 
 def main_advice(datafilter):
