@@ -1,7 +1,7 @@
 import json
 import os
 
-from hpcadvisor import logger
+from hpcadvisor import logger, utils
 
 log = logger.logger
 
@@ -34,7 +34,7 @@ def get_plotfilter(plotfilter_file):
             if not isinstance(value, list):
                 plotfilter[key] = [value]
     else:
-        log.warning("Plotfilter file not provided. Consuming entire dataset")
+        log.warning("Plotfilter file not provided or does not exist. Consuming entire dataset")
     return plotfilter
 
 
@@ -44,6 +44,8 @@ def get_dataset_from_file(dataset_file):
     if os.path.exists(dataset_file):
         with open(dataset_file, "r") as file:
             existing_data = json.load(file)
+    else:
+        log.error("Dataset file not found: " + dataset_file)
 
     return existing_data
 
@@ -68,8 +70,13 @@ def is_valid_datapoint(datapoint, plotfilter):
     return True
 
 
-def get_datapoints(dataset_file, plotfilter):
+def get_datapoints(plotfilter_file):
+
+    dataset_file = utils.get_dataset_filename()
+
     dataset = get_dataset_from_file(dataset_file)
+
+    plotfilter = get_plotfilter(plotfilter_file)
 
     datapoints = []
     for datapoint in dataset[datapoints_label]:

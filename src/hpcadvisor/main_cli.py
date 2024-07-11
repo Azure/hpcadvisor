@@ -51,8 +51,11 @@ def main_create_deployment(name, user_input_file, debug):
 
 
 def main_plot(plotfilter, showtable):
-    plotdir = utils.get_plot_dir()
-    cli_plot_generator.generate_plots(plotfilter, plotdir, showtable)
+    if showtable:
+        cli_plot_generator.generate_datatable(plotfilter)
+    else:
+        plotdir = utils.get_plot_dir()
+        cli_plot_generator.generate_plots(plotfilter, plotdir, showtable)
 
 
 def main_advice(datafilter):

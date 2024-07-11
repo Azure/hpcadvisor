@@ -31,7 +31,10 @@ def get_tick_spacing(max_y, num_ticks=10):
 
 def gen_data_table(datapoints, dynamic_filter):
 
-    print(f"{'SKU':<30}{'Num Nodes':<20}{'Num Cores':<20}{'Exec Time':<20}{'Cost':<20}")
+    print(f"{'SKU':<30}{'NumNodes':<10}{'PPRPerc':<10}{'NumCores':<10}{'ExecTime':<10}{'Cost':<10}")
+    print("-" * 80)
+
+    tablepoints = []
 
     for datapoint in datapoints:
         matched_dynamic_filter = dataset_handler.dynamic_filter_matches(
@@ -39,12 +42,23 @@ def gen_data_table(datapoints, dynamic_filter):
         )
         if not matched_dynamic_filter:
             continue
-        exectime = datapoint["exec_time"]
-        num_vms = datapoint["nnodes"]
-        sku = datapoint["sku"]
-        cost = price_puller.get_price("eastus", sku) * num_vms
-        num_cores = datapoint["total_cores"]
-        print(f"{sku:<30}{num_vms:<20}{num_cores:<20}{exectime:<20}{cost:<20}")
+        new_datapoint = {}
+        new_datapoint["sku"] = datapoint["sku"]
+        new_datapoint["nnodes"] = datapoint["nnodes"]
+        new_datapoint["ppr_perc"] = datapoint["ppr_perc"]
+        new_datapoint["total_cores"] = datapoint["total_cores"]
+        new_datapoint["exec_time"] = datapoint["exec_time"]
+        cost = price_puller.get_price("eastus", datapoint["sku"]) * \
+               datapoint["nnodes"] * \
+               datapoint["exec_time"] / 3600
+        new_datapoint["cost"] = cost
+        tablepoints.append(new_datapoint)
+
+    tablepoints = sorted(tablepoints, key=lambda x: x["exec_time"])
+    for point in tablepoints:
+        print(f"{point['sku']:<30}{point['nnodes']:<10}{point['ppr_perc']:<10}{point['total_cores']:<10}{point['exec_time']:<10}{point['cost']:<10.2f}")
+
+     # print(f"{sku:<30}{num_vms:<10}{pprrperc:<10}{num_cores:<10}{exectime:<10}{cost:<10}")
 
 
 def gen_plot_exectime_vs_numvms(

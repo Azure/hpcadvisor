@@ -1,4 +1,3 @@
-import os
 
 from hpcadvisor import dataset_handler, logger, plot_generator, utils
 
@@ -18,47 +17,50 @@ def gen_core_plots(plot_id, datapoints, dynamic_filters, plotdir):
         None, datapoints, dynamic_filters, plotdir, plot_file
     )
 
-
-def generate_plots(plotfilter_file, plotdir, showtable):
-    plotfilter = dataset_handler.get_plotfilter(plotfilter_file)
-
-    dataset_file = utils.get_dataset_filename()
-    log.debug("Generating plots from dataset file: " + dataset_file)
-
-    appinputs = []
-    if not os.path.exists(dataset_file):
-        log.error("Dataset file not found: " + dataset_file)
-        return
-
-    datapoints = dataset_handler.get_datapoints(dataset_file, plotfilter)
-
-    if not datapoints:
-        log.error("No datapoints found. Check dataset and plotfilter files")
-        return
+def get_dynamic_filter_items(datapoints):
 
     appinputs = dataset_handler.get_appinput_combinations(datapoints)
-
     dynamic_filter_items = []
+
     for appinput in appinputs:
         filter = {}
         filter["appinputs"] = appinput
         dynamic_filter_items.append(filter)
 
-    if showtable:
-        log.info("Generating table...")
-        if dynamic_filter_items:
-            for dynamic_filter in dynamic_filter_items:
-                plot_generator.gen_data_table(datapoints, dynamic_filter)
-        else:
-           plot_generator.gen_data_table(datapoints, dynamic_filter_items)
+    return dynamic_filter_items
+
+def generate_datatable(plotfilter_file):
+
+    log.debug("Generating data table from dataset file")
+
+    datapoints = dataset_handler.get_datapoints(plotfilter_file)
+
+    if not datapoints:
+        log.error("No datapoints found. Check dataset and plotfilter files")
         return
 
-    plot_id = 0
+    dynamic_filter_items = get_dynamic_filter_items(datapoints)
+
+    for dynamic_filter in dynamic_filter_items or [dynamic_filter_items]:
+        plot_generator.gen_data_table(datapoints, dynamic_filter)
+
+    return
+
+def generate_plots(plotfilter_file, plotdir):
+
+    log.debug("Generating plots from dataset file")
+
+    datapoints = dataset_handler.get_datapoints(plotfilter_file)
+
+    if not datapoints:
+        log.error("No datapoints found. Check dataset and plotfilter files")
+        return
+
+    dynamic_filter_items = get_dynamic_filter_items(datapoints)
+
     log.info("Generating plots...")
 
-    if dynamic_filter_items:
-        for dynamic_filter in dynamic_filter_items:
-            gen_core_plots(plot_id, datapoints, dynamic_filter, plotdir)
-            plot_id += 2
-    else:
-        gen_core_plots(plot_id, datapoints, dynamic_filter_items, plotdir)
+    plot_id = 0
+    for dynamic_filter in dynamic_filter_items or [dynamic_filter_items]:
+        gen_core_plots(plot_id, datapoints, dynamic_filter, plotdir)
+        plot_id += 2
