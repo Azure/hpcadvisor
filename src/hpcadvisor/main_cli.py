@@ -55,7 +55,7 @@ def main_plot(plotfilter, showtable):
         cli_plot_generator.generate_datatable(plotfilter)
     else:
         plotdir = utils.get_plot_dir()
-        cli_plot_generator.generate_plots(plotfilter, plotdir, showtable)
+        cli_plot_generator.generate_plots(plotfilter, plotdir)
 
 
 def main_advice(datafilter):
