@@ -3,7 +3,14 @@ from hpcadvisor import dataset_handler, logger, plot_generator
 log = logger.logger
 
 
-def gen_core_plots(plot_id, datapoints, dynamic_filters, plotdir):
+def plot_id_generator(start=0):
+    plot_id = start
+    while True:
+        yield plot_id
+        plot_id += 1
+
+
+def gen_core_plots(plot_id_gen, datapoints, dynamic_filters, plotdir):
 
     plot_functions = [
         ("exectime_vs_numvms", plot_generator.gen_plot_exectime_vs_numvms),
@@ -12,9 +19,9 @@ def gen_core_plots(plot_id, datapoints, dynamic_filters, plotdir):
     ]
 
     for plot_type, plot_function in plot_functions:
+        plot_id = next(plot_id_gen)
         plot_file = f"plot_{plot_id}_{plot_type}.pdf"
         plot_function(None, datapoints, dynamic_filters, plotdir, plot_file)
-        plot_id += 1
 
 def get_dynamic_filter_items(datapoints):
 
@@ -57,7 +64,6 @@ def generate_plots(plotfilter_file, plotdir):
 
     dynamic_filter_items = get_dynamic_filter_items(datapoints)
 
-    plot_id = 0
+    plot_id_gen = plot_id_generator()
     for dynamic_filter in dynamic_filter_items or [dynamic_filter_items]:
-        gen_core_plots(plot_id, datapoints, dynamic_filter, plotdir)
-        plot_id += 3
+        gen_core_plots(plot_id_gen, datapoints, dynamic_filter, plotdir)
