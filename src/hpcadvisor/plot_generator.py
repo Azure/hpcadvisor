@@ -45,7 +45,7 @@ def gen_data_table(datapoints, dynamic_filter):
         new_datapoint = {}
         new_datapoint["sku"] = datapoint["sku"]
         new_datapoint["nnodes"] = datapoint["nnodes"]
-        new_datapoint["ppr_perc"] = datapoint["ppr_perc"]
+        new_datapoint["ppr_perc"] = int(datapoint["ppr_perc"])
         new_datapoint["total_cores"] = datapoint["total_cores"]
         new_datapoint["exec_time"] = datapoint["exec_time"]
         cost = price_puller.get_price("eastus", datapoint["sku"]) * \
