@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import datetime
 import io
 import os
 import time
@@ -1148,7 +1147,6 @@ def store_task_execution_data(
 
     pool_info = batch_client.pool.get(poolid)
     sku = pool_info.vm_size
-    print(task)
     number_of_nodes = 1
     if task.multi_instance_settings is None:
         log.warning(f"task {taskid} is not a multi-instance task. Assume 1 node")
@@ -1159,8 +1157,9 @@ def store_task_execution_data(
 
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
 
-    if tags is not None or len(tags) == 0:
+    if tags is None or len(tags) == 0:
         tags = {}
+
     datapoint["timestamp"] = timestamp
     datapoint["sku"] = sku
     datapoint["nnodes"] = number_of_nodes

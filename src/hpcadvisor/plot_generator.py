@@ -211,8 +211,8 @@ def gen_plot_scatter_exectime_vs_cost(
     #         marker=marker,
     #     )
 
-    ax.set_ylabel("Execution time (seconds)")
-    ax.set_xlabel("Cost (USD/hour)")
+    ax.set_xlabel("Execution time (seconds)")
+    ax.set_ylabel("Cost (USD)")
 
     # ticking_spacing = get_tick_spacing(max_exectime)
 
