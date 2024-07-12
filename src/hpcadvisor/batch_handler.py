@@ -4,6 +4,7 @@ import io
 import os
 import time
 from datetime import timedelta
+import datetime
 
 import azure.batch.models as batchmodels
 import numpy as np
