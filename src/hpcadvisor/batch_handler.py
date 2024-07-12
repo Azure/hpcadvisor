@@ -1122,7 +1122,7 @@ def get_task_execution_status(jobname, taskid):
 def store_task_execution_data(
     poolid, jobid, taskid, ppr_perc, appinputs, dataset_file, appname, tags
 ):
-    log.info(f"collecting task execution data: {taskid}")
+    log.info(f"collecting task execution data: {taskid} {jobid} {poolid}")
 
     if batch_client is None:
         log.critical("batch_client is None")
@@ -1148,7 +1148,13 @@ def store_task_execution_data(
 
     pool_info = batch_client.pool.get(poolid)
     sku = pool_info.vm_size
-    number_of_nodes = task.multi_instance_settings.number_of_instances
+    print(task)
+    number_of_nodes = 1
+    if task.multi_instance_settings is None:
+        log.warning(f"task {taskid} is not a multi-instance task. Assume 1 node")
+    else:
+        number_of_nodes = task.multi_instance_settings.number_of_instances
+
     total_cores = _get_total_cores(sku) * number_of_nodes
 
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")
