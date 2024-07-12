@@ -62,7 +62,15 @@ def get_dataset_skus(dataset):
 def is_valid_datapoint(datapoint, plotfilter):
     for key, valuelist in plotfilter.items():
         if key in datapoint:
-            if datapoint[key] not in valuelist:
+            if key == "tags":
+                anymatch = False
+                if any(all(tag_name in datapoint[key] and datapoint[key][tag_name] == tag_value
+                               for tag_name, tag_value in values_dict.items())
+                           for values_dict in valuelist):
+                            anymatch = True
+                if not anymatch:
+                    return False
+            elif  datapoint[key] not in valuelist:
                 return False
         else:
             return False
