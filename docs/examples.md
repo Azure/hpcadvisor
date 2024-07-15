@@ -82,3 +82,17 @@ The example for this app ([files
 here](https://github.com/Azure/hpcadvisor/tree/main/examples/namd/)) is based on
 installation using the binary from NAMD official website.
 
+
+## LAMMPS
+
+Large-scale Atomic/Molecular Massively Parallel Simulator (LAMMPS) is
+a molecular dynamics simulator designed to model particles in a variety of
+scientific and engineering applications. Developed by Sandia National
+Laboratories, it is highly scalable, so one can run it on single processors or
+in parallel using message-passing techniques. LAMMPS uses spatial-decomposition
+techniques to partition the simulation domain into small 3D sub-domains, one of
+which is assigned to each processor.
+
+The example for this app ([files
+here](https://github.com/Azure/hpcadvisor/tree/main/examples/lammps/)) is based
+on installation using [EESSI](https://www.eessi.io/).
