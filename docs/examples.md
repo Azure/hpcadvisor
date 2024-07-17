@@ -26,11 +26,11 @@ which has three files:
 - `plotfilter_matrixmult.json`: filter to consider only data for this
   application when generating the plots and the recommendation (pareto-front
   data).
-- `ui_defaults.json`: user input to create the environment, setup application,
+- `ui_defaults.yaml`: user input to create the environment, setup application,
   and define scenarios to be explored.
 
-```json title="ui_defaults.json"
---8<-- "https://raw.githubusercontent.com/Azure/hpcadvisor/main/examples/matrixmult/ui_defaults.json"
+```yaml title="ui_defaults.yaml"
+--8<-- "https://raw.githubusercontent.com/Azure/hpcadvisor/main/examples/matrixmult/ui_defaults.yaml"
 ```
 
 

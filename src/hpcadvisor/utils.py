@@ -1,10 +1,11 @@
 import datetime
-import json
 import os
 import random
 import string
 import sys
 import time
+
+import yaml
 
 from hpcadvisor import logger
 
@@ -146,16 +147,20 @@ def get_userinput_from_file(user_input_file):
     ]
 
     try:
-        with open(user_input_file, "r") as json_file:
-            json_data = json.load(json_file)
-    except json.JSONDecodeError:
-        log.critical(f"User input not valid json file: " + user_input_file)
-        sys.exit(1)
+        with open(user_input_file, "r") as file:
+            try:
+                data = yaml.safe_load(file)
+            except yaml.YAMLError as e:
+                log.critical(f"User input not valid YAML file: {user_input_file}\n{e}")
+                sys.exit(1)
+            except Exception as e:
+                log.critical(f"Error reading file as YAML: {user_input_file}\n{e}")
+                sys.exit(1)
     except FileNotFoundError:
         log.critical("File not found: " + user_input_file)
         sys.exit(1)
 
-    missing_variables = [var for var in required_variables if var not in json_data]
+    missing_variables = [var for var in required_variables if var not in data]
 
     if missing_variables:
         log.critical("Missing variables in user input file:")
@@ -163,7 +168,9 @@ def get_userinput_from_file(user_input_file):
             log.critical(f"missing variable: {var}")
         sys.exit(1)
 
-    return json_data
+    log.debug(f"User input data: {data}")
+
+    return data
 
 
 def list_deployments():

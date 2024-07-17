@@ -2,7 +2,7 @@
 
 ## UI defaults
 
-This JSON file is used as input for both CLI and GUI to deploy environments,
+This YAML file is used as input for both CLI and GUI to deploy environments,
 collect data, plot graphs, and get advice.
 
 It currently has these fields:
@@ -23,6 +23,12 @@ It currently has these fields:
 - `peervpn` (optional): boolean for peering with vpn resource group / vnet
 - `createjumpbox` (optional): boolean for creating a VM in the same resource
 group
+
+Example inside matrix multiplication folder:
+
+```yaml title="ui_defaults.yaml"
+--8<-- "https://raw.githubusercontent.com/Azure/hpcadvisor/main/examples/matrixmult/ui_defaults.yaml"
+```
 
 
 
