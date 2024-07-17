@@ -549,7 +549,7 @@
 
 <h1 id="files-and-dirs">Files and Dirs</h1>
 <h2 id="ui-defaults">UI defaults</h2>
-<p>This JSON file is used as input for both CLI and GUI to deploy environments,
+<p>This YAML file is used as input for both CLI and GUI to deploy environments,
 collect data, plot graphs, and get advice.</p>
 <p>It currently has these fields:</p>
 <ul>
@@ -570,33 +570,50 @@ collect data, plot graphs, and get advice.</p>
 <li><code>createjumpbox</code> (optional): boolean for creating a VM in the same resource
 group</li>
 </ul>
+<p>Example inside matrix multiplication folder:</p>
+<div class="highlight"><span class="filename">ui_defaults.yaml</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">subscription</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mysubscription</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nt">skus</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">Standard_HC44rs</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">Standard_HB120rs_v2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">Standard_HB120rs_v3</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nt">rgprefix</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nettoaha</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="nt">appsetupurl</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://raw.githubusercontent.com/Azure/hpcadvisor/main/examples/matrixmult/appsetup_matrix.sh</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="nt">nnodes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">4</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="nt">appname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">matrixmult</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="nt">tags</span><span class="p">:</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">appname</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">matrixmult</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v1</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="nt">region</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">southcentralus</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="nt">createjumpbox</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="nt">ppr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="nt">appinputs</span><span class="p">:</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">  </span><span class="nt">appinteractions</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;3&quot;</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">  </span><span class="nt">appmatrixsize</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;4000&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;7000&quot;</span><span class="p p-Indicator">]</span>
+</code></pre></div>
 <h2 id="data-filter">Data filter</h2>
 <p>This JSON file specifies which parts of the dataset one wants to use for plotting
 graphs or getting advice (pareto-front). You can specify the
 application name, and the deployment environments, which can be useful in case
 data was collected using a few deployments but one does not want to consider all
 deployments for that particular application.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>{
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  &quot;deployment&quot;: [
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    &quot;myresourcegroup&quot;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  ],
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  &quot;appname&quot;: &quot;wrf4&quot;
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>}
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>{
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  &quot;deployment&quot;: [
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    &quot;myresourcegroup&quot;
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>  ],
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>  &quot;appname&quot;: &quot;wrf4&quot;
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>}
 </code></pre></div>
 <h2 id="main-hpcadvisor-dir">Main HPCAdvisor dir</h2>
 <p>All files related to deployment, dataset, task output, among others are stored
 in the main HPCAdvisor folder, located at:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>$HOME/.hpcadvisor/
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>$HOME/.hpcadvisor/
 </code></pre></div>
 <h2 id="deployment-dirs">Deployment dirs</h2>
 <p>Every deployment contains a directory located at:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>$HOME/.hpcadvisor/&lt;deploymentname&gt;
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>$HOME/.hpcadvisor/&lt;deploymentname&gt;
 </code></pre></div>
 <h2 id="task-stderr-and-stdout">Task stderr and stdout</h2>
 <p>For each task executed, two files are collected:</p>
 <p>Standard error and standard output:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>$HOME/.hpcadvisor/&lt;deploymentname/output-&lt;taskname&gt;/stderr.txt
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>$HOME/.hpcadvisor/&lt;deploymentname/output-&lt;taskname&gt;/stdout.txt
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>$HOME/.hpcadvisor/&lt;deploymentname/output-&lt;taskname&gt;/stderr.txt
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>$HOME/.hpcadvisor/&lt;deploymentname/output-&lt;taskname&gt;/stdout.txt
 </code></pre></div>
 
 
