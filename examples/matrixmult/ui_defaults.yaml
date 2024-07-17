@@ -11,5 +11,5 @@ region: southcentralus
 createjumpbox: true
 ppr: 100
 appinputs:
-  appinteractions: "3"
-  appmatrixsize: ["4000", "7000"]
+  appinteractions: 3
+  appmatrixsize: [4000, 7000]
