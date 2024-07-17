@@ -29,7 +29,7 @@ def get_tick_spacing(max_y, num_ticks=10):
     return tick_spacing
 
 
-def gen_data_table(datapoints, dynamic_filter):
+def gen_data_table(datapoints, dynamic_filter, appexectime=False):
 
     print(f"{'SKU':<30}{'NumNodes':<10}{'PPRPerc':<10}{'NumCores':<10}{'ExecTime':<10}{'Cost':<10}")
     print("-" * 80)
@@ -42,15 +42,21 @@ def gen_data_table(datapoints, dynamic_filter):
         )
         if not matched_dynamic_filter:
             continue
+
         new_datapoint = {}
+        new_datapoint["exec_time"] = datapoint["exec_time"]
+        if appexectime:
+            new_datapoint["exec_time"] = datapoint["appexectime"]
+
         new_datapoint["sku"] = datapoint["sku"]
         new_datapoint["nnodes"] = datapoint["nnodes"]
         new_datapoint["ppr_perc"] = int(datapoint["ppr_perc"])
         new_datapoint["total_cores"] = datapoint["total_cores"]
-        new_datapoint["exec_time"] = datapoint["exec_time"]
+
         cost = price_puller.get_price("eastus", datapoint["sku"]) * \
                datapoint["nnodes"] * \
-               datapoint["exec_time"] / 3600
+               new_datapoint["exec_time"] / 3600
+
         new_datapoint["cost"] = cost
         tablepoints.append(new_datapoint)
 
@@ -62,14 +68,14 @@ def gen_data_table(datapoints, dynamic_filter):
 
 
 def gen_plot_exectime_vs_numvms(
-    st, datapoints, dynamic_filter, plotdir, plotfile="plot.png"
+    st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png"
 ):
     style.use("dark_background")
 
     num_vms = []
 
     mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
-        datapoints, dynamic_filter
+        datapoints, dynamic_filter, appexectime
     )
 
     if len(mydata) == 0:
@@ -107,7 +113,7 @@ def gen_plot_exectime_vs_numvms(
         plt.savefig(plotfile)
 
 def gen_plot_exectime_vs_cost(
-    st, datapoints, dynamic_filter, plotdir, plotfile="plot.png"
+    st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png"
 ):
     style.use("dark_background")
 
@@ -168,12 +174,12 @@ def gen_plot_exectime_vs_cost(
         plt.savefig(plotfile)
 
 def gen_plot_scatter_exectime_vs_cost(
-    st, datapoints, dynamic_filter, plotdir, plotfile="plot.png"
+    st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png"
 ):
     style.use("dark_background")
 
     mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
-        datapoints, dynamic_filter
+        datapoints, dynamic_filter, appexectime
     )
 
     if len(mydata) == 0:

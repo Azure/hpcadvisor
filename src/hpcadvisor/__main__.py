@@ -51,10 +51,11 @@ def collect_handler(args):
 def plot_handler(args):
     plotfilter = args.datafilter
     showtable = args.showtable
+    appexectime = args.appexectime
 
     from hpcadvisor import main_cli
 
-    main_cli.main_plot(plotfilter, showtable)
+    main_cli.main_plot(plotfilter, showtable, appexectime)
 
 
 def advice_handler(args):
@@ -98,6 +99,7 @@ def _process_arguments():
     plot = subparsers.add_parser("plot", help="Plot generator help")
     plot.add_argument("-df", "--datafilter", help="Data filter", required=True)
     plot.add_argument("-t", "--showtable", help="Show data table", required=False, action="store_true")
+    plot.add_argument("-ae", "--appexectime", help="Use app defined exectime", required=False, action="store_true")
     plot.set_defaults(func=plot_handler)
 
     advice = subparsers.add_parser("advice", help="Advice generator help")

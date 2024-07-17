@@ -50,12 +50,12 @@ def main_create_deployment(name, user_input_file, debug):
     utils.execute_env_deployer(env_file, rg_prefix, debug)
 
 
-def main_plot(plotfilter, showtable):
+def main_plot(plotfilter, showtable, appexectime):
     if showtable:
-        cli_plot_generator.generate_datatable(plotfilter)
+        cli_plot_generator.generate_datatable(plotfilter, appexectime)
     else:
         plotdir = utils.get_plot_dir()
-        cli_plot_generator.generate_plots(plotfilter, plotdir)
+        cli_plot_generator.generate_plots(plotfilter, plotdir, appexectime)
 
 
 def main_advice(datafilter):

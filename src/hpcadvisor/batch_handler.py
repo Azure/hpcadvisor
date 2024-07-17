@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
+import datetime
 import io
 import os
 import time
 from datetime import timedelta
-import datetime
 
 import azure.batch.models as batchmodels
 import numpy as np
@@ -804,13 +804,15 @@ def save_task_files(jobid, taskid):
     taskdir = f"output-{taskid}"
 
     taskdir = utils.get_task_dir(env["RG"], taskdir)
-    stdout = f"{taskdir}/{STANDARD_OUT_FILE_NAME}"
-    stderr = f"{taskdir}/{STANDARD_ERR_FILE_NAME}"
+    stdout_filename = f"{taskdir}/{STANDARD_OUT_FILE_NAME}"
+    stderr_filename = f"{taskdir}/{STANDARD_ERR_FILE_NAME}"
 
-    with open(stdout, "w") as f:
+    with open(stdout_filename, "w") as f:
         f.write(file_stdout)
-    with open(stderr, "w") as f:
+    with open(stderr_filename, "w") as f:
         f.write(file_stderr)
+
+    return stdout_filename, stderr_filename
 
 
 def wait_task_completion(jobid, taskid):
@@ -828,7 +830,6 @@ def wait_task_completion(jobid, taskid):
             break
         time.sleep(5)
 
-    save_task_files(jobid, taskid)
 
 
 def _get_total_cores(vm_size):
@@ -1117,6 +1118,47 @@ def get_task_execution_status(jobname, taskid):
     log.warning(f"Task {taskid} unkown state")
     return taskset_handler.TaskStatus.UNKNOWN
 
+# This needs to be rethinked
+def get_app_execution_time(file_stdout):
+    """Get application execution time from the stdout file
+        Here we are looking for HPCADVISORVAR APPEXECTIME=100
+        APPEXECTIME is the application execution time in seconds
+        which is defined by the user
+    """
+
+    appexectime = 0
+    with open(file_stdout, "r") as f:
+        for line in f:
+            if "HPCADVISORVAR" in line and "APPEXECTIME":
+                line = line.strip()
+                # TODO: improve space handling here
+                line = line.replace("HPCADVISORVAR ", "")
+                appexectime = int(line.split("=")[1])
+                break
+
+    return appexectime
+
+def get_app_level_metrics(file_stdout):
+    """Get application level metrics defined by HPCADVISORVAR
+        in stdout file
+    """
+
+    metrics = {}
+    with open(file_stdout, "r") as f:
+        for line in f:
+            if "HPCADVISORVAR" in line:
+                line = line.strip()
+                # TODO: improve space handling here
+                line = line.replace("HPCADVISORVAR ", "")
+                key = line.split("=")[0]
+                value = line.split("=")[1]
+                metrics[key] = value
+
+
+    return metrics
+
+
+
 
 # TODO: may move this to data_collector.py in future
 def store_task_execution_data(
@@ -1134,6 +1176,11 @@ def store_task_execution_data(
     if task.state != batchmodels.TaskState.completed:
         log.debug(f"task not completed state={task.state} taskid={taskid}")
         return
+
+    file_stdout, file_stderr = save_task_files(jobid, taskid)
+
+    appexectime = get_app_execution_time(file_stdout)
+    applevelmetrics = get_app_level_metrics(file_stdout)
 
     total_elapsed = task.execution_info.end_time - task.execution_info.start_time
     total_elapsed_in_seconds = int(total_elapsed.total_seconds())
@@ -1175,6 +1222,9 @@ def store_task_execution_data(
     datapoint["tags"] = tags
     datapoint["tags"]["poolid"] = poolid
     datapoint["tags"]["taskid"] = taskid
+    if appexectime != 0:
+        datapoint["appexectime"] = appexectime
+    datapoint["appmetrics"] = applevelmetrics
 
     log.debug(f"data point = {datapoint}")
     dataset_handler.add_datapoint(dataset_file, datapoint)

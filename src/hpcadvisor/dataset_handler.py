@@ -127,7 +127,7 @@ def dynamic_filter_matches(datapoint, dynamic_filters):
     return True
 
 
-def get_sku_nnodes_exec_time(datapoints, dynamic_filters):
+def get_sku_nnodes_exec_time(datapoints, dynamic_filters, appexectime=False):
     if not datapoints:
         return [], [], 0
 
@@ -143,7 +143,10 @@ def get_sku_nnodes_exec_time(datapoints, dynamic_filters):
 
         sku = datapoint["sku"]
         nnodes = datapoint["nnodes"]
-        exectime = datapoint["exec_time"]
+        if appexectime:
+            exectime = datapoint["appexectime"]
+        else:
+            exectime = datapoint["exec_time"]
 
         if mydata.get(sku) is None:
             mydata[sku] = []
