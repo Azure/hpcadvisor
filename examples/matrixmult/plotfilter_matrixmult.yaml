@@ -1,0 +1,8 @@
+appname: matrixmult
+
+# uncomment to filter more
+
+#deployment: mydeployment240712v1
+#tags:
+#  version: v1
+
