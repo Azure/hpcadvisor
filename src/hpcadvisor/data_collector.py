@@ -44,11 +44,12 @@ def process_tasks(tasks_file, dataset_file):
 
         if previous_sku != sku:
             log.debug(f"Got new sku: previous=[{previous_sku}] sku=[{sku}]")
-            if poolname != "":
-                log.info(f"Resizing pool: {poolname} to 0")
-                batch_handler.resize_pool(poolname, 0)
-
-            poolname = batch_handler.create_pool(sku)
+            # if poolname != "":
+            #     log.info(f"Resizing pool: {poolname} to 0")
+            #     batch_handler.resize_pool(poolname, 0)
+            #
+            # poolname = batch_handler.create_pool(sku)
+            poolname = "pool-2407180828rkn"
             if poolname == None:
                 log.error(f"Failed to create pool for sku: {sku}")
                 log.error(f"Moving to another task")
@@ -87,9 +88,9 @@ def process_tasks(tasks_file, dataset_file):
 
         previous_sku = sku
 
-    if poolname != "":
-        batch_handler.resize_pool(poolname, 0)
-
+    # if poolname != "":
+    #     batch_handler.resize_pool(poolname, 0)
+    #
 
 def collect_data(tasks_file, dataset_file, env_file, clear_deployment=False):
     if batch_handler.setup_environment(env_file):
