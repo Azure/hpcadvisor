@@ -42,7 +42,7 @@ Follow the matrix multiplication example here for detailed instructions.
 ### CLI-based execution
 
 Once the setup above (via poetry) is done, for the matrix multiplication
-example, you just need to update `examples/matrixmult/ui_defaults.json` with
+example, you just need to update `examples/matrixmult/ui_defaults.yaml` with
 your preferences. For this example, you only need to update `subscription`,
 and you should be good to go.
 
@@ -50,8 +50,8 @@ The follow two lines **deploy** a computing environment specified in ui defaults
 file and start the data **collection** (i.e. run the jobs), respectively:
 
 ```bash
-./hpcadvisor deploy create -u ../examples/matrixmult/ui_defaults.json
-./hpcadvisor collect -n <deploymentname> -u ../examples/matrixmult/ui_defaults.json
+./hpcadvisor deploy create -u ../examples/matrixmult/ui_defaults.yaml
+./hpcadvisor collect -n <deploymentname> -u ../examples/matrixmult/ui_defaults.yaml
 ```
 
 If you want to only test the plot generator component, skipping the data
@@ -65,13 +65,13 @@ cp ../examples/matrixmult/dataset.json $HOME/.hpcadvisor/
 Then request the plot generation:
 
 ```
-./hpcadvisor plot -df ../examples/matrixmult/plotfilter_matrixmult.json
+./hpcadvisor plot -df ../examples/matrixmult/datafilter_matrixmult.yaml
 ```
 
 To get the advice (based on pareto-front calculation):
 
 ```bash
-./hpcadvisor advice -df examples/matrixmult/plotfilter_matrixmult.json
+./hpcadvisor advice -df examples/matrixmult/datafilter_matrixmult.yaml
 ```
 
 ### GUI-based execution
