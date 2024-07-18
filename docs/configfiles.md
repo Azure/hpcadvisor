@@ -35,20 +35,17 @@ Example inside matrix multiplication folder:
 
 ## Data filter
 
-This JSON file specifies which parts of the dataset one wants to use for plotting
+This YAML file specifies which parts of the dataset one wants to use for plotting
 graphs or getting advice (pareto-front). You can specify the
 application name, and the deployment environments, which can be useful in case
 data was collected using a few deployments but one does not want to consider all
 deployments for that particular application.
 
-```
-{
-  "deployment": [
-    "myresourcegroup"
-  ],
-  "appname": "wrf4"
-}
-```
+Example inside matrix multiplication folder:
+
+```yaml title="datafilter_matrixmult.yaml"
+--8<-- "https://raw.githubusercontent.com/Azure/hpcadvisor/main/examples/matrixmult/datafilter_matrixmult.yaml"
+
 
 ##  Main HPCAdvisor dir
 
