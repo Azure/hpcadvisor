@@ -87,7 +87,7 @@ def generate_tasks(filename, var_system, var_appinputs, appname, tags, appsetupu
         task_dict_entry["appname"] = appname
         task_dict_entry["tags"] = tags
         task_dict_entry["appsetupurl"] = appsetupurl
-        task_dict_entry["apprunscript"] = utils.get_app_execution_script()
+        task_dict_entry["apprunscript"] = utils.get_app_execution_script(appsetupurl)
         main_task_dict.append(task_dict_entry)
         id += 1
 

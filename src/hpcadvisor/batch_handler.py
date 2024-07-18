@@ -37,6 +37,9 @@ STANDARD_ERR_FILE_NAME = "stderr.txt"
 log = logger.logger
 batch_client = None
 
+HPCADVISOR_FUNCTION_RUN = "hpcadvisor_run"
+HPCADVISOR_FUNCTION_SETUP = "hpcadvisor_setup"
+
 
 def get_subscription_id(subscription_name):
     credential = DefaultAzureCredential()
@@ -541,7 +544,7 @@ def create_setup_task(jobid, appsetupurl):
     log.debug(f"script for application: {script_name}")
 
     task_commands = [
-        f"/bin/bash -c 'cd $AZ_BATCH_NODE_MOUNTS_DIR/data ; pwd ; curl -sLO {app_setup_url} ; chmod +x {script_name} ; ./{script_name}'"
+        f"/bin/bash -c 'cd $AZ_BATCH_NODE_MOUNTS_DIR/data ; curl -sLO {app_setup_url} ; source {script_name} ; {HPCADVISOR_FUNCTION_SETUP}'"
     ]
 
     log.debug(f"task command: {task_commands}")
@@ -629,16 +632,16 @@ def create_compute_task(poolid, jobid, number_of_nodes, ppr_perc, sku, appinputs
         )
     )
 
-    app_run_script = apprunscript
-    task_commands = [
-        f"/bin/bash -c '$AZ_BATCH_NODE_MOUNTS_DIR/data/{app_run_script}'",
-    ]
-
-    log.debug(f"task command: {task_commands}")
-
     taskrundir = f"run{random_code}"
     fulltaskrundir = f"/mnt/batch/tasks/fsmounts/data/{taskrundir}"
     hostfile_path = f"{fulltaskrundir}/hostfile.txt"
+
+    app_run_script = apprunscript
+    task_commands = [
+        f"/bin/bash -c 'source $AZ_BATCH_NODE_MOUNTS_DIR/data/{app_run_script} ; cd {fulltaskrundir}; {HPCADVISOR_FUNCTION_RUN}'",
+    ]
+
+    log.debug(f"task command: {task_commands}")
 
     multi_instance_settings = batchmodels.MultiInstanceSettings(
         number_of_instances=number_of_nodes,
@@ -1156,9 +1159,6 @@ def get_app_level_metrics(file_stdout):
 
 
     return metrics
-
-
-
 
 # TODO: may move this to data_collector.py in future
 def store_task_execution_data(

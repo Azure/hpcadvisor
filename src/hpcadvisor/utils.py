@@ -14,10 +14,8 @@ environment_filename = "env.conf"
 task_filename = "tasks.json"
 dataset_filename = "dataset.json"
 ui_default_filename = "ui_default.json"
-app_execution_script = "run_app.sh"
 
 hpcadvisor_dir = os.path.join(os.path.expanduser("~"), ".hpcadvisor")
-
 
 
 def get_hpcadvisor_dir():
@@ -36,7 +34,11 @@ def get_task_filename(rg_prefix):
     return os.path.join(deployment_dir, task_filename)
 
 
-def get_app_execution_script():
+def get_app_execution_script(app_setup_url):
+
+    # get file name from url
+    app_execution_script = os.path.basename(app_setup_url)
+
     return app_execution_script
 
 
@@ -134,6 +136,26 @@ def get_rg_prefix_from_file(env_file):
     return None
 
 
+def get_data_from_file(filename):
+
+    try:
+        with open(filename, "r") as file:
+            try:
+                data = yaml.safe_load(file)
+            except yaml.YAMLError as e:
+                log.critical(f"User input not valid YAML file: {filename}\n{e}")
+                sys.exit(1)
+            except Exception as e:
+                log.critical(f"Error reading file as YAML: {filename}\n{e}")
+                sys.exit(1)
+    except FileNotFoundError:
+        log.critical("File not found: " + filename)
+        sys.exit(1)
+
+    log.debug(f"Data from file: {data}")
+    return data
+
+
 def get_userinput_from_file(user_input_file):
     required_variables = [
         "region",
@@ -146,19 +168,7 @@ def get_userinput_from_file(user_input_file):
         "appname",
     ]
 
-    try:
-        with open(user_input_file, "r") as file:
-            try:
-                data = yaml.safe_load(file)
-            except yaml.YAMLError as e:
-                log.critical(f"User input not valid YAML file: {user_input_file}\n{e}")
-                sys.exit(1)
-            except Exception as e:
-                log.critical(f"Error reading file as YAML: {user_input_file}\n{e}")
-                sys.exit(1)
-    except FileNotFoundError:
-        log.critical("File not found: " + user_input_file)
-        sys.exit(1)
+    data = get_data_from_file(user_input_file)
 
     missing_variables = [var for var in required_variables if var not in data]
 
