@@ -45,6 +45,7 @@ Example inside matrix multiplication folder:
 
 ```yaml title="datafilter_matrixmult.yaml"
 --8<-- "https://raw.githubusercontent.com/Azure/hpcadvisor/main/examples/matrixmult/datafilter_matrixmult.yaml"
+```
 
 
 ##  Main HPCAdvisor dir
