@@ -1,16 +1,10 @@
 #!/usr/bin/env bash
 
-set -x
-
-APP_EXE_PATH="${AZ_BATCH_NODE_MOUNTS_DIR}/data/"
-echo "APP_EXE_PATH=$APP_EXE_PATH"
-
-function setup_data {
-
+hpcadvisor_setup() {
+  echo "main setup $(pwd)"
+  echo "Setting up data ..."
   namdurl=https://www.ks.uiuc.edu/Research/namd/3.0b6/download/120834/NAMD_3.0b6_Linux-x86_64-verbs-smp.tar.gz
   namddir=NAMD_3.0b6_Linux-x86_64-verbs-smp
-
-  echo "setup data at dir: $(pwd)"
 
   if [ ! -d $namddir ]; then
     wget "$namdurl"
@@ -25,85 +19,36 @@ function setup_data {
   else
     echo "nothing to be done. App and data all ready"
   fi
-
 }
 
-function generate_run_script {
+hpcadvisor_run() {
+  echo "main run $(pwd)"
 
-  cat <<EOF >run_app.sh
-#!/bin/bash
+  namddir="$(pwd)/../NAMD_3.0b6_Linux-x86_64-verbs-smp"
+  export PATH="$namddir:$PATH"
+  echo "$PATH"
 
-APP_EXE_PATH="\${AZ_BATCH_NODE_MOUNTS_DIR}/data/"
+  NP=$(($NODES * $PPN))
 
-IFS=';' read -ra ADDR <<< "\$AZ_BATCH_NODE_LIST"
+  APP_EXE=$(which namd3)
 
-echo "APP_EXE_PATH=\$APP_EXE_PATH"
-pwd
-cd \$APP_EXE_PATH
-pwd
-execdir="run_\$((RANDOM % 90000 + 10000))"
+  IFS=';' read -ra ADDR <<<"$AZ_BATCH_NODE_LIST"
+  batch_hosts=hosts.batch
+  printf "host %s ++cpus $PPN\n" "${ADDR[@]}" >"$batch_hosts"
 
-mkdir \$execdir
-cd \$execdir || exit
-echo "Execution directory: \$execdir"
+  ########################### APP EXECUTION #####################################
+  cp ../stmv/* .
+  time charmrun "$APP_EXE" ++p $NP ++nodelist $batch_hosts +setcpuaffinity stmv.namd
 
-namddir=NAMD_3.0b6_Linux-x86_64-verbs-smp
-export PATH="\$APP_EXE_PATH/\$namddir:\$PATH"
+  ########################### TEST OUTPUT #####################################
+  OUTPUTFILE=stmv-output.coor
 
-pwd
-
-[[ -z \$PPN ]] && echo "PPN not defined"
-PPN=\$PPN
-
-# Create host file
-batch_hosts=hosts.batch
-rm -rf \$batch_hosts
-
-hostprocmap=""
-for host in "\${ADDR[@]}"; do
-    echo "host \$host ++cpus \$PPN" >> \$batch_hosts
-    hostprocmap="\$hostprocmap,\$host:\${PPN}"
-done
-
-echo "------- hostfile"
-cat \$batch_hosts
-echo "-------"
-
-NODES=\$(cat \$batch_hosts | wc -l)
-
-NP=\$((\$NODES*\$PPN))
-
-echo "NODES=\$NODES PPN=\$PPN"
-echo "hostprocmap=\$hostprocmap"
-
-APP_EXE=\$(which namd3)
-
-echo "APP_EXE=\$APP_EXE"
-
-
-########################### APP EXECUTION #####################################
-cp \$APP_EXE_PATH/stmv/* .
-ls -l
-time charmrun \$APP_EXE ++p \$NP ++nodelist \$batch_hosts +setcpuaffinity stmv.namd
-#############################################################################
-
-
-########################### TEST OUTPUT #####################################
-OUTPUTFILE=stmv-output.coor
-
-if [ -f "\$OUTPUTFILE" ]; then
-    echo "Output file found: \$OUTPUTFILE"
-    exit 0
-else
-    echo "Output file not found: \$OUTPUTFILE"
-    exit 1
-fi
-#############################################################################
-
-EOF
-  chmod +x run_app.sh
+  if [ -f "$OUTPUTFILE" ]; then
+    echo "Output file found: $OUTPUTFILE"
+    return 0
+  else
+    echo "Output file not found: $OUTPUTFILE"
+    return 1
+  fi
+  #############################################################################
 }
-
-cd "$APP_EXE_PATH" || exit
-setup_data
-generate_run_script
