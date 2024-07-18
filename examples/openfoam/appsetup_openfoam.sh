@@ -13,9 +13,6 @@ hpcadvisor_run() {
   module load OpenFOAM
   source "$FOAM_BASH"
 
-  which mpirun
-  which simpleFoam
-
   cp -r "$FOAM_TUTORIALS"/incompressibleFluid/motorBike/motorBike/* .
   chmod -R u+w .
 
@@ -43,7 +40,6 @@ hpcadvisor_run() {
   foamDictionary -entry "hierarchicalCoeffs/n" -set "( $X $Y $Z )" system/decomposeParDict
   foamDictionary -entry blocks -set "( hex ( 0 1 2 3 4 5 6 7 ) ( $BLOCKMESH_DIMENSIONS ) simpleGrading ( 1 1 1 ) )" system/blockMeshDict
 
-  cat Allrun
   time ./Allrun
 
   ########################### TEST OUTPUT #####################################
