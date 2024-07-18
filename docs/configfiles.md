@@ -73,6 +73,6 @@ For each task executed, two files are collected:
 Standard error and standard output:
 
 ```
-$HOME/.hpcadvisor/<deploymentname/output-<taskname>/stderr.txt
-$HOME/.hpcadvisor/<deploymentname/output-<taskname>/stdout.txt
+$HOME/.hpcadvisor/<deploymentname>/output-<taskname>/stderr.txt
+$HOME/.hpcadvisor/<deploymentname>/output-<taskname>/stdout.txt
 ```
