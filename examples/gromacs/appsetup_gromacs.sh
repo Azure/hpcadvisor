@@ -1,15 +1,8 @@
 #!/usr/bin/env bash
 
-set -x
-
-MPI_EXE_PATH="${AZ_BATCH_NODE_MOUNTS_DIR}/data/"
-MPI_EXE=gmx_mpi
-#MPI_CODE=mpi_matrix_mult.c
-echo "MPI_EXE_PATH=$MPI_EXE_PATH"
-
-function setup_data {
+hpcadvisor_setup() {
+  echo "main setup $(pwd)"
   echo "Setting up data ..."
-  pwd
 
   if [[ -d GROMACS_TestCaseA ]]; then
     echo "Data already exists"
@@ -20,90 +13,43 @@ function setup_data {
   tar -xf GROMACS_TestCaseA.tar.xz
 }
 
-function generate_run_script {
+hpcadvisor_run() {
+  echo "main run $(pwd)"
 
-  cat <<EOF >run_app.sh
-#!/bin/bash
+  source /cvmfs/pilot.eessi-hpc.org/latest/init/bash
+  #source /cvmfs/software.eessi.io/versions/2023.06/init/bash
+  module load GROMACS
+  module load OpenMPI
 
-MPI_EXE_PATH="\${AZ_BATCH_NODE_MOUNTS_DIR}/data/"
+  set -x
+  which gmx_mpi
+  which mpirun
 
-IFS=';' read -ra ADDR <<< "\$AZ_BATCH_NODE_LIST"
+  ln -s "../GROMACS_TestCaseA/ion_channel.tpr" .
+  ls -l ion_channel.tpr
 
-source /cvmfs/pilot.eessi-hpc.org/latest/init/bash
-#source /cvmfs/software.eessi.io/versions/2023.06/init/bash
-module load GROMACS
-module load OpenMPI
+  NP=$(($NODES * $PPN))
 
-set -x
-which gmx_mpi
-which mpirun
+  APP_EXE=$(which gmx_mpi)
+  echo "Running GROMACS with $NP processes ..."
 
-echo "MPI_EXE_PATH=\$MPI_EXE_PATH"
-pwd
-cd \$MPI_EXE_PATH
-pwd
-execdir="run_\$((RANDOM % 90000 + 10000))"
-mkdir -p \$execdir
-cd \$execdir || exit
-echo "Execution directory: \$execdir"
+  export UCX_NET_DEVICES=mlx5_ib0:1
+  export OMP_NUM_THREADS=1
+  #export OMP_NUM_THREADS=$PPN
+  export OMPI_MCA_pml=ucx
 
-pwd
-ls -l "\$MPI_EXE_PATH/"
-ln -s "\$MPI_EXE_PATH/GROMACS_TestCaseA/ion_channel.tpr" .
-ls -l ion_channel.tpr
-
-# Create host file
-batch_hosts=hosts.batch
-rm -rf \$batch_hosts
-
-IFS=';' read -ra ADDR <<< "\$AZ_BATCH_NODE_LIST"
-
-[[ -z \$PPN ]] && echo "PPN not defined"
-PPN=\$PPN
-
-hostprocmap=""
-
-for host in "\${ADDR[@]}"; do
-    echo \$host >> \$batch_hosts
-    hostprocmap="\$hostprocmap,\$host:\${PPN}"
-done
-
-hostprocmap="\${hostprocmap:1}"
-
-NODES=\$(cat \$batch_hosts | wc -l)
-
-NP=\$((\$NODES*\$PPN))
-
-echo "NODES=\$NODES PPN=\$PPN"
-echo "hostprocmap=\$hostprocmap"
-
-APP_EXE=\$(which gmx_mpi)
-echo "Running GROMACS with \$NP processes ..."
-export UCX_NET_DEVICES=mlx5_ib0:1
-
-export OMP_NUM_THREADS=1
-#export OMP_NUM_THREADS=\$PPN
-export OMPI_MCA_pml=ucx
-
-time mpirun -np \$NP --host \$hostprocmap \$APP_EXE mdrun \
+  time mpirun -np $NP --host "$AZ_HOST_LIST_PPN" "$APP_EXE" mdrun \
     -s ion_channel.tpr \
     -cpt 1000 \
     -maxh 1.0 \
     -nsteps 50000 \
-    -ntomp \$OMP_NUM_THREADS
+    -ntomp $OMP_NUM_THREADS
 
-if [[ -f md.log && \$(grep "Finished mdrun" md.log) ]]; then
+  if [[ -f md.log && $(grep "Finished mdrun" md.log) ]]; then
     echo "GROMACS run completed successfully"
-    exit 0
-else
+    return 0
+  else
     echo "GROMACS run failed"
-    exit 1
-fi
-
-EOF
-  chmod +x run_app.sh
+    return 1
+  fi
 }
-
-cd "$MPI_EXE_PATH" || exit
-setup_data
-generate_run_script
