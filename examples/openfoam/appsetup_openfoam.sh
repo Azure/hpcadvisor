@@ -1,94 +1,63 @@
 #!/usr/bin/env bash
 
-set -x
-
-APP_EXE_PATH="${AZ_BATCH_NODE_MOUNTS_DIR}/data/"
-echo "APP_EXE_PATH=$APP_EXE_PATH"
-
-function setup_data {
-  echo "data will be used from openfoam installation"
-  echo "nothing to be done"
-  pwd
+hpcadvisor_setup() {
+  echo "main setup $(pwd)"
+  echo "data comes from openfoam installation...skipping"
+  return 0
 }
 
-function generate_run_script {
+hpcadvisor_run() {
+  echo "main run $(pwd)"
 
-  cat <<EOF >run_app.sh
-#!/bin/bash
+  source /cvmfs/software.eessi.io/versions/2023.06/init/bash
+  module load OpenFOAM
+  source "$FOAM_BASH"
 
-cd \$AZ_TASKRUN_DIR
-echo "Execution directory: \$(pwd)"
+  which mpirun
+  which simpleFoam
 
-source /cvmfs/software.eessi.io/versions/2023.06/init/bash
-module load OpenFOAM
-source "\$FOAM_BASH"
+  cp -r "$FOAM_TUTORIALS"/incompressibleFluid/motorBike/motorBike/* .
+  chmod -R u+w .
 
-which mpirun
-which simpleFoam
+  NP=$(($NODES * $PPN))
+  echo "Running OpenFOAM with $NP processes..."
 
-cp -r "\$FOAM_TUTORIALS"/incompressibleFluid/motorBike/motorBike/* .
-chmod -R u+w .
+  export UCX_NET_DEVICES=mlx5_ib0:1
+  export OMPI_MCA_pml=ucx
 
-NP=\$((\$NODES*\$PPN))
+  # allow flags to be added to the mpirun command through FOAM_MPIRUN_FLAGS environment variable
+  sed -i '/RunFunctions/a source <(declare -f runParallel | sed "s/mpirun/mpirun \\\$FOAM_MPIRUN_FLAGS/g")' Allrun
+  sed -i 's#/bin/sh#/bin/bash#g' Allrun
 
-echo "Running OpenFOAM with \$NP processes ..."
-export UCX_NET_DEVICES=mlx5_ib0:1
+  export FOAM_MPIRUN_FLAGS="--hostfile $AZ_HOSTFILE_PATH $(env | grep 'WM_\|FOAM_' | cut -d'=' -f1 | sed 's/^/-x /g' | tr '\n' ' ') -x PATH -x LD_LIBRARY_PATH -x MPI_BUFFER_SIZE -x UCX_IB_MLX5_DEVX=n -x UCX_POSIX_USE_PROC_LINK=n --report-bindings --verbose --map-by core --bind-to core "
+  echo "$FOAM_MPIRUN_FLAGS"
 
-#export OMP_NUM_THREADS=1
-#export OMP_NUM_THREADS=\$PPN
-export OMPI_MCA_pml=ucx
+  ########################### APP EXECUTION #####################################
+  [ -z "$BLOCKMESH_DIMENSIONS" ] && BLOCKMESH_DIMENSIONS="20 8 8"
 
-# allow flags to be added to the mpirun command through FOAM_MPIRUN_FLAGS environment variable
-sed -i '/RunFunctions/a source <(declare -f runParallel | sed "s/mpirun/mpirun \\\\\\\$FOAM_MPIRUN_FLAGS/g")' Allrun
+  X=$(($NP / 4))
+  Y=2
+  Z=2
 
-sed -i 's#/bin/sh#/bin/bash#g' Allrun
-sed -i '/bash/a set -x' Allrun
+  foamDictionary -entry numberOfSubdomains -set "$NP" system/decomposeParDict
+  foamDictionary -entry "hierarchicalCoeffs/n" -set "( $X $Y $Z )" system/decomposeParDict
+  foamDictionary -entry blocks -set "( hex ( 0 1 2 3 4 5 6 7 ) ( $BLOCKMESH_DIMENSIONS ) simpleGrading ( 1 1 1 ) )" system/blockMeshDict
 
+  cat Allrun
+  time ./Allrun
 
-# export FOAM_MPIRUN_FLAGS="--host \$AZ_HOST_LIST_PPN \$(env | grep 'WM_\|FOAM_' | cut -d'=' -f1 | sed 's/^/-x /g' | tr '\n' ' ') -x PATH -x LD_LIBRARY_PATH -x MPI_BUFFER_SIZE -x UCX_IB_MLX5_DEVX=n -x UCX_POSIX_USE_PROC_LINK=n --report-bindings --verbose --map-by core --bind-to core "
-
-export FOAM_MPIRUN_FLAGS="--hostfile \$AZ_HOSTFILE_PATH \$(env | grep 'WM_\|FOAM_' | cut -d'=' -f1 | sed 's/^/-x /g' | tr '\n' ' ') -x PATH -x LD_LIBRARY_PATH -x MPI_BUFFER_SIZE -x UCX_IB_MLX5_DEVX=n -x UCX_POSIX_USE_PROC_LINK=n --report-bindings --verbose --map-by core --bind-to core "
-echo \$FOAM_MPIRUN_FLAGS
-
-########################### APP EXECUTION #####################################
-BLOCKMESH_DIMENSIONS="80 32 32"
-# BLOCKMESH_DIMENSIONS="40 16 16"
-#BLOCKMESH_DIMENSIONS="20 8 8" # 0.35M cells
-
-NTASKS=\$NP
-
-X=\$((\$NTASKS / 4))
-Y=2
-Z=2
-
-foamDictionary -entry numberOfSubdomains -set "\$NTASKS" system/decomposeParDict
-
-foamDictionary -entry "hierarchicalCoeffs/n" -set "( \$X \$Y \$Z )" system/decomposeParDict
-
-foamDictionary -entry blocks -set "( hex ( 0 1 2 3 4 5 6 7 ) ( \$BLOCKMESH_DIMENSIONS ) simpleGrading ( 1 1 1 ) )" system/blockMeshDict
-
-cat Allrun
-time ./Allrun
-#############################################################################
-
-
-########################### TEST OUTPUT #####################################
-LOGFILE="log.foamRun"
-if [[ -f \$LOGFILE && \$(tail -n 1 "\$LOGFILE") == 'Finalising parallel run' ]]; then
-  echo "Simulation completed"
-#  reconstructPar -constant
-  touch case.foam
-  exit 0
-else
-  echo "Simulation failed"
-  exit 1
-fi
-#############################################################################
-
-EOF
-  chmod +x run_app.sh
+  ########################### TEST OUTPUT #####################################
+  LOGFILE="log.foamRun"
+  if [[ -f $LOGFILE && $(tail -n 1 "$LOGFILE") == 'Finalising parallel run' ]]; then
+    echo "Simulation completed"
+    # reconstructPar -constant
+    # touch case.foam
+    FOAMRUNCLOCKTIME=$(cat log.foamRun | grep ClockTime | tail -n 1 | awk {'print $7 '})
+    echo "HPCADVISORVAR FOAMRUNCLOCKTIME=$FOAMRUNCLOCKTIME"
+    echo "HPCADVISORVAR APPEXECTIME=$FOAMRUNCLOCKTIME"
+    return 0
+  else
+    echo "Simulation failed"
+    return 1
+  fi
 }
-
-cd "$APP_EXE_PATH" || exit
-setup_data
-generate_run_script
