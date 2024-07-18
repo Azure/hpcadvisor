@@ -1,6 +1,8 @@
 import json
 import os
 
+import yaml
+
 from hpcadvisor import logger, utils
 
 log = logger.logger
@@ -27,8 +29,7 @@ def add_datapoint(dataset_file, datapoint):
 def get_plotfilter(plotfilter_file):
     plotfilter = {}
     if plotfilter_file and os.path.exists(plotfilter_file):
-        with open(plotfilter_file, "r") as file:
-            plotfilter = json.load(file)
+        plotfilter = utils.get_data_from_file(plotfilter_file)
 
         for key, value in plotfilter.items():
             if not isinstance(value, list):
