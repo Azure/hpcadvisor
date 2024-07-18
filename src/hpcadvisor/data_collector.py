@@ -87,9 +87,9 @@ def process_tasks(tasks_file, dataset_file):
 
         previous_sku = sku
 
-    # if poolname != "":
-    #     batch_handler.resize_pool(poolname, 0)
-    #
+    if poolname != "":
+        batch_handler.resize_pool(poolname, 0)
+
 
 def collect_data(tasks_file, dataset_file, env_file, clear_deployment=False):
     if batch_handler.setup_environment(env_file):
