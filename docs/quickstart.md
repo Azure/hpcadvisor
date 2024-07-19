@@ -80,7 +80,7 @@ One can use the browser version and click the buttons for the different
 operations. To pre-fill user input, specify the input file as showed below:
 
 ```bash
-./hpcadvisor gui -u ../examples/matrixmult/ui_defaults.json
+./hpcadvisor gui -u ../examples/matrixmult/ui_defaults.yaml
 ```
 
 ---
