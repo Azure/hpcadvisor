@@ -11,8 +11,10 @@ hpcadvisor_run() {
 
   source /cvmfs/software.eessi.io/versions/2023.06/init/bash
   module load OpenFOAM
+  # module load OpenFOAM/10-foss-2023a
   source "$FOAM_BASH"
 
+  # cp -r "$FOAM_TUTORIALS"/incompressible/simpleFoam/motorBike/* .
   cp -r "$FOAM_TUTORIALS"/incompressibleFluid/motorBike/motorBike/* .
   chmod -R u+w .
 
@@ -43,8 +45,11 @@ hpcadvisor_run() {
   time ./Allrun
 
   ########################### TEST OUTPUT #####################################
+  ########################### TEST OUTPUT #####################################
   LOGFILE="log.foamRun"
-  if [[ -f $LOGFILE && $(tail -n 1 "$LOGFILE") == 'Finalising parallel run' ]]; then
+  LOGFILE2="log.snappyHexMesh"
+  if [[ -f $LOGFILE && $(tail -n 1 "$LOGFILE") == 'Finalising parallel run' ]] &&
+    [[ -f $LOGFILE2 && $(tail -n 1 "$LOGFILE2") == 'Finalising parallel run' ]]; then
     echo "Simulation completed"
     # reconstructPar -constant
     # touch case.foam
@@ -56,4 +61,5 @@ hpcadvisor_run() {
     echo "Simulation failed"
     return 1
   fi
+
 }
