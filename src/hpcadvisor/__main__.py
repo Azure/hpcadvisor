@@ -42,10 +42,12 @@ def collect_handler(args):
     userinput = args.userinput
     cleardeployment = args.cleardeployment
     cleartasks = args.cleartasks
+    keeppools = args.keeppools
+    reusepools = args.reusepools
 
     from hpcadvisor import main_cli
 
-    main_cli.main_collect_data(name, userinput, cleardeployment, cleartasks)
+    main_cli.main_collect_data(name, userinput, cleardeployment, cleartasks, keeppools, reusepools)
 
 
 def plot_handler(args):
@@ -93,6 +95,12 @@ def _process_arguments():
     )
     collect.add_argument(
         "-ct", "--cleartasks", help="Clear tasks", required=False, action="store_true"
+    )
+    collect.add_argument(
+        "-kp", "--keeppools", help="Keep pools", required=False, action="store_true"
+    )
+    collect.add_argument(
+        "-rp", "--reusepools", help="Reuse pools", required=False, action="store_true"
     )
     collect.set_defaults(func=collect_handler)
 

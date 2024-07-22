@@ -9,6 +9,7 @@ from datetime import timedelta
 import azure.batch.models as batchmodels
 import numpy as np
 from azure.batch import BatchServiceClient
+from azure.batch.models import PoolListOptions
 from azure.cli.core.util import b64encode
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.compute import ComputeManagementClient
@@ -398,6 +399,24 @@ def wrap_commands_in_shell(commands):
     return "/bin/bash -c '{}; wait'".format(";".join(commands))
     # return "/bin/bash -c 'set -e; set -o pipefail; {}; wait'".format(";".join(commands))
 
+def get_existing_pool(sku, number_of_nodes):
+
+    if not batch_client:
+        log.critical("batch_client is None")
+        return None
+
+    log.info(f"Get existing pool for sku: {sku}")
+
+    options = PoolListOptions(filter="state eq 'active'")
+
+    batch_pools = batch_client.pool.list(pool_list_options=options)
+
+    for pool in batch_pools:
+        if pool.vm_size.lower() == sku.lower() and pool.target_dedicated_nodes == number_of_nodes:
+            log.info(f"Reusing pool {pool.id} found with sku {sku} and nodes {number_of_nodes}")
+            return pool.id
+
+    return None
 
 def create_pool(sku, poolname=None, number_of_nodes=1):
     if poolname is None:

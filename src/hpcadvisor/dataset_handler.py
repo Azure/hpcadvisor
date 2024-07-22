@@ -128,9 +128,9 @@ def dynamic_filter_matches(datapoint, dynamic_filters):
     return True
 
 
-def get_sku_nnodes_exec_time(datapoints, dynamic_filters, appexectime=False):
+def get_sku_nnodes_exec_time(datapoints, dynamic_filters, appexectime):
     if not datapoints:
-        return [], [], 0
+        return {}, {}, 0
 
     max_exectime = 0
     mydata = {}

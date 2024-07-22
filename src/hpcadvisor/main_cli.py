@@ -65,8 +65,8 @@ def main_advice(datafilter):
 
 
 def main_collect_data(
-    deployment_name, user_input_file, clear_deployment=False, clear_tasks=False
-):
+    deployment_name, user_input_file, clear_deployment=False, clear_tasks=False,
+keep_pools=False, reuse_pools=False):
     user_input = utils.get_userinput_from_file(user_input_file)
 
     data_system = {}
@@ -93,5 +93,5 @@ def main_collect_data(
     env_file = utils.get_deployments_file(deployment_name)
     dataset_filename = utils.get_dataset_filename()
     data_collector.collect_data(
-        task_filename, dataset_filename, env_file, clear_deployment
+        task_filename, dataset_filename, env_file, clear_deployment, keep_pools, reuse_pools
     )

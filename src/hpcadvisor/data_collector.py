@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 
+
 from hpcadvisor import batch_handler, logger, taskset_handler
 
 log = logger.logger
@@ -24,7 +25,7 @@ def resize_pool(poolname, number_of_nodes):
     return False
 
 
-def process_tasks(tasks_file, dataset_file):
+def process_tasks(tasks_file, dataset_file, keep_pools=False, reuse_pools=False):
     tasks = taskset_handler.get_tasks_from_file(tasks_file)
     previous_sku = ""
     jobname = ""
@@ -44,11 +45,16 @@ def process_tasks(tasks_file, dataset_file):
 
         if previous_sku != sku:
             log.debug(f"Got new sku: previous=[{previous_sku}] sku=[{sku}]")
-            if poolname != "":
+            if poolname != "" and not keep_pools:
                 log.info(f"Resizing pool: {poolname} to 0")
                 batch_handler.resize_pool(poolname, 0)
 
-            poolname = batch_handler.create_pool(sku)
+            if reuse_pools:
+                poolname = batch_handler.get_existing_pool(sku, number_of_nodes)
+
+            if not poolname or not reuse_pools:
+                poolname = batch_handler.create_pool(sku)
+
             if poolname == None:
                 log.error(f"Failed to create pool for sku: {sku}")
                 log.error(f"Moving to another task")
@@ -87,15 +93,15 @@ def process_tasks(tasks_file, dataset_file):
 
         previous_sku = sku
 
-    if poolname != "":
+    if poolname != "" and not keep_pools:
         batch_handler.resize_pool(poolname, 0)
 
 
-def collect_data(tasks_file, dataset_file, env_file, clear_deployment=False):
+def collect_data(tasks_file, dataset_file, env_file, clear_deployment=False, keep_pools=False, reuse_pools=False):
     if batch_handler.setup_environment(env_file):
         log.debug("Environment setup completed")
         log.info("Starting tasks...this may take a while")
-        process_tasks(tasks_file, dataset_file)
+        process_tasks(tasks_file, dataset_file, keep_pools, reuse_pools)
         if clear_deployment:
             batch_handler.delete_environment()
         log.info("Tasks completed")

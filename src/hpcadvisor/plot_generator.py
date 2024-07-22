@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import itertools
 import os
 
 import matplotlib.pyplot as plt
@@ -12,15 +13,29 @@ from hpcadvisor import dataset_handler, logger, price_puller
 
 log = logger.logger
 
-
 markers = ["o", "s", "^", "D", "*", "+", "x", "|", "_", "."]
+default_colors = ['orange', 'red', 'yellow', 'green', 'blue', 'purple', 'brown', 'pink']
+color_cycle = itertools.cycle(default_colors)
+marker_cycle = itertools.cycle(markers)
 
+color_map = {}
+marker_map = {}
+
+style.use("dark_background")
+
+# TODO: remove hardcoded region
+def handle_plot_output(st, fig, plotdir, plotfile):
+    if st:
+        st.pyplot(fig)
+    else:
+        plotfile = os.path.join(plotdir, plotfile)
+        log.info("Saving file: " + plotfile)
+        plt.savefig(plotfile)
 
 def _get_appinput_title(appinput):
     if not appinput or not "appinputs" in appinput:
         return ""
     return " ".join([f"{key}={value} " for key, value in appinput["appinputs"].items()])
-
 
 def get_tick_spacing(max_y, num_ticks=10):
     tick_spacing = max_y / (num_ticks - 1)
@@ -28,6 +43,22 @@ def get_tick_spacing(max_y, num_ticks=10):
     tick_spacing = round(tick_spacing / order_of_magnitude) * order_of_magnitude
     return tick_spacing
 
+def setup_plot_legend(ax):
+    handles, labels = ax.get_legend_handles_labels()
+    sorted_labels_handles = sorted(zip(labels, handles), key=lambda x: x[0])
+    labels, handles = zip(*sorted_labels_handles)
+    ax.legend(handles, labels, loc="upper right")
+
+def get_color_marker_maps(mydata):
+    global color_map
+    global marker_map
+
+    for sku in sorted(mydata.keys()):
+        if sku not in color_map:
+            color_map[sku] = next(color_cycle)
+            marker_map[sku] = next(marker_cycle)
+
+    return color_map, marker_map
 
 def gen_data_table(datapoints, dynamic_filter, appexectime=False):
 
@@ -55,7 +86,7 @@ def gen_data_table(datapoints, dynamic_filter, appexectime=False):
 
         cost = price_puller.get_price("eastus", datapoint["sku"]) * \
                datapoint["nnodes"] * \
-               new_datapoint["exec_time"] / 3600
+               new_datapoint["exec_time"] / 3600.0
 
         new_datapoint["cost"] = cost
         tablepoints.append(new_datapoint)
@@ -64,31 +95,27 @@ def gen_data_table(datapoints, dynamic_filter, appexectime=False):
     for point in tablepoints:
         print(f"{point['sku']:<30}{point['nnodes']:<10}{point['ppr_perc']:<10}{point['total_cores']:<10}{point['exec_time']:<10}{point['cost']:<10.2f}")
 
-     # print(f"{sku:<30}{num_vms:<10}{pprrperc:<10}{num_cores:<10}{exectime:<10}{cost:<10}")
-
 
 def gen_plot_exectime_vs_numvms(
     st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png"
 ):
-    style.use("dark_background")
-
     num_vms = []
 
     mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
         datapoints, dynamic_filter, appexectime
     )
 
-    if len(mydata) == 0:
-        log.error("No datapoints found. Check dataset and plotfilter files")
+    if not mydata:
+        log.error("No datapoints found. Check dataset and datafilter files")
         return
 
     fig, ax = plt.subplots()
 
-    markers = ["o", "s", "^", "D", "*", "+", "x", "|", "_", "."]
+    color_map, marker_map = get_color_marker_maps(mydata)
+
     for index, key in enumerate(mydata):
-        marker = markers[index % len(markers)]
         ax.plot(
-            num_vms[key], mydata[key], label=key, markerfacecolor="none", marker=marker
+            num_vms[key], mydata[key], label=key, markerfacecolor="none", marker=marker_map[key], color=color_map[key]
         )
 
     ax.set_ylabel("Execution time (seconds)")
@@ -97,28 +124,21 @@ def gen_plot_exectime_vs_numvms(
     ticking_spacing = get_tick_spacing(max_exectime)
 
     plt.yticks(np.arange(0, max_exectime * 1.5, ticking_spacing))
-    handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles, labels, loc="upper right")
+
+    setup_plot_legend(ax)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     appinput_title = _get_appinput_title(dynamic_filter)
     title = f"Execution time (s) per SKU & Num Nodes\n{appinput_title}"
     ax.set_title(title)
 
-    if st:
-        st.pyplot(fig)
-    else:
-        plotfile = os.path.join(plotdir, plotfile)
-        log.info("Saving file: " + plotfile)
-        plt.savefig(plotfile)
+    handle_plot_output(st, fig, plotdir, plotfile)
 
 def gen_plot_exectime_vs_cost(
     st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png"
 ):
-    style.use("dark_background")
-
     mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
-        datapoints, dynamic_filter
+        datapoints, dynamic_filter, appexectime
     )
 
     if len(mydata) == 0:
@@ -129,6 +149,8 @@ def gen_plot_exectime_vs_cost(
     for key in mydata:
         sku_costs[key] = price_puller.get_price("eastus", key)
 
+    print("-------------------------------")
+    print(mydata)
     exec_costs = {}
     for key in mydata:
         exec_costs[key] = []
@@ -139,25 +161,32 @@ def gen_plot_exectime_vs_cost(
 
     fig, ax = plt.subplots()
 
+    global color_map
+    global marker_map
+
+    for sku in sorted(mydata.keys()):
+        if sku not in color_map:
+            color_map[sku] = next(color_cycle)
+            marker_map[sku] = next(marker_cycle)
+
     for index, key in enumerate(mydata):
-        marker = markers[index % len(markers)]
         ax.plot(
             exec_costs[key],
             mydata[key],
             label=key,
             markerfacecolor="none",
-            marker=marker,
+            marker=marker_map[key],
+            color=color_map[key]
         )
 
     ax.set_ylabel("Execution time (seconds)")
-    ax.set_xlabel("Cost (USD/hour)")
+    ax.set_xlabel("Cost (USD)")
 
     ticking_spacing = get_tick_spacing(max_exectime)
 
     plt.yticks(np.arange(0, max_exectime * 1.5, ticking_spacing))
 
-    handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles, labels, loc="upper right")
+    setup_plot_legend(ax)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     appinput_title = _get_appinput_title(dynamic_filter)
@@ -166,18 +195,11 @@ def gen_plot_exectime_vs_cost(
     )
     ax.set_title(title)
 
-    if st:
-        st.pyplot(fig)
-    else:
-        plotfile = os.path.join(plotdir, plotfile)
-        log.info("Saving file: " + plotfile)
-        plt.savefig(plotfile)
+    handle_plot_output(st, fig, plotdir, plotfile)
 
 def gen_plot_scatter_exectime_vs_cost(
     st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png"
 ):
-    style.use("dark_background")
-
     mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
         datapoints, dynamic_filter, appexectime
     )
@@ -203,40 +225,16 @@ def gen_plot_scatter_exectime_vs_cost(
 
     fig, ax = plt.subplots()
 
-    print(mydata)
-    print(exec_costs)
     plt.scatter(scatter_data_x, scatter_data_y)
-
-    # for index, key in enumerate(mydata):
-    #     marker = markers[index % len(markers)]
-    #     ax.plot.scatter(
-    #         exec_costs[key],
-    #         mydata[key],
-    #         label=key,
-    #         markerfacecolor="none",
-    #         marker=marker,
-    #     )
 
     ax.set_xlabel("Execution time (seconds)")
     ax.set_ylabel("Cost (USD)")
-
-    # ticking_spacing = get_tick_spacing(max_exectime)
-
-    # plt.yticks(np.arange(0, max_exectime * 1.5, ticking_spacing))
-
-    # handles, labels = ax.get_legend_handles_labels()
-    # ax.legend(handles, labels, loc="upper right")
-    # ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     appinput_title = _get_appinput_title(dynamic_filter)
     title = (
         f"Cost as function of execution time (s)\n{appinput_title}"
     )
+
     ax.set_title(title)
 
-    if st:
-        st.pyplot(fig)
-    else:
-        plotfile = os.path.join(plotdir, plotfile)
-        log.info("Saving file: " + plotfile)
-        plt.savefig(plotfile)
+    handle_plot_output(st, fig, plotdir, plotfile)
