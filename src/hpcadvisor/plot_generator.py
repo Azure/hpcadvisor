@@ -24,6 +24,7 @@ marker_map = {}
 style.use("dark_background")
 
 # TODO: remove hardcoded region
+# TODO: refactor code as there are many duplicate function calls
 def handle_plot_output(st, fig, plotdir, plotfile):
     if st:
         st.pyplot(fig)
@@ -95,6 +96,50 @@ def gen_data_table(datapoints, dynamic_filter, appexectime=False):
     for point in tablepoints:
         print(f"{point['sku']:<30}{point['nnodes']:<10}{point['ppr_perc']:<10}{point['total_cores']:<10}{point['exec_time']:<10}{point['cost']:<10.2f}")
 
+def gen_plot_speedup(
+    st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png"
+):
+    num_vms = []
+
+    mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
+        datapoints, dynamic_filter, appexectime
+    )
+
+    if not mydata:
+        log.error("No datapoints found. Check dataset and datafilter files")
+        return
+
+    fig, ax = plt.subplots()
+
+    color_map, marker_map = get_color_marker_maps(mydata)
+
+    max_speedup = 0
+    for index, key in enumerate(mydata):
+        speedup = [mydata[key][0] / x for x in mydata[key]]
+        max_speedup = max(max_speedup, max(speedup))
+        ax.plot(
+            num_vms[key], speedup, label=key, markerfacecolor="none", marker=marker_map[key], color=color_map[key]
+        )
+        #ax.plot(
+        #    num_vms[key], mydata[key], label=key, markerfacecolor="none", marker=marker_map[key], color=color_map[key]
+        #)
+
+    ax.set_ylabel("Speedup")
+    ax.set_xlabel("Number of VMs")
+
+    ticking_spacing = get_tick_spacing(max_exectime)
+
+    plt.yticks(np.arange(0, max_speedup * 1.5, ticking_spacing))
+
+    setup_plot_legend(ax)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+    appinput_title = _get_appinput_title(dynamic_filter)
+    title = f"Speedup\n{appinput_title}"
+    ax.set_title(title)
+
+    handle_plot_output(st, fig, plotdir, plotfile)
+
 
 def gen_plot_exectime_vs_numvms(
     st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png"
@@ -149,8 +194,6 @@ def gen_plot_exectime_vs_cost(
     for key in mydata:
         sku_costs[key] = price_puller.get_price("eastus", key)
 
-    print("-------------------------------")
-    print(mydata)
     exec_costs = {}
     for key in mydata:
         exec_costs[key] = []
@@ -171,20 +214,20 @@ def gen_plot_exectime_vs_cost(
 
     for index, key in enumerate(mydata):
         ax.plot(
-            exec_costs[key],
             mydata[key],
+            exec_costs[key],
             label=key,
             markerfacecolor="none",
             marker=marker_map[key],
             color=color_map[key]
         )
 
-    ax.set_ylabel("Execution time (seconds)")
-    ax.set_xlabel("Cost (USD)")
+    ax.set_xlabel("Execution time (seconds)")
+    ax.set_ylabel("Cost (USD)")
 
     ticking_spacing = get_tick_spacing(max_exectime)
 
-    plt.yticks(np.arange(0, max_exectime * 1.5, ticking_spacing))
+    # plt.yticks(np.arange(0, max_exectime * 1.5, ticking_spacing))
 
     setup_plot_legend(ax)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))

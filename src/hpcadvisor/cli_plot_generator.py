@@ -15,7 +15,8 @@ def gen_core_plots(plot_id_gen, datapoints, dynamic_filters, appexectime, plotdi
     plot_functions = [
         ("exectime_vs_numvms", plot_generator.gen_plot_exectime_vs_numvms),
         ("exectime_vs_cost", plot_generator.gen_plot_exectime_vs_cost),
-        ("scatter_exectime_vs_cost", plot_generator.gen_plot_scatter_exectime_vs_cost)
+        ("scatter_exectime_vs_cost", plot_generator.gen_plot_scatter_exectime_vs_cost),
+        ("speedup", plot_generator.gen_plot_speedup)
     ]
 
     for plot_type, plot_function in plot_functions:

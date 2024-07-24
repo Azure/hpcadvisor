@@ -1152,7 +1152,7 @@ def get_app_execution_time(file_stdout):
                 line = line.strip()
                 # TODO: improve space handling here
                 line = line.replace("HPCADVISORVAR ", "")
-                appexectime = int(line.split("=")[1])
+                appexectime = float(line.split("=")[1])
                 break
 
     return appexectime
