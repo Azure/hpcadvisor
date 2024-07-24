@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import itertools
+import math
 import os
 
 import matplotlib.pyplot as plt
@@ -39,10 +40,32 @@ def _get_appinput_title(appinput):
     return " ".join([f"{key}={value} " for key, value in appinput["appinputs"].items()])
 
 def get_tick_spacing(max_y, num_ticks=10):
+    if num_ticks <= 1:
+        raise ValueError("num_ticks must be greater than 1")
+
+    if max_y <= 0:
+        raise ValueError("max_y must be greater than 0")
+
+    # Calculate initial tick spacing
     tick_spacing = max_y / (num_ticks - 1)
-    order_of_magnitude = 10 ** (len(str(int(tick_spacing))) - 1)
+
+    # Determine the order of magnitude
+    order_of_magnitude = 10 ** math.floor(math.log10(tick_spacing))
+
+    # Adjust tick_spacing to a more readable value
     tick_spacing = round(tick_spacing / order_of_magnitude) * order_of_magnitude
+
+    # Ensure tick_spacing is positive and reasonable
+    if tick_spacing <= 0:
+        tick_spacing = order_of_magnitude
+
     return tick_spacing
+
+# def get_tick_spacing(max_y, num_ticks=10):
+#     tick_spacing = max_y / float(num_ticks - 1)
+#     order_of_magnitude = 10 ** (len(str(int(tick_spacing))) - 1)
+#     tick_spacing = round(tick_spacing / order_of_magnitude) * order_of_magnitude
+#     return tick_spacing
 
 def setup_plot_legend(ax):
     handles, labels = ax.get_legend_handles_labels()
@@ -95,6 +118,50 @@ def gen_data_table(datapoints, dynamic_filter, appexectime=False):
     tablepoints = sorted(tablepoints, key=lambda x: x["exec_time"])
     for point in tablepoints:
         print(f"{point['sku']:<30}{point['nnodes']:<10}{point['ppr_perc']:<10}{point['total_cores']:<10}{point['exec_time']:<10}{point['cost']:<10.2f}")
+
+def gen_plot_efficiency(
+    st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png"
+):
+    num_vms = []
+
+    mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
+        datapoints, dynamic_filter, appexectime
+    )
+
+    if not mydata:
+        log.error("No datapoints found. Check dataset and datafilter files")
+        return
+
+    fig, ax = plt.subplots()
+
+    color_map, marker_map = get_color_marker_maps(mydata)
+
+    max_y = 0
+    for index, key in enumerate(mydata):
+        speedup = [mydata[key][0] / x for x in mydata[key]]
+        efficiency = np.array(speedup) / np.array(num_vms[key])
+        max_y = max(max_y, max(efficiency))
+        ax.plot(
+            num_vms[key], efficiency, label=key, markerfacecolor="none", marker=marker_map[key], color=color_map[key]
+        )
+
+    ax.set_ylabel("Efficiency")
+    ax.set_xlabel("Number of VMs")
+
+    ticking_spacing = get_tick_spacing(max_y)
+
+    plt.yticks(np.arange(0, max_y * 1.5, ticking_spacing))
+
+    setup_plot_legend(ax)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+    appinput_title = _get_appinput_title(dynamic_filter)
+    title = f"Efficiency\n{appinput_title}"
+    ax.set_title(title)
+
+    handle_plot_output(st, fig, plotdir, plotfile)
+
+
 
 def gen_plot_speedup(
     st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png"
