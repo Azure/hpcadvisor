@@ -10,7 +10,7 @@ def plot_id_generator(start=0):
         plot_id += 1
 
 
-def gen_core_plots(plot_id_gen, datapoints, dynamic_filters, appexectime, plotdir):
+def gen_core_plots(plot_id_gen, datapoints, dynamic_filters, appexectime, plotdir, subtitle=None):
 
     plot_functions = [
         ("exectime_vs_numvms", plot_generator.gen_plot_exectime_vs_numvms),
@@ -23,7 +23,7 @@ def gen_core_plots(plot_id_gen, datapoints, dynamic_filters, appexectime, plotdi
     for plot_type, plot_function in plot_functions:
         plot_id = next(plot_id_gen)
         plot_file = f"plot_{plot_id}_{plot_type}.pdf"
-        plot_function(None, datapoints, dynamic_filters, appexectime, plotdir, plot_file)
+        plot_function(None, datapoints, dynamic_filters, appexectime, plotdir, plot_file, subtitle)
 
 def get_dynamic_filter_items(datapoints):
 
@@ -54,7 +54,7 @@ def generate_datatable(plotfilter_file, appexectime=False):
 
     return
 
-def generate_plots(plotfilter_file, plotdir, appexectime=False):
+def generate_plots(plotfilter_file, plotdir, appexectime=False, subtitle=None):
 
     log.debug("Generating plots from dataset file")
 
@@ -68,4 +68,4 @@ def generate_plots(plotfilter_file, plotdir, appexectime=False):
 
     plot_id_gen = plot_id_generator()
     for dynamic_filter in dynamic_filter_items or [dynamic_filter_items]:
-        gen_core_plots(plot_id_gen, datapoints, dynamic_filter, appexectime, plotdir)
+        gen_core_plots(plot_id_gen, datapoints, dynamic_filter, appexectime, plotdir, subtitle)

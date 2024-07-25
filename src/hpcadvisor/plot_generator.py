@@ -46,32 +46,27 @@ def get_tick_spacing(max_y, num_ticks=10):
     if max_y <= 0:
         raise ValueError("max_y must be greater than 0")
 
-    # Calculate initial tick spacing
     tick_spacing = max_y / (num_ticks - 1)
 
-    # Determine the order of magnitude
     order_of_magnitude = 10 ** math.floor(math.log10(tick_spacing))
 
-    # Adjust tick_spacing to a more readable value
     tick_spacing = round(tick_spacing / order_of_magnitude) * order_of_magnitude
 
-    # Ensure tick_spacing is positive and reasonable
     if tick_spacing <= 0:
         tick_spacing = order_of_magnitude
 
     return tick_spacing
 
-# def get_tick_spacing(max_y, num_ticks=10):
-#     tick_spacing = max_y / float(num_ticks - 1)
-#     order_of_magnitude = 10 ** (len(str(int(tick_spacing))) - 1)
-#     tick_spacing = round(tick_spacing / order_of_magnitude) * order_of_magnitude
-#     return tick_spacing
 
 def setup_plot_legend(ax):
     handles, labels = ax.get_legend_handles_labels()
+    # Remove "standard_" prefix from labels
+    labels = [label.replace("standard_", "") for label in labels]
+
     sorted_labels_handles = sorted(zip(labels, handles), key=lambda x: x[0])
     labels, handles = zip(*sorted_labels_handles)
-    ax.legend(handles, labels, loc="upper right")
+    ax.legend(handles, labels, loc="upper left",ncol=len(labels))
+
 
 def get_color_marker_maps(mydata):
     global color_map
@@ -83,6 +78,22 @@ def get_color_marker_maps(mydata):
             marker_map[sku] = next(marker_cycle)
 
     return color_map, marker_map
+
+    if not subtitle:
+        subtitle = _get_appinput_title(dynamic_filter)
+
+    title = f"Speedup\n{subtitle}"
+    ax.set_title(title)
+
+
+def set_title(maintitle, subtitle, ax, dynamic_filter=None):
+
+    if not subtitle:
+        subtitle = _get_appinput_title(dynamic_filter)
+
+    title = f"{maintitle}\n{subtitle}"
+    ax.set_title(title)
+
 
 def gen_data_table(datapoints, dynamic_filter, appexectime=False):
 
@@ -120,7 +131,7 @@ def gen_data_table(datapoints, dynamic_filter, appexectime=False):
         print(f"{point['sku']:<30}{point['nnodes']:<10}{point['ppr_perc']:<10}{point['total_cores']:<10}{point['exec_time']:<10}{point['cost']:<10.2f}")
 
 def gen_plot_efficiency(
-    st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png"
+    st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png", subtitle=None
 ):
     num_vms = []
 
@@ -155,16 +166,14 @@ def gen_plot_efficiency(
     setup_plot_legend(ax)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
-    appinput_title = _get_appinput_title(dynamic_filter)
-    title = f"Efficiency\n{appinput_title}"
-    ax.set_title(title)
+    set_title("Efficiency", subtitle, ax, dynamic_filter)
 
     handle_plot_output(st, fig, plotdir, plotfile)
 
 
 
 def gen_plot_speedup(
-    st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png"
+    st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png", subtitle=None
 ):
     num_vms = []
 
@@ -194,22 +203,21 @@ def gen_plot_speedup(
     ax.set_ylabel("Speedup")
     ax.set_xlabel("Number of VMs")
 
-    ticking_spacing = get_tick_spacing(max_exectime)
+    print(max_speedup)
+    ticking_spacing = get_tick_spacing(max_speedup)
 
     plt.yticks(np.arange(0, max_speedup * 1.5, ticking_spacing))
 
     setup_plot_legend(ax)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
-    appinput_title = _get_appinput_title(dynamic_filter)
-    title = f"Speedup\n{appinput_title}"
-    ax.set_title(title)
+    set_title("Speedup", subtitle, ax, dynamic_filter)
 
     handle_plot_output(st, fig, plotdir, plotfile)
 
 
 def gen_plot_exectime_vs_numvms(
-    st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png"
+    st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png", subtitle=None
 ):
     num_vms = []
 
@@ -240,14 +248,12 @@ def gen_plot_exectime_vs_numvms(
     setup_plot_legend(ax)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
-    appinput_title = _get_appinput_title(dynamic_filter)
-    title = f"Execution time (s) per SKU & Num Nodes\n{appinput_title}"
-    ax.set_title(title)
+    set_title("Exectime", subtitle, ax, dynamic_filter)
 
     handle_plot_output(st, fig, plotdir, plotfile)
 
 def gen_plot_exectime_vs_cost(
-    st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png"
+    st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png", subtitle=None
 ):
     mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
         datapoints, dynamic_filter, appexectime
@@ -262,12 +268,14 @@ def gen_plot_exectime_vs_cost(
         sku_costs[key] = price_puller.get_price("eastus", key)
 
     exec_costs = {}
+    max_y = 0
     for key in mydata:
         exec_costs[key] = []
         for i in range(len(mydata[key])):
-            exec_costs[key].append(
-                (mydata[key][i] / 3600.0) * sku_costs[key] * num_vms[key][i]
-            )
+            cost = (mydata[key][i] / 3600.0) * sku_costs[key] * num_vms[key][i]
+            exec_costs[key].append(cost)
+            max_y = max(max_y, cost)
+
 
     fig, ax = plt.subplots()
 
@@ -292,23 +300,19 @@ def gen_plot_exectime_vs_cost(
     ax.set_xlabel("Execution time (seconds)")
     ax.set_ylabel("Cost (USD)")
 
-    ticking_spacing = get_tick_spacing(max_exectime)
+    ticking_spacing = get_tick_spacing(max_y)
 
-    # plt.yticks(np.arange(0, max_exectime * 1.5, ticking_spacing))
+    plt.yticks(np.arange(0, max_y * 1.5, ticking_spacing))
 
     setup_plot_legend(ax)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
-    appinput_title = _get_appinput_title(dynamic_filter)
-    title = (
-        f"Cost as function of execution time (s) per sku & num nodes\n{appinput_title}"
-    )
-    ax.set_title(title)
+    set_title("Cost", subtitle, ax, dynamic_filter)
 
     handle_plot_output(st, fig, plotdir, plotfile)
 
 def gen_plot_scatter_exectime_vs_cost(
-    st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png"
+    st, datapoints, dynamic_filter, appexectime, plotdir, plotfile="plot.png", subtitle=None
 ):
     mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
         datapoints, dynamic_filter, appexectime
@@ -340,11 +344,6 @@ def gen_plot_scatter_exectime_vs_cost(
     ax.set_xlabel("Execution time (seconds)")
     ax.set_ylabel("Cost (USD)")
 
-    appinput_title = _get_appinput_title(dynamic_filter)
-    title = (
-        f"Cost as function of execution time (s)\n{appinput_title}"
-    )
-
-    ax.set_title(title)
+    set_title("Cost", subtitle, ax, dynamic_filter)
 
     handle_plot_output(st, fig, plotdir, plotfile)
