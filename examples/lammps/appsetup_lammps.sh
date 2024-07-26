@@ -1,64 +1,53 @@
 #!/usr/bin/env bash
 
-set -x
+hpcadvisor_setup() {
+  echo "main setup $(pwd)"
 
-APP_EXE_PATH="${AZ_BATCH_NODE_MOUNTS_DIR}/data/"
-echo "APP_EXE_PATH=$APP_EXE_PATH"
+  echo "Setting up data ..."
 
-function setup_data {
-  echo "Downloading data for lammps"
+  if [[ -f in.lj.txt ]]; then
+    echo "Data already exists"
+    return 0
+  fi
   wget https://www.lammps.org/inputs/in.lj.txt
-
 }
 
-function generate_run_script {
+hpcadvisor_run() {
+  echo "main run $(pwd)"
 
-  cat <<EOF >run_app.sh
-#!/bin/bash
+  source /cvmfs/software.eessi.io/versions/2023.06/init/bash
+  module load LAMMPS
 
-set -x
-cd \$AZ_TASKRUN_DIR
-echo "Execution directory: \$(pwd)"
+  APP=$(which lmp)
 
-source /cvmfs/software.eessi.io/versions/2023.06/init/bash
-module load LAMMPS
-which mpirun
-which lmp
+  inputfile="in.lj.txt"
+  cp ../$inputfile .
 
-cp ../in.lj.txt .
+  NP=$(($NODES * $PPN))
+  export UCX_NET_DEVICES=mlx5_ib0:1
 
-NP=\$((\$NODES*\$PPN))
-export UCX_NET_DEVICES=mlx5_ib0:1
+  [ -z "$BOXFACTOR" ] && BOXFACTOR="30"
 
-input_file="in.lj.txt"
+  sed -i "s/variable\s\+x\s\+index\s\+[0-9]\+/variable x index $BOXFACTOR/" $inputfile
+  sed -i "s/variable\s\+y\s\+index\s\+[0-9]\+/variable y index $BOXFACTOR/" $inputfile
+  sed -i "s/variable\s\+z\s\+index\s\+[0-9]\+/variable z index $BOXFACTOR/" $inputfile
 
-new_x=20
-new_y=20
-new_z=20
+  time mpirun -np $NP --host "$AZ_HOST_LIST_PPN" "$APP" -i $inputfile
 
-sed -i "s/variable\s\+x\s\+index\s\+[0-9]\+/variable x index \$new_x/" \$input_file
-sed -i "s/variable\s\+y\s\+index\s\+[0-9]\+/variable y index \$new_y/" \$input_file
-sed -i "s/variable\s\+z\s\+index\s\+[0-9]\+/variable z index \$new_z/" \$input_file
+  log_file="log.lammps"
 
-time mpirun -np \$NP --host \$AZ_HOST_LIST_PPN  lmp -i in.lj.txt
-
-
-###
-
-log_file="log.lammps"
-
-if grep -q "Total wall time:" "\$log_file"; then
-  echo "Simulation completed successfully."
-  exit 0
-else
-  echo "Simulation did not complete successfully."
-  exit 1
-fi
-
-EOF
-  chmod +x run_app.sh
+  if grep -q "Total wall time:" "$log_file"; then
+    echo "Simulation completed successfully."
+    LAMMPSCLOCKTIME=$(cat log.lammps | grep Loop | awk '{print $4}')
+    LAMMPSATOMS=$(cat log.lammps | grep Loop | awk '{print $12}')
+    LAMMPSSTEPS=$(cat log.lammps | grep Loop | awk '{print $9}')
+    echo "HPCADVISORVAR LAMMPSCLOCKTIME=$LAMMPSCLOCKTIME"
+    echo "HPCADVISORVAR APPEXECTIME=$LAMMPSCLOCKTIME"
+    echo "HPCADVISORVAR LAMMPSATOMS=$LAMMPSATOMS"
+    echo "HPCADVISORVAR LAMMPSSTEPS=$LAMMPSSTEPS"
+    return 0
+  else
+    echo "Simulation did not complete successfully."
+    return 1
+  fi
 }
-
-cd "$APP_EXE_PATH" || exit
-setup_data
-generate_run_script
