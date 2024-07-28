@@ -13,6 +13,7 @@ STORAGEFILE=data
 
 PROGRESSFILE="env_progress.txt"
 VMJUMPBOXNAME="jumpbox"
+STORAGESIZE=300
 
 get_var() {
 
@@ -157,7 +158,7 @@ create_storage_account_files_nfs() {
     --enabled-protocol NFS \
     --root-squash NoRootSquash \
     --name "$STORAGEFILE" \
-    --quota 100
+    --quota "$STORAGESIZE"
 
   storage_account_id=$(az storage account show \
     --resource-group "$RG" --name "$STORAGEACCOUNT" \
