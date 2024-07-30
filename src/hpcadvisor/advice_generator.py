@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import os
-import time
 
 # import matplotlib.pyplot as plt
 # import matplotlib.style as style
@@ -29,9 +27,9 @@ def calculate_pareto_front(data):
     return np.array(pareto_front)
 
 
-def gen_advice_exectime_vs_cost(st, datapoints, dynamic_filter):
+def gen_advice_exectime_vs_cost(st, datapoints, dynamic_filter, appexectime):
     mydata, num_vms, max_exectime = dataset_handler.get_sku_nnodes_exec_time(
-        datapoints, dynamic_filter
+        datapoints, dynamic_filter, appexectime
     )
 
     if len(mydata) == 0:
@@ -53,5 +51,7 @@ def gen_advice_exectime_vs_cost(st, datapoints, dynamic_filter):
             data_for_pareto.append((mydata[key][i], cost, num_vms[key][i], sku))
 
     pareto_front = calculate_pareto_front(data_for_pareto)
+    # sort by execution time
+    sorted_pareto_front = sorted(pareto_front, key=lambda x: float(x[0]))
 
-    return pareto_front
+    return sorted_pareto_front

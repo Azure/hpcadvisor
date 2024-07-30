@@ -1,14 +1,13 @@
-import os
-import sys
 
-from hpcadvisor import advice_generator, dataset_handler, logger, plot_generator, utils
+from hpcadvisor import (advice_generator, dataset_handler, logger,
+                        plot_generator, utils)
 
 log = logger.logger
 
 
-def gen_advice_table(table_id, datapoints, datafilter_input):
+def gen_advice_table(table_id, datapoints, datafilter_input, appexectime):
     pareto_front = advice_generator.gen_advice_exectime_vs_cost(
-        None, datapoints, datafilter_input
+        None, datapoints, datafilter_input,appexectime
     )
 
     if pareto_front is None:
@@ -27,18 +26,12 @@ def gen_advice_table(table_id, datapoints, datafilter_input):
     print()
 
 
-def generate_advice(datafilter_file):
+def generate_advice(datafilter_file, appexectime):
     datafilter = dataset_handler.get_plotfilter(datafilter_file)
 
-    dataset_file = utils.get_dataset_filename()
-    log.debug("Generating advice from dataset file: " + dataset_file)
-
     appinputs = []
-    if not os.path.exists(dataset_file):
-        log.error("Dataset file not found: " + dataset_file)
-        return
 
-    datapoints = dataset_handler.get_datapoints(dataset_file, datafilter)
+    datapoints = dataset_handler.get_datapoints(datafilter_file)
 
     if not datapoints:
         log.error("No datapoints found. Check dataset and datafilter files")
@@ -56,7 +49,7 @@ def generate_advice(datafilter_file):
 
     if datafilter_appinputs:
         for datafilter_appinput_entry in datafilter_appinputs:
-            gen_advice_table(table_id, datapoints, datafilter_appinput_entry)
+            gen_advice_table(table_id, datapoints, datafilter_appinput_entry,appexectime)
             table_id += 1
     else:
-        gen_advice_table(table_id, datapoints, datafilter_appinputs)
+        gen_advice_table(table_id, datapoints, datafilter_appinputs,appexectime)

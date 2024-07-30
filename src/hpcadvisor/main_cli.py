@@ -58,10 +58,10 @@ def main_plot(plotfilter, showtable, appexectime, subtitle):
         cli_plot_generator.generate_plots(plotfilter, plotdir, appexectime, subtitle)
 
 
-def main_advice(datafilter):
+def main_advice(datafilter,appexectime):
     log.info("Generating advice...")
     # plotdir = utils.get_plot_dir()
-    cli_advice_generator.generate_advice(datafilter)
+    cli_advice_generator.generate_advice(datafilter,appexectime)
 
 
 def main_collect_data(

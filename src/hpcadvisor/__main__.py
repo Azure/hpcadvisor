@@ -63,10 +63,11 @@ def plot_handler(args):
 
 def advice_handler(args):
     datafilter = args.datafilter
+    appexectime = args.appexectime
 
     from hpcadvisor import main_cli
 
-    main_cli.main_advice(datafilter)
+    main_cli.main_advice(datafilter, appexectime)
 
 
 def _process_arguments():
@@ -115,6 +116,7 @@ def _process_arguments():
     advice = subparsers.add_parser("advice", help="Advice generator help")
     advice.add_argument("-n", "--name", help="Deployment name", required=False)
     advice.add_argument("-df", "--datafilter", help="Data filter", required=False)
+    advice.add_argument("-ae", "--appexectime", help="Use app defined exectime", required=False, action="store_true")
     advice.set_defaults(func=advice_handler)
 
     gui = subparsers.add_parser("gui", help="GUI mode help")
