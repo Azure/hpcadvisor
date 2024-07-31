@@ -27,13 +27,13 @@ hpcadvisor_run() {
   ln -s "\$wrfrundir"/* .
   ln -sf ../v4.4_bench_conus12km/* .
 
-  NP=$(($NODES * $PPN))
+  NP=$(($NNODES * $PPN))
 
   APP_EXE=$(which wrf.exe)
 
   echo "Running WRF with $NP processes ..."
   export UCX_NET_DEVICES=mlx5_ib0:1
-  time mpirun -np $NP --host "$AZ_HOST_LIST_PPN" "$APP_EXE"
+  time mpirun -np $NP --host "$HOSTLIST_PPN" "$APP_EXE"
 
   echo "WRF run completed... confirming"
 

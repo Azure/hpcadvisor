@@ -28,7 +28,7 @@ hpcadvisor_run() {
   ln -s "../GROMACS_TestCaseA/ion_channel.tpr" .
   ls -l ion_channel.tpr
 
-  NP=$(($NODES * $PPN))
+  NP=$(($NNODES * $PPN))
 
   APP_EXE=$(which gmx_mpi)
   echo "Running GROMACS with $NP processes ..."
@@ -38,7 +38,7 @@ hpcadvisor_run() {
   #export OMP_NUM_THREADS=$PPN
   export OMPI_MCA_pml=ucx
 
-  time mpirun -np $NP --host "$AZ_HOST_LIST_PPN" "$APP_EXE" mdrun \
+  time mpirun -np $NP --host "$HOSTLIST_PPN" "$APP_EXE" mdrun \
     -s ion_channel.tpr \
     -cpt 1000 \
     -maxh 1.0 \

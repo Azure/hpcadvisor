@@ -18,7 +18,7 @@ hpcadvisor_run() {
   cp -r "$FOAM_TUTORIALS"/incompressibleFluid/motorBike/motorBike/* .
   chmod -R u+w .
 
-  NP=$(($NODES * $PPN))
+  NP=$(($NNODES * $PPN))
   echo "Running OpenFOAM with $NP processes..."
 
   export UCX_NET_DEVICES=mlx5_ib0:1
@@ -28,7 +28,7 @@ hpcadvisor_run() {
   sed -i '/RunFunctions/a source <(declare -f runParallel | sed "s/mpirun/mpirun \\\$FOAM_MPIRUN_FLAGS/g")' Allrun
   sed -i 's#/bin/sh#/bin/bash#g' Allrun
 
-  export FOAM_MPIRUN_FLAGS="--hostfile $AZ_HOSTFILE_PATH $(env | grep 'WM_\|FOAM_' | cut -d'=' -f1 | sed 's/^/-x /g' | tr '\n' ' ') -x PATH -x LD_LIBRARY_PATH -x MPI_BUFFER_SIZE -x UCX_IB_MLX5_DEVX=n -x UCX_POSIX_USE_PROC_LINK=n --report-bindings --verbose --map-by core --bind-to core "
+  export FOAM_MPIRUN_FLAGS="--hostfile $HOSTFILE_PATH $(env | grep 'WM_\|FOAM_' | cut -d'=' -f1 | sed 's/^/-x /g' | tr '\n' ' ') -x PATH -x LD_LIBRARY_PATH -x MPI_BUFFER_SIZE -x UCX_IB_MLX5_DEVX=n -x UCX_POSIX_USE_PROC_LINK=n --report-bindings --verbose --map-by core --bind-to core "
   echo "$FOAM_MPIRUN_FLAGS"
 
   ########################### APP EXECUTION #####################################

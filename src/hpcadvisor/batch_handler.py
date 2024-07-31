@@ -665,12 +665,12 @@ def create_compute_task(poolid, jobid, number_of_nodes, ppr_perc, sku, appinputs
     multi_instance_settings = batchmodels.MultiInstanceSettings(
         number_of_instances=number_of_nodes,
         coordination_command_line = (
-            "/bin/bash -c 'env ; mkdir -p $AZ_TASKRUN_DIR  ; leaderhost=$(echo $AZ_BATCH_HOST_LIST | cut -d\",\" -f1);"
+            "/bin/bash -c 'env ; mkdir -p $TASKRUN_DIR  ; leaderhost=$(echo $AZ_BATCH_HOST_LIST | cut -d\",\" -f1);"
                 "myhost=$(hostname -I | awk \"{print \\$1}\");"
                 "if [ \"$myhost\" == \"$leaderhost\" ]; then "
                 "IFS=','; "
                 "for host in $AZ_BATCH_HOST_LIST; do "
-                "echo \"${host} slots=$PPN\" >> $AZ_HOSTFILE_PATH; "
+                "echo \"${host} slots=$PPN\" >> $HOSTFILE_PATH; "
                 "done; "
                 "fi'"
 
@@ -679,12 +679,13 @@ def create_compute_task(poolid, jobid, number_of_nodes, ppr_perc, sku, appinputs
 
     list_nodes_ppn = get_hostname_ppn_list_str(poolid, ppn)
     environment_settings = _get_environment_settings(appinputs)
-    _append_environment_settings(environment_settings, "NODES", number_of_nodes)
+    _append_environment_settings(environment_settings, "NNODES", number_of_nodes)
     _append_environment_settings(environment_settings, "PPN", ppn)
     _append_environment_settings(environment_settings, "SKU", sku)
-    _append_environment_settings(environment_settings, "AZ_HOST_LIST_PPN", list_nodes_ppn)
-    _append_environment_settings(environment_settings, "AZ_TASKRUN_DIR", fulltaskrundir)
-    _append_environment_settings(environment_settings, "AZ_HOSTFILE_PATH",hostfile_path)
+    _append_environment_settings(environment_settings, "VMTYPE", sku)
+    _append_environment_settings(environment_settings, "HOSTLIST_PPN", list_nodes_ppn)
+    _append_environment_settings(environment_settings, "TASKRUN_DIR", fulltaskrundir)
+    _append_environment_settings(environment_settings, "HOSTFILE_PATH",hostfile_path)
 
     task = batchmodels.TaskAddParameter(
         id=task_id,

@@ -32,10 +32,10 @@ hpcadvisor_run() {
   [[ -z $APPINTERACTIONS ]] && APPINTERACTIONS=5
   [[ -z $APPMATRIXSIZE ]] && APPMATRIXSIZE=1000
 
-  NP=$(($NODES * $PPN))
+  NP=$(($NNODES * $PPN))
   EXECPATH=$(realpath "${MPI_EXE}")
 
-  mpirun -np $NP --host "$AZ_HOST_LIST_PPN" --map-by ppr:"${PPN}":node "$EXECPATH" "${APPMATRIXSIZE}" "${APPINTERACTIONS}"
+  mpirun -np $NP --host "$HOSTLIST_PPN" --map-by ppr:"${PPN}":node "$EXECPATH" "${APPMATRIXSIZE}" "${APPINTERACTIONS}"
   [[ $? -ne 0 ]] && return 1
 
   return 0

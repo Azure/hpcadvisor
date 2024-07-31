@@ -28,7 +28,7 @@ hpcadvisor_run() {
   export PATH="$namddir:$PATH"
   echo "$PATH"
 
-  NP=$(($NODES * $PPN))
+  NP=$(($NNODES * $PPN))
 
   APP_EXE=$(which namd3)
 
