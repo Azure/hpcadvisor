@@ -22,6 +22,7 @@ def gen_advice_table(table_id, datapoints, datafilter_input, appexectime):
     print(f"{'Exectime(s)':<12} {'Cost($/h)':<12} {'Nodes':<6} SKU")
     for exectime, cost, nnodes, sku in pareto_front:
         cost = float(cost)
+        sku = sku.replace("standard_", "")
         print(f"{exectime:<12} {cost:<12.4f} {nnodes:<6} {sku}")
     print()
 
