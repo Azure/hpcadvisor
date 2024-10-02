@@ -77,7 +77,7 @@ keep_pools=False, reuse_pools=False):
     data_app_input = user_input["appinputs"]
 
     task_filename = utils.get_task_filename(deployment_name)
-    if clear_tasks or not os.path.exists(task_filename):
+    if clear_tasks or not os.path.exists(task_filename) or os.path.getsize(task_filename) == 0:
         log.info(f"Generating new tasks file: {task_filename}")
         taskset_handler.generate_tasks(
             task_filename,
