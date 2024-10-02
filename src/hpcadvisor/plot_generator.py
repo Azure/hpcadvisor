@@ -23,6 +23,9 @@ color_map = {}
 marker_map = {}
 
 style.use("dark_background")
+plt.rcParams.update({'legend.fontsize': 12, 'axes.labelsize': 14, 'xtick.labelsize': 14, 'ytick.labelsize': 14})
+# plt.tight_layout()
+# plt.subplots_adjust(left=0.35)
 
 # TODO: remove hardcoded region
 # TODO: refactor code as there are many duplicate function calls
@@ -32,7 +35,7 @@ def handle_plot_output(st, fig, plotdir, plotfile):
     else:
         plotfile = os.path.join(plotdir, plotfile)
         log.info("Saving file: " + plotfile)
-        plt.savefig(plotfile)
+        plt.savefig(plotfile, bbox_inches='tight')
 
 def _get_appinput_title(appinput):
     if not appinput or not "appinputs" in appinput:
