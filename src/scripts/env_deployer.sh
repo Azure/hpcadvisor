@@ -14,7 +14,7 @@ STORAGEFILE=data
 PROGRESSFILE="env_progress.txt"
 VMJUMPBOXNAME="jumpbox"
 STORAGESIZE=300
-
+ENABLEANF="True"
 get_var() {
 
   ENV_VARS_FILE=$1
@@ -32,10 +32,15 @@ setup_vars() {
   RG=$(get_var "$ENV_VARS_FILE" "RG")
   BATCHACCOUNT=$(get_var "$ENV_VARS_FILE" "BATCHACCOUNT")
   STORAGEACCOUNT=$(get_var "$ENV_VARS_FILE" "STORAGEACCOUNT")
+  ANFACCOUNT=$(get_var "$ENV_VARS_FILE" "ANFACCOUNT")
+  ANFVOLUMENAME=$(get_var "$ENV_VARS_FILE" "ANFVOLUMENAME")
+  ANFPOOLNAME=$(get_var "$ENV_VARS_FILE" "ANFPOOLNAME")
   KEYVAULT=$(get_var "$ENV_VARS_FILE" "KEYVAULT")
   VNETNAME=$(get_var "$ENV_VARS_FILE" "VNETNAME")
   VSUBNETNAME=$(get_var "$ENV_VARS_FILE" "VSUBNETNAME")
   VNETADDRESS=$(get_var "$ENV_VARS_FILE" "VNETADDRESS")
+
+  VSUBNETNAMEANF=$(get_var "$ENV_VARS_FILE" "VSUBNETNAME")"anf"
 
   # optional
   VPNRG=$(get_var "$ENV_VARS_FILE" "VPNRG")
@@ -71,9 +76,27 @@ create_vnet_subnet() {
 
   az network vnet create -g "$RG" \
     -n "$VNETNAME" \
-    --address-prefix "$VNETADDRESS"/16 \
-    --subnet-name "$VSUBNETNAME" \
-    --subnet-prefixes "$VNETADDRESS"/24
+    --address-prefix "$VNETADDRESS"/16
+
+  if [ "$ENABLEANF" == "True" ]; then
+    VSUBNETADDRESS="$(echo "$VNETADDRESS" | awk -F. '{print $1"."$2"."$3+1"."$4}')"
+    az network vnet subnet create -g "$RG" \
+      --vnet-name "$VNETNAME" \
+      -n "$VSUBNETNAMEANF" \
+      --address-prefix "$VSUBNETADDRESS"/24 \
+      --delegations "Microsoft.NetApp/volumes"
+
+    VSUBNETADDRESS="$(echo "$VNETADDRESS" | awk -F. '{print $1"."$2"."$3+2"."$4}')"
+    az network vnet subnet create -g "$RG" \
+      --vnet-name "$VNETNAME" \
+      -n "$VSUBNETNAME" \
+      --address-prefix "$VSUBNETADDRESS"/24
+  else
+    az network vnet subnet create -g "$RG" \
+      --vnet-name "$VNETNAME" \
+      -n "$VSUBNETNAME" \
+      --address-prefix "$VNETADDRESS"/24
+  fi
 
   update_progress "created vnet/subnet"
 }
@@ -278,6 +301,57 @@ create_batch_account_with_usersubscription() {
 #   update_progress "logged into batch account"
 # }
 
+create_anf_storage() {
+
+  set -x
+  REG_STATE=$(az provider show --namespace Microsoft.NetApp --query "registrationState" -o tsv)
+
+  # If the provider is not registered, register it
+  if [ "$REG_STATE" != "Registered" ]; then
+    echo "Microsoft.NetApp is not registered. Registering..."
+    az provider register --namespace Microsoft.NetApp
+    echo "Registration of Microsoft.NetApp initiated."
+  else
+    echo "Microsoft.NetApp is already registered."
+  fi
+
+  MOUNT_PATH="/mnt/anf"
+  SERVICE_LEVEL="Premium"
+  POOL_SIZE_TIB=4
+  VOLUME_SIZE_GIB=1000
+
+  az netappfiles account create \
+    --resource-group "$RG" \
+    --location "$REGION" \
+    --account-name "$ANFACCOUNT"
+
+  az netappfiles pool create \
+    --resource-group "$RG" \
+    --account-name "$ANFACCOUNT" \
+    --location "$REGION" \
+    --pool-name "$ANFPOOLNAME" \
+    --service-level $SERVICE_LEVEL \
+    --size "$POOL_SIZE_TIB"
+
+  az netappfiles volume create \
+    --resource-group "$RG" \
+    --location "$REGION" \
+    --file-path "$ANFVOLUMENAME" \
+    --account-name "$ANFACCOUNT" \
+    --pool-name "$ANFPOOLNAME" \
+    --volume-name "$ANFVOLUMENAME" \
+    --service-level $SERVICE_LEVEL \
+    --usage-threshold 100 \
+    --vnet "$VNETNAME" \
+    --protocol-types NFSv3 \
+    --subnet "$VSUBNETNAMEANF"
+
+  VOLUME_RESOURCE_ID=$(az netappfiles volume show --resource-group "$RG" --account-name "$ANFACCOUNT" --pool-name "$ANFPOOLNAME" --volume-name "$ANFVOLUMENAME" --query id --output tsv)
+  echo "ANF Volume Resource ID: $VOLUME_RESOURCE_ID"
+
+  update_progress "created ANF storage"
+}
+
 main() {
 
   if [ $# -ne 1 ]; then
@@ -292,8 +366,14 @@ main() {
 
   >"$PROGRESSFILE"
   create_resource_group
+
   create_vnet_subnet
-  create_storage_account_files_nfs
+
+  if [ "$ENABLEANF" == "True" ]; then
+    create_anf_storage
+  else
+    create_storage_account_files_nfs
+  fi
 
   [ "$CREATEJUMPBOX" == "True" ] && create_vm "$TESTVMSKU"
   [ "$PEERVPN" == "True" ] && peer_vpn

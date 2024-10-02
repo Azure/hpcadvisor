@@ -3,6 +3,7 @@
 import datetime
 import io
 import os
+import sys
 import time
 from datetime import timedelta
 
@@ -18,6 +19,8 @@ from azure.mgmt.compute.models import (DiskCreateOption, LinuxConfiguration,
                                        SshPublicKey, VirtualMachine,
                                        VirtualMachineImage)
 from azure.mgmt.monitor import MonitorManagementClient
+from azure.mgmt.netapp import NetAppManagementClient
+from azure.mgmt.netapp.models import NetAppAccount
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient, SubscriptionClient
 
@@ -28,7 +31,7 @@ from hpcadvisor.azure_identity_credential_adapter import \
 batch_supported_images = "batch_supported_images.txt"
 VMIMAGE = "almalinux:almalinux-hpc:8_6-hpc-gen2:latest"
 backupnodeagent = "batch.node.el 8"
-
+anfenabled = True
 env = {}
 
 DEFAULT_ENCODING = "utf-8"
@@ -37,6 +40,7 @@ STANDARD_ERR_FILE_NAME = "stderr.txt"
 
 log = logger.logger
 batch_client = None
+anf_client = None
 
 HPCADVISOR_FUNCTION_RUN = "hpcadvisor_run"
 HPCADVISOR_FUNCTION_SETUP = "hpcadvisor_setup"
@@ -182,6 +186,16 @@ def resize_pool(poolid, target_nodes, wait_resize=True):
 
     if wait_resize:
         return wait_pool_ready(poolid)
+
+
+def _get_anf_client(subscription_id, resource_group):
+
+    global anf_client
+    log.debug(f"Getting anf client sub={subscription_id} rg={resource_group}")
+
+    credentials = DefaultAzureCredential()
+    anf_client = NetAppManagementClient(credentials, subscription_id)
+    return anf_client
 
 
 def _get_batch_client(subscription_id, resource_group):
@@ -418,6 +432,15 @@ def get_existing_pool(sku, number_of_nodes):
 
     return None
 
+def get_anf_ip():
+
+    volume = anf_client.volumes.get(env["RG"],
+                                    env["ANFACCOUNT"],
+                                    env["ANFPOOLNAME"],
+                                    env["ANFVOLUMENAME"])
+
+    return volume.mount_targets[0].ip_address
+
 def create_pool(sku, poolname=None, number_of_nodes=1):
     if poolname is None:
         random_code = utils.get_random_code()
@@ -428,32 +451,44 @@ def create_pool(sku, poolname=None, number_of_nodes=1):
         return None
 
     log.info(f"Create pool: {poolname}")
-
-    storage_account = env["STORAGEACCOUNT"]
-    storage_file_dir = "data"
-    nfs_fileshare = storage_file_dir
-    nfs_share_hostname = f"{storage_account}.file.core.windows.net"
-    nfs_share_directory = f"/{storage_account}/{nfs_fileshare}"
-
     subnetid = env["SUBVNETID"]
-
     pool_id = poolname
 
-    mount_configuration = batchmodels.MountConfiguration(
-        nfs_mount_configuration=batchmodels.NFSMountConfiguration(
-            source=f"{nfs_share_hostname}:{nfs_share_directory}",
-            relative_mount_path=nfs_fileshare,
-            mount_options="-o rw,hard,rsize=65536,wsize=65536,vers=4,minorversion=1,tcp,sec=sys",
-        )
-    )
+    anf_ip = ""
+    if anfenabled:
+        anf_ip = get_anf_ip()
+        log.debug(f"ANF IP address={anf_ip}")
+
+    # storage_account = env["STORAGEACCOUNT"]
+    # storage_file_dir = "data"
+    # nfs_fileshare = storage_file_dir
+    # nfs_share_hostname = f"{storage_account}.file.core.windows.net"
+    # nfs_share_directory = f"/{storage_account}/{nfs_fileshare}"
+    #
+
+
+    # mount_configuration = batchmodels.MountConfiguration(
+    #     nfs_mount_configuration=batchmodels.NFSMountConfiguration(
+    #         source=f"{nfs_share_hostname}:{nfs_share_directory}",
+    #         relative_mount_path=nfs_fileshare,
+    #         mount_options="-o rw,hard,rsize=65536,wsize=65536,vers=4,minorversion=1,tcp,sec=sys",
+    #     )
+    # )
 
     # TODO: need to move to another place
     # TODO: find alternatives for this sleep 60 to prevent rpm lock error
     #
     # https://www.eessi.io/docs/getting_access/native_installation/
-    script = """
+
+    # TODO: put bach the option for blob on nfs
+    # sudo chown _azbatch:_azbatchgrp /mnt/batch/tasks/fsmounts/data
+    anfmountdir = env["ANFMOUNTDIR"]
+    anfvolume = env["ANFVOLUMENAME"]
+    script = f"""
     sleep 60
-    sudo chown _azbatch:_azbatchgrp /mnt/batch/tasks/fsmounts/data
+    sudo mkdir {anfmountdir} ; mount {anf_ip}:/{anfvolume} {anfmountdir}
+    sudo chown _azbatch:_azbatchgrp {anfmountdir}
+    sudo df -Tha
     sudo rpm --import https://repo.almalinux.org/almalinux/RPM-GPG-KEY-AlmaLinux
     sudo yum upgrade -y almalinux-release
     sudo yum install -y https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest.noarch.rpm
@@ -509,7 +544,7 @@ def create_pool(sku, poolname=None, number_of_nodes=1):
         target_dedicated_nodes=number_of_nodes,
         enable_inter_node_communication=True,
         target_node_communication_mode="simplified",
-        mount_configuration=[mount_configuration],
+        # mount_configuration=[mount_configuration],
         start_task=start_task,
         network_configuration=network_configuration,
         task_scheduling_policy=batchmodels.TaskSchedulingPolicy(
@@ -562,9 +597,16 @@ def create_setup_task(jobid, appsetupurl):
     script_name = os.path.basename(app_setup_url)
     log.debug(f"script for application: {script_name}")
 
-    task_commands = [
-        f"/bin/bash -c 'cd $AZ_BATCH_NODE_MOUNTS_DIR/data ; curl -sLO {app_setup_url} ; source {script_name} ; {HPCADVISOR_FUNCTION_SETUP}'"
+    anfmountdir = env["ANFMOUNTDIR"]
+
+    if anfenabled:
+        task_commands = [
+            f"/bin/bash -c 'set ; cd {anfmountdir} ; curl -sLO {app_setup_url} ; source {script_name} ; {HPCADVISOR_FUNCTION_SETUP}'"
     ]
+    else:
+        task_commands = [
+            f"/bin/bash -c 'set ; cd $AZ_BATCH_NODE_MOUNTS_DIR/data ; curl -sLO {app_setup_url} ; source {script_name} ; {HPCADVISOR_FUNCTION_SETUP}'"
+        ]
 
     log.debug(f"task command: {task_commands}")
 
@@ -651,14 +693,26 @@ def create_compute_task(poolid, jobid, number_of_nodes, ppr_perc, sku, appinputs
         )
     )
 
+    anfmountdir = env["ANFMOUNTDIR"]
     taskrundir = f"run{random_code}"
-    fulltaskrundir = f"/mnt/batch/tasks/fsmounts/data/{taskrundir}"
+    if anfenabled:
+       fulltaskrundir = f"{anfmountdir}/{taskrundir}"
+    else:
+       fulltaskrundir = f"/mnt/batch/tasks/fsmounts/data/{taskrundir}"
+
     hostfile_path = f"{fulltaskrundir}/hostfile.txt"
 
     app_run_script = apprunscript
-    task_commands = [
-        f"/bin/bash -c 'source $AZ_BATCH_NODE_MOUNTS_DIR/data/{app_run_script} ; cd {fulltaskrundir}; {HPCADVISOR_FUNCTION_RUN}'",
-    ]
+
+    anfmountdir = env["ANFMOUNTDIR"]
+    if anfenabled:
+        task_commands = [
+            f"/bin/bash -c 'set ; source {anfmountdir}/{app_run_script} ; cd {fulltaskrundir}; {HPCADVISOR_FUNCTION_RUN}'",
+        ]
+    else:
+        task_commands = [
+        f"/bin/bash -c 'set ; source $AZ_BATCH_NODE_MOUNTS_DIR/data/{app_run_script} ; cd {fulltaskrundir}; {HPCADVISOR_FUNCTION_RUN}'",
+        ]
 
     log.debug(f"task command: {task_commands}")
 
@@ -719,6 +773,11 @@ def get_environment():
 
 def setup_environment(filename):
     global batch_client
+    global anf_client
+
+    if not os.path.exists(filename):
+        log.critical(f"Environment file does not exist: {filename}")
+        sys.exit(1)
 
     with open(filename) as f:
         lines = f.readlines()
@@ -759,6 +818,7 @@ def setup_environment(filename):
     )
 
     batch_client = _get_batch_client(env["SUBSCRIPTION"], env["RG"])
+    anf_client = _get_anf_client(env["SUBSCRIPTION"], env["RG"])
 
     env["NODEAGENTSKU"] = _get_node_agent_sku(VMIMAGE)
 
