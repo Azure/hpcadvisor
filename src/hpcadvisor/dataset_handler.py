@@ -23,7 +23,7 @@ def add_datapoint(dataset_file, datapoint):
     existing_data[datapoints_label].append(datapoint)
 
     with open(dataset_file, "w") as outfile:
-        json.dump(existing_data, outfile)
+        json.dump(existing_data, outfile, indent=2)
 
 
 def get_plotfilter(plotfilter_file):

@@ -33,7 +33,7 @@ def _ensure_list(value):
 
 def _store_tasks(task_dict, filename):
     with open(filename, "w") as outfile:
-        json.dump(task_dict, outfile)
+        json.dump(task_dict, outfile, indent=2)
     log.info(f"{filename}: file created/updated with {len(task_dict)} tasks")
 
 
