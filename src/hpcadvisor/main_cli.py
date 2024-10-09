@@ -3,8 +3,8 @@
 import os
 
 from hpcadvisor import (batch_handler, cli_advice_generator,
-                        cli_plot_generator, data_collector, logger,
-                        taskset_handler, utils)
+                        cli_plot_generator, cli_task_selector, data_collector,
+                        logger, taskset_handler, utils)
 
 log = logger.logger
 
@@ -62,6 +62,15 @@ def main_advice(datafilter,appexectime):
     log.info("Generating advice...")
     # plotdir = utils.get_plot_dir()
     cli_advice_generator.generate_advice(datafilter,appexectime)
+
+
+def main_select_task(operation, userinput, taskfile, policy_name, num_tasks):
+    log.info("Selecting next task ...")
+
+    if operation == "gettasks":
+        cli_task_selector.get_next_tasks(taskfile, policy_name, num_tasks)
+    else:
+        print(f"Unknown operation: {operation}")
 
 
 def main_collect_data(

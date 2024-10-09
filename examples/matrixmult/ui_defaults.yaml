@@ -9,6 +9,8 @@ tags:
   version: v1
 region: southcentralus
 createjumpbox: true
+taskselector: sequential
+taskparallel: 1
 ppr: 100
 appinputs:
   appinteractions: 3

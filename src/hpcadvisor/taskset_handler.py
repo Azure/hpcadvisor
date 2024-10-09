@@ -5,7 +5,7 @@ import json
 import os
 from enum import Enum
 
-from hpcadvisor import logger, utils
+from hpcadvisor import logger, utils, task_selection_policy
 
 log = logger.logger
 
@@ -17,6 +17,7 @@ class TaskStatus(str, Enum):
     FAILED = "failed"
     ALL = "all"
     UNKNOWN = "unknown"
+
 
 
 def clear_task_file(filename):
@@ -110,3 +111,19 @@ def get_tasks_from_file(tasks_file, filter_status=TaskStatus.PENDING):
 
     log.info(f"Loaded {len(filtered_tasks)} tasks from file")
     return filtered_tasks
+
+def select_task(tasks, policy: task_selection_policy.TaskPolicy, num_tasks: int):
+    return policy.apply(tasks, num_tasks)
+
+def get_tasks(tasks_file, policy_name, num_tasks=1):
+    tasks = get_tasks_from_file(tasks_file)
+    
+    if num_tasks < 1 or num_tasks > len(tasks):
+        log.warning(f"Number of tasks should be between 1 and {len(tasks)} (received: {num_tasks})")
+        return []
+
+    policy_class = task_selection_policy.get_policy_class(policy_name)
+
+    policy = policy_class()
+
+    return select_task(tasks, policy, num_tasks)

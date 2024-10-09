@@ -70,6 +70,20 @@ def advice_handler(args):
     main_cli.main_advice(datafilter, appexectime)
 
 
+def selecttask_handler(args):
+
+    operation = args.operation
+    userinput = args.userinput
+    taskfile = args.taskfile
+    policy = args.policy
+    numtasks = int(args.numtasks)
+
+    from hpcadvisor import main_cli
+
+    main_cli.main_select_task(operation, userinput, taskfile, policy, numtasks)
+
+
+
 def _process_arguments():
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument(
@@ -122,6 +136,15 @@ def _process_arguments():
     gui = subparsers.add_parser("gui", help="GUI mode help")
     gui.add_argument("-u", "--userinput", help="User input", required=False)
     gui.set_defaults(func=gui_handler)
+
+    selecttask = subparsers.add_parser("selecttask", help="Task Selector help")
+    selecttask.add_argument("operation", type=str)
+    selecttask.add_argument("-u", "--userinput", help="User input", required=False)
+    selecttask.add_argument("-tf", "--taskfile", help="Taskfile", required=True)
+    selecttask.add_argument("-p", "--policy", help="Task selector policy", required=False)
+    selecttask.add_argument("-n", "--numtasks", help="Number of tasks", required=False)
+    selecttask.set_defaults(func=selecttask_handler)
+
 
     args = parser.parse_args()
 
