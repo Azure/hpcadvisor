@@ -14,16 +14,18 @@ def process_tasks_singletask(tasks_file, dataset_file, collector_config):
     taskselector_policy = collector_config.get("policy", None)
     
     taskcounter = 0
+    log.debug("Starting task processing in single task mode")
+
     while True:
         next_tasks = taskselector_policy.get_tasks(tasks)
         if len(tasks) == 0:
             log.info("No tasks found")
             break
-        print("---> next_tasks", next_tasks)
+       
         task= next_tasks.pop(0)    
         taskcounter += 1
 
-        print(f"Processing task: {taskcounter}/{len(tasks) + taskcounter}")
+        log.debug(f"Processing task: {taskcounter}/{len(tasks) + taskcounter}")
         log.info(f"Processing task: {task}")
         sku = task["sku"]
         number_of_nodes = task["nnodes"]
@@ -88,6 +90,16 @@ def process_tasks_singletask(tasks_file, dataset_file, collector_config):
         batch_handler.resize_pool(poolname, 0)
 
 
+def process_tasks_multitask(tasks_file, dataset_file, collector_config):
+
+    log.debug("Starting task processing in multi task mode")
+
+    tasks = taskset_handler.get_tasks_from_file(tasks_file)
+    previous_sku = ""
+    jobname = ""
+    poolname = ""
+       
+
 def collect_data(tasks_file, dataset_file, env_file, collector_config):
     if batch_handler.setup_environment(env_file):
         log.debug("Environment setup completed")
@@ -97,7 +109,7 @@ def collect_data(tasks_file, dataset_file, env_file, collector_config):
             log.info("Single task mode")
             process_tasks_singletask(tasks_file, dataset_file, collector_config)
         else:
-            log.error("Only single task mode is supported")
+            process_tasks_multitask(tasks_file, dataset_file, collector_config)
             return
         if collector_config["cleardeployment"]:
             batch_handler.delete_environment()
