@@ -187,6 +187,22 @@ def resize_pool(poolid, target_nodes, wait_resize=True):
     if wait_resize:
         return wait_pool_ready(poolid)
 
+def resize_pool_multi_attempt(poolname, number_of_nodes):
+    attempts = 3
+    while attempts > 0:
+        rc = resize_pool(poolname, number_of_nodes)
+        if not rc:
+            log.warning(
+                f"Failed to resize pool: {poolname} to {number_of_nodes}. Attempts left: {attempts}"
+            )
+            resize_pool(poolname, 0)
+            attempts -= 1
+        else:
+            return True
+
+    log.warning(f"Failed to resize pool: {poolname} to {number_of_nodes}")
+    resize_pool(poolname, 0)
+    return False
 
 def _get_anf_client(subscription_id, resource_group):
 

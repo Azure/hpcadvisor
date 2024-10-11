@@ -36,18 +36,39 @@ def deployment_handler(args):
         main_cli.main_shutdown_deployment(args.name)
         return
 
+    else:
+        print("Supported operations: create|list|shutdown")
+        sys.exit(1)
+
 
 def collect_handler(args):
     name = args.name
-    userinput = args.userinput
+    userinput_file = args.userinput
     cleardeployment = args.cleardeployment
     cleartasks = args.cleartasks
     keeppools = args.keeppools
     reusepools = args.reusepools
 
-    from hpcadvisor import main_cli
+    from hpcadvisor import main_cli, utils
+    from hpcadvisor.task_selection_policy import get_policy_class
 
-    main_cli.main_collect_data(name, userinput, cleardeployment, cleartasks, keeppools, reusepools)
+    userinput = utils.get_userinput_from_file(userinput_file)
+
+    if "taskselector" in userinput:
+        policy_name = userinput["taskselector"].get("policy", "sequential")
+        paralleltasks = userinput["taskselector"].get("paralleltasks", 1)
+        selector_config = {"num_tasks": paralleltasks}
+        policy = get_policy_class(policy_name, selector_config)
+    else:
+        policy = None
+
+    collector_config = {"cleardeployment": cleardeployment,
+                        "cleartasks": cleartasks, 
+                        "keeppools": keeppools,
+                        "reusepools": reusepools,
+                        "policy": policy}
+
+    main_cli.main_collect_data(name, userinput_file, collector_config)
 
 
 def plot_handler(args):
@@ -80,7 +101,7 @@ def selecttask_handler(args):
 
     from hpcadvisor import main_cli
 
-    main_cli.main_select_task(operation, userinput, taskfile, policy, numtasks)
+    main_cli.main_selecttask(operation, userinput, taskfile, policy, numtasks)
 
 
 

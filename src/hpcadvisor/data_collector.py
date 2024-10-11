@@ -1,38 +1,29 @@
 #!/usr/bin/env python3
 
-
-
 from hpcadvisor import batch_handler, logger, taskset_handler
 
 log = logger.logger
 
 
-def resize_pool(poolname, number_of_nodes):
-    attempts = 3
-    while attempts > 0:
-        rc = batch_handler.resize_pool(poolname, number_of_nodes)
-        if not rc:
-            log.warning(
-                f"Failed to resize pool: {poolname} to {number_of_nodes}. Attempts left: {attempts}"
-            )
-            batch_handler.resize_pool(poolname, 0)
-            attempts -= 1
-        else:
-            return True
-
-    log.warning(f"Failed to resize pool: {poolname} to {number_of_nodes}")
-    batch_handler.resize_pool(poolname, 0)
-    return False
-
-
-def process_tasks(tasks_file, dataset_file, keep_pools=False, reuse_pools=False):
+def process_tasks_singletask(tasks_file, dataset_file, collector_config):
     tasks = taskset_handler.get_tasks_from_file(tasks_file)
     previous_sku = ""
     jobname = ""
     poolname = ""
 
-    for taskcounter, task in enumerate(tasks, start=1):
-        print(f"Processing task: {taskcounter}/{len(tasks)}")
+    taskselector_policy = collector_config.get("policy", None)
+    
+    taskcounter = 0
+    while True:
+        next_tasks = taskselector_policy.get_tasks(tasks)
+        if len(tasks) == 0:
+            log.info("No tasks found")
+            break
+        print("---> next_tasks", next_tasks)
+        task= next_tasks.pop(0)    
+        taskcounter += 1
+
+        print(f"Processing task: {taskcounter}/{len(tasks) + taskcounter}")
         log.info(f"Processing task: {task}")
         sku = task["sku"]
         number_of_nodes = task["nnodes"]
@@ -45,14 +36,14 @@ def process_tasks(tasks_file, dataset_file, keep_pools=False, reuse_pools=False)
 
         if previous_sku != sku:
             log.debug(f"Got new sku: previous=[{previous_sku}] sku=[{sku}]")
-            if poolname != "" and not keep_pools:
+            if poolname != "" and not collector_config["keeppools"]:
                 log.info(f"Resizing pool: {poolname} to 0")
                 batch_handler.resize_pool(poolname, 0)
 
-            if reuse_pools:
+            if collector_config["reusepools"]:
                 poolname = batch_handler.get_existing_pool(sku, number_of_nodes)
 
-            if not poolname or not reuse_pools:
+            if not poolname or not collector_config["reusepools"]:
                 poolname = batch_handler.create_pool(sku)
 
             if poolname == None:
@@ -65,7 +56,7 @@ def process_tasks(tasks_file, dataset_file, keep_pools=False, reuse_pools=False)
         log.info(f"Resizing pool: {poolname} to {number_of_nodes}")
 
         # TODO: think if task should go to failed or keep pending state
-        if not resize_pool(poolname, number_of_nodes):
+        if not batch_handler.resize_pool_multi_attempt(poolname, number_of_nodes):
             log.error(f"Failed to resize pool: {poolname} to {number_of_nodes}")
             log.error(f"Moving to another task")
             continue
@@ -93,16 +84,22 @@ def process_tasks(tasks_file, dataset_file, keep_pools=False, reuse_pools=False)
 
         previous_sku = sku
 
-    if poolname != "" and not keep_pools:
+    if poolname != "" and not collector_config["keeppools"]:
         batch_handler.resize_pool(poolname, 0)
 
 
-def collect_data(tasks_file, dataset_file, env_file, clear_deployment=False, keep_pools=False, reuse_pools=False):
+def collect_data(tasks_file, dataset_file, env_file, collector_config):
     if batch_handler.setup_environment(env_file):
         log.debug("Environment setup completed")
         log.info("Starting tasks...this may take a while")
-        process_tasks(tasks_file, dataset_file, keep_pools, reuse_pools)
-        if clear_deployment:
+
+        if collector_config.get("policy", None).config.get("num_tasks") == 1:
+            log.info("Single task mode")
+            process_tasks_singletask(tasks_file, dataset_file, collector_config)
+        else:
+            log.error("Only single task mode is supported")
+            return
+        if collector_config["cleardeployment"]:
             batch_handler.delete_environment()
         log.info("Tasks completed")
     else:

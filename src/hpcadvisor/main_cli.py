@@ -64,18 +64,17 @@ def main_advice(datafilter,appexectime):
     cli_advice_generator.generate_advice(datafilter,appexectime)
 
 
-def main_select_task(operation, userinput, taskfile, policy_name, num_tasks):
-    log.info("Selecting next task ...")
+def main_selecttask(operation, userinput, taskfile, policy_name, num_tasks):
 
     if operation == "gettasks":
         cli_task_selector.get_next_tasks(taskfile, policy_name, num_tasks)
+    elif operation == "show":
+        cli_task_selector.show_tasks(taskfile)
     else:
-        print(f"Unknown operation: {operation}")
+        log.error(f"Unknown operation: {operation}. Supported: gettasks|show")
 
 
-def main_collect_data(
-    deployment_name, user_input_file, clear_deployment=False, clear_tasks=False,
-keep_pools=False, reuse_pools=False):
+def main_collect_data(deployment_name, user_input_file, collector_config):
     user_input = utils.get_userinput_from_file(user_input_file)
 
     data_system = {}
@@ -86,7 +85,7 @@ keep_pools=False, reuse_pools=False):
     data_app_input = user_input["appinputs"]
 
     task_filename = utils.get_task_filename(deployment_name)
-    if clear_tasks or not os.path.exists(task_filename) or os.path.getsize(task_filename) == 0:
+    if collector_config["cleartasks"] or not os.path.exists(task_filename) or os.path.getsize(task_filename) == 0:
         log.info(f"Generating new tasks file: {task_filename}")
         taskset_handler.generate_tasks(
             task_filename,
@@ -101,6 +100,7 @@ keep_pools=False, reuse_pools=False):
 
     env_file = utils.get_deployments_file(deployment_name)
     dataset_filename = utils.get_dataset_filename()
-    data_collector.collect_data(
-        task_filename, dataset_filename, env_file, clear_deployment, keep_pools, reuse_pools
-    )
+    data_collector.collect_data(task_filename, 
+                                dataset_filename, 
+                                env_file,
+                                collector_config)

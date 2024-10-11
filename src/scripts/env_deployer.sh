@@ -381,7 +381,7 @@ main() {
   create_batch_account_with_usersubscription
   # login_batch_with_usersubcription
   update_progress "environment created"
-  echo "Environment deployer execution completed."
+  echo "Environment deployer execution completed: $RG."
 }
 
 main "$@"
