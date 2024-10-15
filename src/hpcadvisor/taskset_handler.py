@@ -120,6 +120,8 @@ def select_task(tasks, policy: task_selection_policy.TaskPolicy):
 def get_policy(policy_name, config):
     return task_selection_policy.get_policy_class(policy_name, config)
 
+def get_pending_tasks(tasks):
+    return [task for task in tasks if task["status"] == TaskStatus.PENDING]
 
 def get_tasks(tasks_file, policy_name, num_tasks=1):
     tasks = get_tasks_from_file(tasks_file)

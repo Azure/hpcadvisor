@@ -57,16 +57,18 @@ def collect_handler(args):
     if "taskselector" in userinput:
         policy_name = userinput["taskselector"].get("policy", "sequential")
         paralleltasks = userinput["taskselector"].get("paralleltasks", 1)
-        selector_config = {"num_tasks": paralleltasks}
+        selector_config = {"paralleltasks": paralleltasks}
         policy = get_policy_class(policy_name, selector_config)
     else:
         policy = None
 
-    collector_config = {"cleardeployment": cleardeployment,
-                        "cleartasks": cleartasks, 
-                        "keeppools": keeppools,
-                        "reusepools": reusepools,
-                        "policy": policy}
+    collector_config = {
+        "cleardeployment": cleardeployment,
+        "cleartasks": cleartasks,
+        "keeppools": keeppools,
+        "reusepools": reusepools,
+        "policy": policy,
+    }
 
     main_cli.main_collect_data(name, userinput_file, collector_config)
 
@@ -102,7 +104,6 @@ def selecttask_handler(args):
     from hpcadvisor import main_cli
 
     main_cli.main_selecttask(operation, userinput, taskfile, policy, numtasks)
-
 
 
 def _process_arguments():
@@ -143,15 +144,29 @@ def _process_arguments():
 
     plot = subparsers.add_parser("plot", help="Plot generator help")
     plot.add_argument("-df", "--datafilter", help="Data filter", required=True)
-    plot.add_argument("-t", "--showtable", help="Show data table", required=False, action="store_true")
-    plot.add_argument("-ae", "--appexectime", help="Use app defined exectime", required=False, action="store_true")
+    plot.add_argument(
+        "-t", "--showtable", help="Show data table", required=False, action="store_true"
+    )
+    plot.add_argument(
+        "-ae",
+        "--appexectime",
+        help="Use app defined exectime",
+        required=False,
+        action="store_true",
+    )
     plot.add_argument("-st", "--subtitle", help="Plot sub title", required=False)
     plot.set_defaults(func=plot_handler)
 
     advice = subparsers.add_parser("advice", help="Advice generator help")
     advice.add_argument("-n", "--name", help="Deployment name", required=False)
     advice.add_argument("-df", "--datafilter", help="Data filter", required=False)
-    advice.add_argument("-ae", "--appexectime", help="Use app defined exectime", required=False, action="store_true")
+    advice.add_argument(
+        "-ae",
+        "--appexectime",
+        help="Use app defined exectime",
+        required=False,
+        action="store_true",
+    )
     advice.set_defaults(func=advice_handler)
 
     gui = subparsers.add_parser("gui", help="GUI mode help")
@@ -162,10 +177,11 @@ def _process_arguments():
     selecttask.add_argument("operation", type=str)
     selecttask.add_argument("-u", "--userinput", help="User input", required=False)
     selecttask.add_argument("-tf", "--taskfile", help="Taskfile", required=True)
-    selecttask.add_argument("-p", "--policy", help="Task selector policy", required=False)
+    selecttask.add_argument(
+        "-p", "--policy", help="Task selector policy", required=False
+    )
     selecttask.add_argument("-n", "--numtasks", help="Number of tasks", required=False)
     selecttask.set_defaults(func=selecttask_handler)
-
 
     args = parser.parse_args()
 
