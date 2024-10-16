@@ -130,8 +130,9 @@ def start_task_in_parallel(task, tasks_file, dataset_file, collector_config):
 
 def check_task_completion(task):
     log.debug(f"Checking task completion: {task}")
+
     if task["status"] == taskset_handler.TaskStatus.COMPLETED:
-        return True
+        return True, task["status"]
 
     jobname = task["tags"]["jobname"]
     taskid = task["tags"]["taskid"]
@@ -220,7 +221,7 @@ def process_tasks_multitask(tasks_file, dataset_file, collector_config):
         while True:
             time.sleep(pooling_delay_completion)
 
-            for task in running_tasks:
+            for task in running_tasks[:]:
                 task_has_completed, task_status = check_task_completion(task)
                 if task_has_completed:
                     process_task_completion(task, task_status, tasks_file, dataset_file)
