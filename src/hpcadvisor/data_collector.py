@@ -175,6 +175,8 @@ def process_task_completion(task, task_status, tasks_file, dataset_file):
 
     taskset_handler.update_task_status(task["id"], tasks_file, task_status)
 
+    batch_handler.delete_pool(poolname)
+
 
 def process_tasks_multitask(tasks_file, dataset_file, collector_config):
 

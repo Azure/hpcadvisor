@@ -481,6 +481,26 @@ def get_anf_ip():
     return volume.mount_targets[0].ip_address
 
 
+def delete_pools():
+    if not batch_client:
+        log.critical("batch_client is None")
+        return
+
+    log.info("Delete all pools")
+    for pool in batch_client.pool.list():
+        log.info(f"Delete pool: {pool.id}")
+        batch_client.pool.delete(pool.id)
+
+
+def delete_pool(poolid):
+    if not batch_client:
+        log.critical("batch_client not available")
+        return
+
+    log.info(f"Delete pool: {poolid}")
+    batch_client.pool.delete(poolid)
+
+
 def create_pool(sku, number_of_nodes):
     random_code = utils.get_random_code()
     poolname = f"pool-{random_code}"

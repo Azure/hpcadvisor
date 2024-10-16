@@ -2,13 +2,21 @@
 
 import os
 
-from hpcadvisor import (batch_handler, cli_advice_generator,
-                        cli_plot_generator, cli_task_selector, data_collector,
-                        logger, taskset_handler, utils)
+from hpcadvisor import (
+    batch_handler,
+    cli_advice_generator,
+    cli_plot_generator,
+    cli_task_selector,
+    data_collector,
+    logger,
+    taskset_handler,
+    utils,
+)
 
 log = logger.logger
 
-def main_shutdown_deployment(name):
+
+def main_shutdown_deployment(name, deletepools):
     env_file = utils.get_deployments_file(name)
     log.debug(f"Deployment file: {env_file}")
 
@@ -17,9 +25,15 @@ def main_shutdown_deployment(name):
         return
 
     print(f"Shutting down deployment: {name}")
+    if deletepools:
+        print("Deleting pools only...")
 
     if batch_handler.setup_environment(env_file):
-        batch_handler.delete_environment()
+        if deletepools:
+            batch_handler.delete_pools()
+        else:
+            batch_handler.delete_environment()
+
     else:
         log.error("Failed to setup environment.")
 
@@ -58,10 +72,10 @@ def main_plot(plotfilter, showtable, appexectime, subtitle):
         cli_plot_generator.generate_plots(plotfilter, plotdir, appexectime, subtitle)
 
 
-def main_advice(datafilter,appexectime):
+def main_advice(datafilter, appexectime):
     log.info("Generating advice...")
     # plotdir = utils.get_plot_dir()
-    cli_advice_generator.generate_advice(datafilter,appexectime)
+    cli_advice_generator.generate_advice(datafilter, appexectime)
 
 
 def main_selecttask(operation, userinput, taskfile, policy_name, num_tasks):
@@ -85,7 +99,11 @@ def main_collect_data(deployment_name, user_input_file, collector_config):
     data_app_input = user_input["appinputs"]
 
     task_filename = utils.get_task_filename(deployment_name)
-    if collector_config["cleartasks"] or not os.path.exists(task_filename) or os.path.getsize(task_filename) == 0:
+    if (
+        collector_config["cleartasks"]
+        or not os.path.exists(task_filename)
+        or os.path.getsize(task_filename) == 0
+    ):
         log.info(f"Generating new tasks file: {task_filename}")
         taskset_handler.generate_tasks(
             task_filename,
@@ -93,14 +111,13 @@ def main_collect_data(deployment_name, user_input_file, collector_config):
             data_app_input,
             user_input["appname"],
             user_input["tags"],
-            user_input["appsetupurl"]
+            user_input["appsetupurl"],
         )
     else:
         log.info(f"Using existing tasks file: {task_filename}")
 
     env_file = utils.get_deployments_file(deployment_name)
     dataset_filename = utils.get_dataset_filename()
-    data_collector.collect_data(task_filename, 
-                                dataset_filename, 
-                                env_file,
-                                collector_config)
+    data_collector.collect_data(
+        task_filename, dataset_filename, env_file, collector_config
+    )
