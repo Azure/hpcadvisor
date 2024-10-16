@@ -126,10 +126,15 @@ def start_task_in_parallel(task, tasks_file, dataset_file, collector_config):
     task["tags"]["taskid"] = taskid
 
     log.debug(f"Task started in parallel: {task}")
+    taskset_handler.update_task_status(
+        task["id"], tasks_file, taskset_handler.TaskStatus.RUNNING
+    )
 
 
 def check_task_completion(task):
-    log.debug(f"Checking task completion: {task}")
+    log.debug(
+        f"Checking task completion: id={task['id']} poolid={task['tags']['poolname']} jobname={task['tags']['jobname']} taskid={task['tags']['taskid']} status={task['status']} nnodes={task['nnodes']}"
+    )
 
     if task["status"] == taskset_handler.TaskStatus.COMPLETED:
         return True, task["status"]
@@ -141,6 +146,7 @@ def check_task_completion(task):
     task_completed = batch_handler.wait_task_completion(
         jobname, taskid, wait_blocked=False
     )
+    log.debug(f"Task status: {task_completed} {jobname} {taskid}")
 
     if not task_completed:
         return False, None
@@ -176,6 +182,7 @@ def process_task_completion(task, task_status, tasks_file, dataset_file):
     taskset_handler.update_task_status(task["id"], tasks_file, task_status)
 
     batch_handler.delete_pool(poolname)
+    batch_handler.delete_job(jobname)
 
 
 def process_tasks_multitask(tasks_file, dataset_file, collector_config):
