@@ -16,7 +16,7 @@ from hpcadvisor import (
 log = logger.logger
 
 
-def main_shutdown_deployment(name, deletepools):
+def main_shutdown_deployment(name, options):
     env_file = utils.get_deployments_file(name)
     log.debug(f"Deployment file: {env_file}")
 
@@ -25,13 +25,17 @@ def main_shutdown_deployment(name, deletepools):
         return
 
     print(f"Shutting down deployment: {name}")
-    if deletepools:
+    if options["deletepools"]:
         print("Deleting pools only...")
+    elif options["deletejobs"]:
+        print("Deleting jobs only...")
 
     if batch_handler.setup_environment(env_file):
-        if deletepools:
+        if options["deletepools"]:
             batch_handler.delete_pools()
-        else:
+        if options["deletejobs"]:
+            batch_handler.delete_jobs()
+        if not options["deletepools"] and not options["deletejobs"]:
             batch_handler.delete_environment()
 
     else:

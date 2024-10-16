@@ -361,6 +361,27 @@ def get_job(batch_client, jobid):
     return None
 
 
+def delete_jobs():
+    if not batch_client:
+        log.critical("batch_client is None")
+        return
+
+    log.info("Delete all jobs")
+    for job in batch_client.job.list():
+        log.info(f"Delete job: {job.id}")
+        batch_client.job.delete(job.id)
+
+
+def delete_job(jobid):
+
+    if not batch_client:
+        log.critical("batch_client is None")
+        return
+
+    log.info(f"Delete job: {jobid}")
+    batch_client.job.delete(jobid)
+
+
 def create_job(poolid, jobid=None):
     if jobid is None:
         random_code = utils.get_random_code()

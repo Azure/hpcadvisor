@@ -33,7 +33,10 @@ def deployment_handler(args):
         main_cli.main_list_deployments()
         return
     elif args.operation == "shutdown":
-        main_cli.main_shutdown_deployment(args.name, args.deletepools)
+        options = {}
+        options["deletepools"] = args.deletepools
+        options["deletejobs"] = args.deletejobs
+        main_cli.main_shutdown_deployment(args.name, options)
         return
 
     else:
@@ -130,6 +133,14 @@ def _process_arguments():
         required=False,
         action="store_true",
     )
+    deploy.add_argument(
+        "-dj",
+        "--deletejobs",
+        help="Delete Jobs only",
+        required=False,
+        action="store_true",
+    )
+
     deploy.set_defaults(func=deployment_handler)
 
     collect = subparsers.add_parser("collect", help="Data collection help")
