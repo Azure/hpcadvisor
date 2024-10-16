@@ -109,6 +109,21 @@ def selecttask_handler(args):
     main_cli.main_selecttask(operation, userinput, taskfile, policy, numtasks)
 
 
+def datafilter_handler(args):
+
+    operation = args.operation
+    datafilter = args.datafilter
+    exportfile = args.exportfile
+
+    from hpcadvisor import main_cli
+
+    if operation == "export":
+        main_cli.main_datafilter(operation, datafilter, exportfile)
+    else:
+        print(f"Invalid operation: {operation}. Supported operations: export")
+        sys.exit(1)
+
+
 def _process_arguments():
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument(
@@ -200,6 +215,12 @@ def _process_arguments():
     )
     selecttask.add_argument("-n", "--numtasks", help="Number of tasks", required=False)
     selecttask.set_defaults(func=selecttask_handler)
+
+    datafilter = subparsers.add_parser("datafilter", help="Datafilter help")
+    datafilter.add_argument("operation", type=str)
+    datafilter.add_argument("-df", "--datafilter", help="Data filter", required=True)
+    datafilter.add_argument("-e", "--exportfile", help="Exported file", required=True)
+    datafilter.set_defaults(func=datafilter_handler)
 
     args = parser.parse_args()
 

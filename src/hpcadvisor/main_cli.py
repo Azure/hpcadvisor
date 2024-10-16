@@ -5,6 +5,7 @@ import os
 from hpcadvisor import (
     batch_handler,
     cli_advice_generator,
+    cli_data_filter,
     cli_plot_generator,
     cli_task_selector,
     data_collector,
@@ -80,6 +81,11 @@ def main_advice(datafilter, appexectime):
     log.info("Generating advice...")
     # plotdir = utils.get_plot_dir()
     cli_advice_generator.generate_advice(datafilter, appexectime)
+
+
+def main_datafilter(operation, datafilter, exportfile):
+    log.info("Data filtering ...")
+    cli_data_filter.export(datafilter, exportfile)
 
 
 def main_selecttask(operation, userinput, taskfile, policy_name, num_tasks):
