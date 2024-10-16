@@ -10,6 +10,12 @@ log = logger.logger
 datapoints_label = "datapoints"
 
 
+def store_datapoints(dataset_file, datapoints):
+
+    with open(dataset_file, "w") as outfile:
+        json.dump(datapoints, outfile, indent=2)
+
+
 def add_datapoint(dataset_file, datapoint):
     existing_data = {}
 
@@ -23,7 +29,7 @@ def add_datapoint(dataset_file, datapoint):
     existing_data[datapoints_label].append(datapoint)
 
     with open(dataset_file, "w") as outfile:
-        json.dump(existing_data, outfile)
+        json.dump(existing_data, outfile, indent=2)
 
 
 def get_plotfilter(plotfilter_file):
@@ -35,7 +41,9 @@ def get_plotfilter(plotfilter_file):
             if not isinstance(value, list):
                 plotfilter[key] = [value]
     else:
-        log.warning("Plotfilter file not provided or does not exist. Consuming entire dataset")
+        log.warning(
+            "Plotfilter file not provided or does not exist. Consuming entire dataset"
+        )
     return plotfilter
 
 
@@ -65,13 +73,18 @@ def is_valid_datapoint(datapoint, plotfilter):
         if key in datapoint:
             if key == "tags":
                 anymatch = False
-                if any(all(tag_name in datapoint[key] and datapoint[key][tag_name] == tag_value
-                               for tag_name, tag_value in values_dict.items())
-                           for values_dict in valuelist):
-                            anymatch = True
+                if any(
+                    all(
+                        tag_name in datapoint[key]
+                        and datapoint[key][tag_name] == tag_value
+                        for tag_name, tag_value in values_dict.items()
+                    )
+                    for values_dict in valuelist
+                ):
+                    anymatch = True
                 if not anymatch:
                     return False
-            elif  datapoint[key] not in valuelist:
+            elif datapoint[key] not in valuelist:
                 return False
         else:
             return False

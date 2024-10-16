@@ -3,6 +3,7 @@
 import datetime
 import io
 import os
+import sys
 import time
 from datetime import timedelta
 
@@ -18,6 +19,8 @@ from azure.mgmt.compute.models import (DiskCreateOption, LinuxConfiguration,
                                        SshPublicKey, VirtualMachine,
                                        VirtualMachineImage)
 from azure.mgmt.monitor import MonitorManagementClient
+from azure.mgmt.netapp import NetAppManagementClient
+from azure.mgmt.netapp.models import NetAppAccount
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient, SubscriptionClient
 
@@ -28,7 +31,7 @@ from hpcadvisor.azure_identity_credential_adapter import \
 batch_supported_images = "batch_supported_images.txt"
 VMIMAGE = "almalinux:almalinux-hpc:8_6-hpc-gen2:latest"
 backupnodeagent = "batch.node.el 8"
-
+anfenabled = True
 env = {}
 
 DEFAULT_ENCODING = "utf-8"
@@ -37,6 +40,7 @@ STANDARD_ERR_FILE_NAME = "stderr.txt"
 
 log = logger.logger
 batch_client = None
+anf_client = None
 
 HPCADVISOR_FUNCTION_RUN = "hpcadvisor_run"
 HPCADVISOR_FUNCTION_SETUP = "hpcadvisor_setup"
@@ -93,7 +97,11 @@ def wait_pool_ready(poolid):
         log.critical("batch_client is None")
         return
 
-    log.info(f"awaiting pool resize: poolid={poolid}")
+    # measure time to wait for pool to be ready
+
+    init_time = datetime.datetime.now()
+
+    log.debug(f"awaiting pool to be ready: poolid={poolid}")
     rc = utils.wait_until(
         lambda: batch_client.pool.get(poolid).allocation_state == "steady"
     )
@@ -102,7 +110,9 @@ def wait_pool_ready(poolid):
     if rc is utils.WAIT_UNTIL_RC.FAILURE:
         log.error("Pool resize failed.")
 
-    log.info("Pool resize is complete.")
+    elapsed_time = datetime.datetime.now() - init_time
+    log.debug(f"Pool ready: poolid={poolid} elapsed_time={elapsed_time}")
+    log.info(f"Pool resize is complete: poolid={poolid}")
 
     target_dedicated_nodes = batch_client.pool.get(poolid).target_dedicated_nodes
 
@@ -129,7 +139,9 @@ def wait_pool_ready(poolid):
 
     # pool can be in steady state but with nodes that are unusable.
     # so, we need to check the state of the compute nodes
-    log.info("awaiting compute nodes startup")
+
+    init_time = datetime.datetime.now()
+    log.info(f"awaiting compute nodes startup: poolid={poolid}")
     rc = utils.wait_until(lambda: verify_pool())
     if rc is utils.WAIT_UNTIL_RC.TIMEOUT:
         log.error("Timed out waiting for compute nodes to be ready.")
@@ -137,7 +149,10 @@ def wait_pool_ready(poolid):
     if rc is utils.WAIT_UNTIL_RC.FAILURE:
         log.error("Compute nodes failed to start.")
         return None
-    log.info("Compute nodes are ready.")
+
+    elapsed_time = datetime.datetime.now() - init_time
+    log.debug(f"Compute nodes ready: poolid={poolid} elapsed_time={elapsed_time}")
+    log.info(f"Compute nodes are ready. poolid={poolid}")
     pool_info = batch_client.pool.get(poolid)
     log.info(f" pool_info.current_dedicated_nodes={pool_info.current_dedicated_nodes}")
 
@@ -182,6 +197,34 @@ def resize_pool(poolid, target_nodes, wait_resize=True):
 
     if wait_resize:
         return wait_pool_ready(poolid)
+
+
+def resize_pool_multi_attempt(poolname, number_of_nodes):
+    attempts = 3
+    while attempts > 0:
+        rc = resize_pool(poolname, number_of_nodes)
+        if not rc:
+            log.warning(
+                f"Failed to resize pool: {poolname} to {number_of_nodes}. Attempts left: {attempts}"
+            )
+            resize_pool(poolname, 0)
+            attempts -= 1
+        else:
+            return True
+
+    log.warning(f"Failed to resize pool: {poolname} to {number_of_nodes}")
+    resize_pool(poolname, 0)
+    return False
+
+
+def _get_anf_client(subscription_id, resource_group):
+
+    global anf_client
+    log.debug(f"Getting anf client sub={subscription_id} rg={resource_group}")
+
+    credentials = DefaultAzureCredential()
+    anf_client = NetAppManagementClient(credentials, subscription_id)
+    return anf_client
 
 
 def _get_batch_client(subscription_id, resource_group):
@@ -314,6 +357,27 @@ def get_job(batch_client, jobid):
     return None
 
 
+def delete_jobs():
+    if not batch_client:
+        log.critical("batch_client is None")
+        return
+
+    log.info("Delete all jobs")
+    for job in batch_client.job.list():
+        log.info(f"Delete job: {job.id}")
+        batch_client.job.delete(job.id)
+
+
+def delete_job(jobid):
+
+    if not batch_client:
+        log.critical("batch_client is None")
+        return
+
+    log.info(f"Delete job: {jobid}")
+    batch_client.job.delete(jobid)
+
+
 def create_job(poolid, jobid=None):
     if jobid is None:
         random_code = utils.get_random_code()
@@ -399,6 +463,7 @@ def wrap_commands_in_shell(commands):
     return "/bin/bash -c '{}; wait'".format(";".join(commands))
     # return "/bin/bash -c 'set -e; set -o pipefail; {}; wait'".format(";".join(commands))
 
+
 def get_existing_pool(sku, number_of_nodes):
 
     if not batch_client:
@@ -412,48 +477,93 @@ def get_existing_pool(sku, number_of_nodes):
     batch_pools = batch_client.pool.list(pool_list_options=options)
 
     for pool in batch_pools:
-        if pool.vm_size.lower() == sku.lower() and pool.target_dedicated_nodes == number_of_nodes:
-            log.info(f"Reusing pool {pool.id} found with sku {sku} and nodes {number_of_nodes}")
+        if (
+            pool.vm_size.lower() == sku.lower()
+            and pool.target_dedicated_nodes == number_of_nodes
+        ):
+            log.info(
+                f"Reusing pool {pool.id} found with sku {sku} and nodes {number_of_nodes}"
+            )
             return pool.id
 
     return None
 
-def create_pool(sku, poolname=None, number_of_nodes=1):
-    if poolname is None:
-        random_code = utils.get_random_code()
-        poolname = f"pool-{random_code}"
+
+def get_anf_ip():
+
+    volume = anf_client.volumes.get(
+        env["RG"], env["ANFACCOUNT"], env["ANFPOOLNAME"], env["ANFVOLUMENAME"]
+    )
+
+    return volume.mount_targets[0].ip_address
+
+
+def delete_pools():
+    if not batch_client:
+        log.critical("batch_client is None")
+        return
+
+    log.info("Delete all pools")
+    for pool in batch_client.pool.list():
+        log.info(f"Delete pool: {pool.id}")
+        batch_client.pool.delete(pool.id)
+
+
+def delete_pool(poolid):
+    if not batch_client:
+        log.critical("batch_client not available")
+        return
+
+    log.info(f"Delete pool: {poolid}")
+    batch_client.pool.delete(poolid)
+
+
+def create_pool(sku, number_of_nodes):
+    random_code = utils.get_random_code()
+    poolname = f"pool-{random_code}"
 
     if not batch_client:
         log.critical("batch_client is None")
         return None
 
     log.info(f"Create pool: {poolname}")
-
-    storage_account = env["STORAGEACCOUNT"]
-    storage_file_dir = "data"
-    nfs_fileshare = storage_file_dir
-    nfs_share_hostname = f"{storage_account}.file.core.windows.net"
-    nfs_share_directory = f"/{storage_account}/{nfs_fileshare}"
-
     subnetid = env["SUBVNETID"]
-
     pool_id = poolname
 
-    mount_configuration = batchmodels.MountConfiguration(
-        nfs_mount_configuration=batchmodels.NFSMountConfiguration(
-            source=f"{nfs_share_hostname}:{nfs_share_directory}",
-            relative_mount_path=nfs_fileshare,
-            mount_options="-o rw,hard,rsize=65536,wsize=65536,vers=4,minorversion=1,tcp,sec=sys",
-        )
-    )
+    anf_ip = ""
+    if anfenabled:
+        anf_ip = get_anf_ip()
+        log.debug(f"ANF IP address={anf_ip}")
+
+    # storage_account = env["STORAGEACCOUNT"]
+    # storage_file_dir = "data"
+    # nfs_fileshare = storage_file_dir
+    # nfs_share_hostname = f"{storage_account}.file.core.windows.net"
+    # nfs_share_directory = f"/{storage_account}/{nfs_fileshare}"
+    #
+
+    # mount_configuration = batchmodels.MountConfiguration(
+    #     nfs_mount_configuration=batchmodels.NFSMountConfiguration(
+    #         source=f"{nfs_share_hostname}:{nfs_share_directory}",
+    #         relative_mount_path=nfs_fileshare,
+    #         mount_options="-o rw,hard,rsize=65536,wsize=65536,vers=4,minorversion=1,tcp,sec=sys",
+    #     )
+    # )
 
     # TODO: need to move to another place
     # TODO: find alternatives for this sleep 60 to prevent rpm lock error
     #
     # https://www.eessi.io/docs/getting_access/native_installation/
-    script = """
+
+    # TODO: put bach the option for blob on nfs
+    # sudo chown _azbatch:_azbatchgrp /mnt/batch/tasks/fsmounts/data
+    anfmountdir = env["ANFMOUNTDIR"]
+    anfvolume = env["ANFVOLUMENAME"]
+    script = f"""
     sleep 60
-    sudo chown _azbatch:_azbatchgrp /mnt/batch/tasks/fsmounts/data
+    sudo mkdir {anfmountdir} ; mount {anf_ip}:/{anfvolume} {anfmountdir}
+    sudo chown _azbatch:_azbatchgrp {anfmountdir}
+    sudo df -Tha
     sudo rpm --import https://repo.almalinux.org/almalinux/RPM-GPG-KEY-AlmaLinux
     sudo yum upgrade -y almalinux-release
     sudo yum install -y https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest.noarch.rpm
@@ -509,7 +619,7 @@ def create_pool(sku, poolname=None, number_of_nodes=1):
         target_dedicated_nodes=number_of_nodes,
         enable_inter_node_communication=True,
         target_node_communication_mode="simplified",
-        mount_configuration=[mount_configuration],
+        # mount_configuration=[mount_configuration],
         start_task=start_task,
         network_configuration=network_configuration,
         task_scheduling_policy=batchmodels.TaskSchedulingPolicy(
@@ -562,9 +672,16 @@ def create_setup_task(jobid, appsetupurl):
     script_name = os.path.basename(app_setup_url)
     log.debug(f"script for application: {script_name}")
 
-    task_commands = [
-        f"/bin/bash -c 'cd $AZ_BATCH_NODE_MOUNTS_DIR/data ; curl -sLO {app_setup_url} ; source {script_name} ; {HPCADVISOR_FUNCTION_SETUP}'"
-    ]
+    anfmountdir = env["ANFMOUNTDIR"]
+
+    if anfenabled:
+        task_commands = [
+            f"/bin/bash -c 'set ; cd {anfmountdir} ; curl -sLO {app_setup_url} ; source {script_name} ; {HPCADVISOR_FUNCTION_SETUP}'"
+        ]
+    else:
+        task_commands = [
+            f"/bin/bash -c 'set ; cd $AZ_BATCH_NODE_MOUNTS_DIR/data ; curl -sLO {app_setup_url} ; source {script_name} ; {HPCADVISOR_FUNCTION_SETUP}'"
+        ]
 
     log.debug(f"task command: {task_commands}")
 
@@ -607,6 +724,7 @@ def _get_environment_settings(appinputs):
 
     return environment_settings
 
+
 def get_pool_ipaddresses(poolid):
     if not batch_client:
         log.critical("batch_client is None")
@@ -621,6 +739,7 @@ def get_pool_ipaddresses(poolid):
 
     return ip_addresses
 
+
 def get_hostname_ppn_list_str(poolid, ppn):
     if not batch_client:
         log.critical("batch_client is None")
@@ -634,7 +753,10 @@ def get_hostname_ppn_list_str(poolid, ppn):
 
     return ",".join(hostname_ppn_list)
 
-def create_compute_task(poolid, jobid, number_of_nodes, ppr_perc, sku, appinputs, apprunscript):
+
+def create_compute_task(
+    poolid, jobid, number_of_nodes, ppr_perc, sku, appinputs, apprunscript
+):
     if not batch_client:
         log.critical("batch_client is None")
         return
@@ -651,29 +773,41 @@ def create_compute_task(poolid, jobid, number_of_nodes, ppr_perc, sku, appinputs
         )
     )
 
+    anfmountdir = env["ANFMOUNTDIR"]
     taskrundir = f"run{random_code}"
-    fulltaskrundir = f"/mnt/batch/tasks/fsmounts/data/{taskrundir}"
+    if anfenabled:
+        fulltaskrundir = f"{anfmountdir}/{taskrundir}"
+    else:
+        fulltaskrundir = f"/mnt/batch/tasks/fsmounts/data/{taskrundir}"
+
     hostfile_path = f"{fulltaskrundir}/hostfile.txt"
+    hostfile_ppn_path = f"{fulltaskrundir}/hostfile_ppn.txt"
 
     app_run_script = apprunscript
-    task_commands = [
-        f"/bin/bash -c 'source $AZ_BATCH_NODE_MOUNTS_DIR/data/{app_run_script} ; cd {fulltaskrundir}; {HPCADVISOR_FUNCTION_RUN}'",
-    ]
+
+    anfmountdir = env["ANFMOUNTDIR"]
+    if anfenabled:
+        task_commands = [
+            f"/bin/bash -c 'export HOSTLIST_PPN=$(paste -d, -s <(sed \"s/ slots=[0-9]\+/:{ppn}/\" $HOSTFILE_PATH)); set ; source {anfmountdir}/{app_run_script} ; cd {fulltaskrundir}; {HPCADVISOR_FUNCTION_RUN}'",
+        ]
+    else:
+        task_commands = [
+            f"/bin/bash -c 'set ; source $AZ_BATCH_NODE_MOUNTS_DIR/data/{app_run_script} ; cd {fulltaskrundir}; {HPCADVISOR_FUNCTION_RUN}'",
+        ]
 
     log.debug(f"task command: {task_commands}")
 
     multi_instance_settings = batchmodels.MultiInstanceSettings(
         number_of_instances=number_of_nodes,
-        coordination_command_line = (
-            "/bin/bash -c 'env ; mkdir -p $TASKRUN_DIR  ; leaderhost=$(echo $AZ_BATCH_HOST_LIST | cut -d\",\" -f1);"
-                "myhost=$(hostname -I | awk \"{print \\$1}\");"
-                "if [ \"$myhost\" == \"$leaderhost\" ]; then "
-                "IFS=','; "
-                "for host in $AZ_BATCH_HOST_LIST; do "
-                "echo \"${host} slots=$PPN\" >> $HOSTFILE_PATH; "
-                "done; "
-                "fi'"
-
+        coordination_command_line=(
+            '/bin/bash -c \'env ; mkdir -p $TASKRUN_DIR  ; leaderhost=$(echo $AZ_BATCH_HOST_LIST | cut -d"," -f1);'
+            'myhost=$(hostname -I | awk "{print \\$1}");'
+            'if [ "$myhost" == "$leaderhost" ]; then '
+            "IFS=','; "
+            "for host in $AZ_BATCH_HOST_LIST; do "
+            'echo "${host} slots=$PPN" >> $HOSTFILE_PATH; '
+            "done; "
+            "fi'"
         ),
     )
 
@@ -683,9 +817,9 @@ def create_compute_task(poolid, jobid, number_of_nodes, ppr_perc, sku, appinputs
     _append_environment_settings(environment_settings, "PPN", ppn)
     _append_environment_settings(environment_settings, "SKU", sku)
     _append_environment_settings(environment_settings, "VMTYPE", sku)
-    _append_environment_settings(environment_settings, "HOSTLIST_PPN", list_nodes_ppn)
+    # _append_environment_settings(environment_settings, "HOSTLIST_PPN", list_nodes_ppn)
     _append_environment_settings(environment_settings, "TASKRUN_DIR", fulltaskrundir)
-    _append_environment_settings(environment_settings, "HOSTFILE_PATH",hostfile_path)
+    _append_environment_settings(environment_settings, "HOSTFILE_PATH", hostfile_path)
 
     task = batchmodels.TaskAddParameter(
         id=task_id,
@@ -719,6 +853,11 @@ def get_environment():
 
 def setup_environment(filename):
     global batch_client
+    global anf_client
+
+    if not os.path.exists(filename):
+        log.critical(f"Environment file does not exist: {filename}")
+        sys.exit(1)
 
     with open(filename) as f:
         lines = f.readlines()
@@ -738,7 +877,7 @@ def setup_environment(filename):
         "STORAGEACCOUNT",
         "VNETNAME",
         "VSUBNETNAME",
-        "REGION"
+        "REGION",
     ]
 
     for var in required_env_vars:
@@ -759,6 +898,7 @@ def setup_environment(filename):
     )
 
     batch_client = _get_batch_client(env["SUBSCRIPTION"], env["RG"])
+    anf_client = _get_anf_client(env["SUBSCRIPTION"], env["RG"])
 
     env["NODEAGENTSKU"] = _get_node_agent_sku(VMIMAGE)
 
@@ -835,7 +975,7 @@ def save_task_files(jobid, taskid):
     return stdout_filename, stderr_filename
 
 
-def wait_task_completion(jobid, taskid):
+def wait_task_completion(jobid, taskid, wait_blocked=True):
     log.info(f"Waiting for task completion {taskid}")
 
     if not batch_client:
@@ -845,11 +985,14 @@ def wait_task_completion(jobid, taskid):
     # TODO: need to add a maximum amount of time for task completion
     while True:
         task = batch_client.task.get(jobid, taskid)
-        log.info(f"task state={task.state}")
+        log.info(f"task state={task.state} task id={taskid}")
         if task.state == batchmodels.TaskState.completed:
             break
+        if not wait_blocked:
+            return False
         time.sleep(5)
 
+    return True
 
 
 def _get_total_cores(vm_size):
@@ -1138,12 +1281,13 @@ def get_task_execution_status(jobname, taskid):
     log.warning(f"Task {taskid} unkown state")
     return taskset_handler.TaskStatus.UNKNOWN
 
+
 # This needs to be rethinked
 def get_app_execution_time(file_stdout):
     """Get application execution time from the stdout file
-        Here we are looking for HPCADVISORVAR APPEXECTIME=100
-        APPEXECTIME is the application execution time in seconds
-        which is defined by the user
+    Here we are looking for HPCADVISORVAR APPEXECTIME=100
+    APPEXECTIME is the application execution time in seconds
+    which is defined by the user
     """
 
     appexectime = 0
@@ -1158,9 +1302,10 @@ def get_app_execution_time(file_stdout):
 
     return appexectime
 
+
 def get_app_level_metrics(file_stdout):
     """Get application level metrics defined by HPCADVISORVAR
-        in stdout file
+    in stdout file
     """
 
     metrics = {}
@@ -1174,8 +1319,8 @@ def get_app_level_metrics(file_stdout):
                 value = line.split("=")[1]
                 metrics[key] = value
 
-
     return metrics
+
 
 # TODO: may move this to data_collector.py in future
 def store_task_execution_data(

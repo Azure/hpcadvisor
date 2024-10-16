@@ -5,7 +5,7 @@ import json
 import os
 from enum import Enum
 
-from hpcadvisor import logger, utils
+from hpcadvisor import logger, task_selection_policy, utils
 
 log = logger.logger
 
@@ -17,6 +17,7 @@ class TaskStatus(str, Enum):
     FAILED = "failed"
     ALL = "all"
     UNKNOWN = "unknown"
+
 
 
 def clear_task_file(filename):
@@ -33,7 +34,7 @@ def _ensure_list(value):
 
 def _store_tasks(task_dict, filename):
     with open(filename, "w") as outfile:
-        json.dump(task_dict, outfile)
+        json.dump(task_dict, outfile, indent=2)
     log.info(f"{filename}: file created/updated with {len(task_dict)} tasks")
 
 
@@ -108,5 +109,33 @@ def get_tasks_from_file(tasks_file, filter_status=TaskStatus.PENDING):
         if filter_status == TaskStatus.ALL or task["status"] == filter_status:
             filtered_tasks.append(task)
 
-    log.info(f"Loaded {len(filtered_tasks)} tasks from file")
+    log.debug(f"Loaded {len(filtered_tasks)} tasks from file")
     return filtered_tasks
+
+
+def select_task(tasks, policy: task_selection_policy.TaskPolicy):
+    return policy.apply(tasks)
+
+
+def get_policy(policy_name, config):
+    return task_selection_policy.get_policy_class(policy_name, config)
+
+def get_pending_tasks(tasks):
+    return [task for task in tasks if task["status"] == TaskStatus.PENDING]
+
+def get_tasks(tasks_file, policy_name, num_tasks=1):
+    tasks = get_tasks_from_file(tasks_file)
+
+    if len(tasks) <= 0:
+        log.warning(f"No tasks found in {tasks_file}")
+        return []
+
+    if num_tasks < 1 or num_tasks > len(tasks):
+        log.warning(f"Number of tasks should be between 1 and {len(tasks)} (received: {num_tasks})")
+        return []
+    
+    selector_config = {"num_tasks": num_tasks}
+    policy = task_selection_policy.get_policy_class(policy_name, selector_config)
+
+
+    return select_task(tasks, policy, num_tasks)

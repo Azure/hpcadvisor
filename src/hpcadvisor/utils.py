@@ -14,6 +14,7 @@ environment_filename = "env.conf"
 task_filename = "tasks.json"
 dataset_filename = "dataset.json"
 ui_default_filename = "ui_default.json"
+anfmountdir="/mnt/anfnfs"
 
 hpcadvisor_dir = os.path.join(os.path.expanduser("~"), ".hpcadvisor")
 
@@ -103,6 +104,10 @@ def generate_env_file(rg_prefix, user_data):
         f.write("RG=" + rg_prefix + "\n")
         f.write("BATCHACCOUNT=" + rg_prefix + "ba\n")
         f.write("STORAGEACCOUNT=" + rg_prefix + "sa\n")
+        f.write("ANFACCOUNT=" + rg_prefix + "anf\n")
+        f.write("ANFVOLUMENAME=anfvolume\n")
+        f.write("ANFPOOLNAME=anfpool\n")
+        f.write("ANFMOUNTDIR="+anfmountdir+"\n")
         f.write("KEYVAULT=" + rg_prefix + "kv\n")
         f.write("VNETNAME=" + rg_prefix + "VNET\n")
         f.write("VSUBNETNAME=" + rg_prefix + "SUBNET\n")
