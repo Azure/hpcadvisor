@@ -16,6 +16,24 @@ def store_datapoints(dataset_file, datapoints):
         json.dump(datapoints, outfile, indent=2)
 
 
+def add_datapoints_fromfile(dataset_file, newdatapoints_file):
+    newdatapoints = utils.get_data_from_file(newdatapoints_file)
+    existing_data = {}
+
+    if os.path.exists(dataset_file):
+        with open(dataset_file, "r") as file:
+            existing_data = json.load(file)
+
+    if not datapoints_label in existing_data:
+        existing_data[datapoints_label] = []
+
+    # for datapoint in newdatapoints[datapoints_label]:
+    existing_data[datapoints_label].append(newdatapoints)
+
+    with open(dataset_file, "w") as outfile:
+        json.dump(existing_data, outfile, indent=2)
+
+
 def add_datapoint(dataset_file, datapoint):
     existing_data = {}
 

@@ -109,18 +109,18 @@ def selecttask_handler(args):
     main_cli.main_selecttask(operation, userinput, taskfile, policy, numtasks)
 
 
-def datafilter_handler(args):
+def dataset_handler(args):
 
     operation = args.operation
-    datafilter = args.datafilter
-    exportfile = args.exportfile
+    input = args.input
+    output = args.output
 
     from hpcadvisor import main_cli
 
-    if operation == "export":
-        main_cli.main_datafilter(operation, datafilter, exportfile)
+    if operation == "filter" or operation == "add":
+        main_cli.main_dataset(operation, input, output)
     else:
-        print(f"Invalid operation: {operation}. Supported operations: export")
+        print(f"Invalid operation: {operation}. Supported operations: filter | add")
         sys.exit(1)
 
 
@@ -216,11 +216,13 @@ def _process_arguments():
     selecttask.add_argument("-n", "--numtasks", help="Number of tasks", required=False)
     selecttask.set_defaults(func=selecttask_handler)
 
-    datafilter = subparsers.add_parser("datafilter", help="Datafilter help")
-    datafilter.add_argument("operation", type=str)
-    datafilter.add_argument("-df", "--datafilter", help="Data filter", required=True)
-    datafilter.add_argument("-e", "--exportfile", help="Exported file", required=True)
-    datafilter.set_defaults(func=datafilter_handler)
+    dataset = subparsers.add_parser("dataset", help="Dataset handler help")
+    dataset.add_argument("operation", type=str)
+    dataset.add_argument(
+        "-i", "--input", help="Data filter | New datapoints", required=False
+    )
+    dataset.add_argument("-o", "--output", help="Filtered file", required=False)
+    dataset.set_defaults(func=dataset_handler)
 
     args = parser.parse_args()
 
