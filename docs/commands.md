@@ -5,7 +5,7 @@ There are five hpcadvisor commands:
 
 - `deploy`: operations related to a deployment
 - `collect`: operation(s) related to data collection (i.e. execution of tasks)
-- `dataset`: opertaion(s) related to manipulation of the dataset (e.g. filter,
+- `dataset`: operation(s) related to manipulation of the dataset (e.g. filter,
 add)
 - `plot`: operation(s) related to generation of plots
 - `advice`: operations(s) related to generation of advice
