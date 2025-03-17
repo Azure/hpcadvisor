@@ -29,7 +29,7 @@ from hpcadvisor.azure_identity_credential_adapter import \
     AzureIdentityCredentialAdapter
 
 batch_supported_images = "batch_supported_images.txt"
-VMIMAGE = "almalinux:almalinux-hpc:8_6-hpc-gen2:latest"
+VMIMAGE = "almalinux:almalinux-hpc:8-hpc-gen2:latest"
 backupnodeagent = "batch.node.el 8"
 anfenabled = True
 env = {}
