@@ -23,6 +23,11 @@ addition to other features related to avoiding scenarios to optimize unnecessary
 tests.
 
 
+## Papers:
+
+[HPCAdvisor: A Tool for Assisting Users in Selecting HPC Resources in the Cloud](http://www.marconetto.me/files/netto2024hpcadvisor.pdf)
+[Simplifying HPC resource selection: A tool for optimizing execution time and cost on Azure](http://www.marconetto.me/files/netto2024simplifying.pdf)
+
 ## Operations
 
 The tool offers three operations:
