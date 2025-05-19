@@ -25,10 +25,10 @@ tests.
 
 ## Papers:
 
-[HPCAdvisor: A Tool for Assisting Users in Selecting HPC Resources in the Cloud](http://www.marconetto.me/files/netto2024hpcadvisor.pdf)
+[HPCAdvisor: A Tool for Assisting Users in Selecting HPC Resources in the Cloud](http://www.marconetto.me/files/netto2024hpcadvisor.pdf). N., M. AS. Proc. of the IEEE/ACM Int. Workshop on HPC User Support Tools in conjunction with Int. Conf. for High Performance Computing, Networking, Storage and Analysis - SuperComputing (SC-HUST). 2024
 
 
-[Simplifying HPC resource selection: A tool for optimizing execution time and cost on Azure](http://www.marconetto.me/files/netto2024simplifying.pdf)
+[Simplifying HPC resource selection: A tool for optimizing execution time and cost on Azure](http://www.marconetto.me/files/netto2024simplifying.pdf). N., M. AS, D. Salvador, W., V., D.. Research poster at the IEEE/ACM Int. Conf. for High Performance Computing, Networking, Storage and Analysis - SuperComputing (SC). 2024
 
 ## Operations
 
