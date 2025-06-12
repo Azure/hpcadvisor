@@ -51,6 +51,7 @@ def collect_handler(args):
     cleartasks = args.cleartasks
     keeppools = args.keeppools
     reusepools = args.reusepools
+    keepjobs = args.keepjobs
 
     from hpcadvisor import main_cli, utils
     from hpcadvisor.task_selection_policy import get_policy_class
@@ -70,6 +71,7 @@ def collect_handler(args):
         "cleartasks": cleartasks,
         "keeppools": keeppools,
         "reusepools": reusepools,
+        "keepjobs": keepjobs,
         "policy": policy,
     }
 
@@ -173,6 +175,10 @@ def _process_arguments():
     collect.add_argument(
         "-rp", "--reusepools", help="Reuse pools", required=False, action="store_true"
     )
+    collect.add_argument(
+        "-kj", "--keepjobs", help="Keep jobs", required=False, action="store_true"
+    )
+
     collect.set_defaults(func=collect_handler)
 
     plot = subparsers.add_parser("plot", help="Plot generator help")

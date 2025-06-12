@@ -21,6 +21,8 @@ azure-mgmt-resource = "^23.0.1"
 matplotlib = "^3.8.2"
 pytest = "^7.4.4"
 azure-mgmt-netapp = "^13.2.0"
+azure-storage-blob = "^12.25.1"
+azure-mgmt-storage = "^23.0.0"
 
 
 [build-system]

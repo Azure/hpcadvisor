@@ -32,6 +32,8 @@ setup_vars() {
     RG=$(get_var "$ENV_VARS_FILE" "RG")
     BATCHACCOUNT=$(get_var "$ENV_VARS_FILE" "BATCHACCOUNT")
     STORAGEACCOUNT=$(get_var "$ENV_VARS_FILE" "STORAGEACCOUNT")
+    BLOBSTORAGEACCOUNT=$(get_var "$ENV_VARS_FILE" "BLOBSTORAGEACCOUNT")
+    BLOBCONTAINER=$(get_var "$ENV_VARS_FILE" "BLOBCONTAINER")
     ANFACCOUNT=$(get_var "$ENV_VARS_FILE" "ANFACCOUNT")
     ANFVOLUMENAME=$(get_var "$ENV_VARS_FILE" "ANFVOLUMENAME")
     ANFPOOLNAME=$(get_var "$ENV_VARS_FILE" "ANFPOOLNAME")
@@ -381,6 +383,32 @@ create_nat_gateway_subnet() {
     update_progress "created NAT gateway subnet"
 }
 
+create_blob_storage() {
+
+    echo "Creating blob storage"
+
+    # Create the storage account (if not exists)
+    az storage account create \
+        --name "$BLOBSTORAGEACCOUNT" \
+        --resource-group "$RG" \
+        --location "$REGION" \
+        --sku Standard_LRS \
+        --allow-blob-public-access false
+
+    az storage container create \
+        --account-name "$BLOBSTORAGEACCOUNT" \
+        --name "$BLOBCONTAINER"
+
+    BLOBSTORAGEKEY=$(az storage account keys list \
+    --account-name "$BLOBSTORAGEACCOUNT" \
+    --resource-group "$RG" \
+    --query '[0].value' -o tsv)
+    
+    echo "BLOBSTORAGEKEY=$BLOBSTORAGEKEY" >> "$ENV_VARS_FILE"
+
+    update_progress "created blob storage"
+}
+
 main() {
 
     if [ $# -ne 1 ]; then
@@ -410,6 +438,7 @@ main() {
     create_batch_account_with_usersubscription
     # login_batch_with_usersubcription
     create_nat_gateway_subnet
+    create_blob_storage
     update_progress "environment created"
     echo "Environment deployer execution completed: $RG"
 }

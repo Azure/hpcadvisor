@@ -183,9 +183,9 @@ def process_task_completion(
 
     taskset_handler.update_task_status(task["id"], tasks_file, task_status)
 
-    if not collector_config["keeppools"]:
+    if "keeppools" not in collector_config or not collector_config["keeppools"]:
         batch_handler.delete_pool(poolname)
-    if not collector_config["keepjobs"]:
+    if "keepjobs" not in collector_config or not collector_config["keepjobs"]:
         batch_handler.delete_job(jobname)
 
 

@@ -6,6 +6,9 @@ import os
 import sys
 import time
 from datetime import timedelta
+import re
+from urllib.parse import urlparse
+
 
 import azure.batch.models as batchmodels
 import numpy as np
@@ -23,11 +26,15 @@ from azure.mgmt.compute.models import (
     VirtualMachine,
     VirtualMachineImage,
 )
+
+from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
 from azure.mgmt.monitor import MonitorManagementClient
 from azure.mgmt.netapp import NetAppManagementClient
 from azure.mgmt.netapp.models import NetAppAccount
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient, SubscriptionClient
+from azure.mgmt.storage import StorageManagementClient
+from azure.batch.models import ResourceFile
 
 from hpcadvisor import dataset_handler, logger, taskset_handler, utils
 from hpcadvisor.azure_identity_credential_adapter import AzureIdentityCredentialAdapter
@@ -123,7 +130,7 @@ def wait_pool_ready(poolid):
     def verify_pool():
         pool_config = batch_client.pool.get(poolid)
         if pool_config.resize_errors and len(pool_config.resize_errors) > 0:
-            log.error(f"Pool {pool_id} resize failed.")
+            log.error(f"Pool {poolid} resize failed.")
             msg = "\n".join(
                 [f"  {e.code}: {e.message}" for e in pool_config.resize_errors]
             )
@@ -564,7 +571,7 @@ def create_pool(sku, number_of_nodes):
     anfmountdir = env["ANFMOUNTDIR"]
     anfvolume = env["ANFVOLUMENAME"]
     script = f"""
-    sleep 60
+    sleep 120
     sudo mkdir {anfmountdir} ; mount {anf_ip}:/{anfvolume} {anfmountdir}
     sudo chown _azbatch:_azbatchgrp {anfmountdir}
     sudo df -Tha
@@ -656,6 +663,61 @@ def create_pool(sku, number_of_nodes):
 
     return poolname
 
+def is_url(input_string):
+
+    is_url_bool = False    
+    parsed = urlparse(input_string)
+
+    if parsed.scheme in ("http", "https") and parsed.netloc:
+        is_url_bool = True
+
+    domain_pattern = re.compile(r"^[\w.-]+\.[a-z]{2,}(?:/|$)")
+    if domain_pattern.match(input_string):
+        is_url_bool = True
+
+    if os.path.exists(input_string):
+        is_url_bool = False
+
+    log.debug(f"Input string '{input_string}' is URL: {is_url_bool}")
+    return is_url_bool
+
+def get_blob_storage_key(subscription_id, resource_group, storage_account_name):
+    credential = DefaultAzureCredential()
+    storage_client = StorageManagementClient(credential, subscription_id)
+    keys = storage_client.storage_accounts.list_keys(resource_group, storage_account_name)
+    return keys.keys[0].value  # Use the first key
+
+def upload_file_to_blob(local_file_path, blob_storage_account, blob_storage_key, blob_container):
+
+    log.info(f"Uploading file {local_file_path} to blob storage")
+    blob_storage_key = get_blob_storage_key(
+        env["SUBSCRIPTION"],
+        env["RG"],
+        blob_storage_account
+    )
+
+    log.debug(f"blob_storage_account={blob_storage_account}, blob_container={blob_container}, blob_storage_key={blob_storage_key}") 
+    
+    script_name = os.path.basename(local_file_path)
+    blob_service_client = BlobServiceClient(
+        f"https://{blob_storage_account}.blob.core.windows.net", credential=blob_storage_key
+    )
+    blob_client = blob_service_client.get_blob_client(container=blob_container, blob=script_name)
+    with open(local_file_path, "rb") as data:
+        blob_client.upload_blob(data, overwrite=True)
+
+    sas_token = generate_blob_sas(
+        account_name=blob_storage_account,
+        container_name=blob_container,
+        blob_name=script_name,
+        account_key=blob_storage_key,
+        permission=BlobSasPermissions(read=True),
+        expiry=datetime.datetime.now(datetime.timezone.utc) + timedelta(hours=2)
+    )
+
+    log.info(f"File {script_name} uploaded to blob storage: {blob_client.url}")
+    log.debug(f"SAS token: {sas_token}")
+    return f"{blob_client.url}?{sas_token}", script_name
 
 def create_setup_task(jobid, appsetupurl):
     log.info(f"Creating setup task for jobid={jobid}")
@@ -664,8 +726,7 @@ def create_setup_task(jobid, appsetupurl):
         log.critical("batch_client is None")
         return
 
-    app_setup_url = appsetupurl
-    log.debug(f"application setup url: {app_setup_url}")
+    log.debug(f"application setup url: {appsetupurl}")
 
     random_code = utils.get_random_code()
     task_id = f"task-app-setup-{random_code}"
@@ -674,18 +735,37 @@ def create_setup_task(jobid, appsetupurl):
         log.critical(f"jobid is None and cannot create setup task {task_id}")
         return
 
-    script_name = os.path.basename(app_setup_url)
+    blob_storage_account = env["BLOBSTORAGEACCOUNT"]
+    blob_storage_key = env["BLOBSTORAGEKEY"]
+    blob_container = env["BLOBCONTAINER"]
+
+
+    appsetup_is_url = is_url(appsetupurl)
+    if not appsetup_is_url:
+        log.debug(f"appsetupurl is not a URL: {appsetupurl}")
+        app_setup_url, script_name = upload_file_to_blob(appsetupurl, blob_storage_account, blob_storage_key, blob_container)
+        resource_files = [ResourceFile(http_url=app_setup_url, file_path=script_name)]
+    else:
+        script_name = os.path.basename(appsetupurl)
+        resource_files = []
+
     log.debug(f"script for application: {script_name}")
 
     anfmountdir = env["ANFMOUNTDIR"]
-
+     
     if anfenabled:
-        task_commands = [
-            f"/bin/bash -c 'set ; cd {anfmountdir} ; curl -sLO {app_setup_url} ; source {script_name} ; {HPCADVISOR_FUNCTION_SETUP}'"
-        ]
+        if not appsetup_is_url:
+            task_commands = [
+                    f"/bin/bash -c 'set ; cp {script_name} {anfmountdir} ; cd {anfmountdir} ; sudo chown _azbatch:_azbatchgrp {script_name} ; source {script_name} ; {HPCADVISOR_FUNCTION_SETUP}'"
+            ]
+        else:
+            task_commands = [
+                f"/bin/bash -c 'set ; cd {anfmountdir} ; curl -sLO {appsetupurl} ; sudo chown _azbatch:_azbatchgrp {script_name} ; source {script_name} ; {HPCADVISOR_FUNCTION_SETUP}'"
+            ]
     else:
+        # TO FIX url versus file
         task_commands = [
-            f"/bin/bash -c 'set ; cd $AZ_BATCH_NODE_MOUNTS_DIR/data ; curl -sLO {app_setup_url} ; source {script_name} ; {HPCADVISOR_FUNCTION_SETUP}'"
+            f"/bin/bash -c 'set ; cd $AZ_BATCH_NODE_MOUNTS_DIR/data ; curl -sLO {appsetupurl} ; source {script_name} ; {HPCADVISOR_FUNCTION_SETUP}'"
         ]
 
     log.debug(f"task command: {task_commands}")
@@ -701,6 +781,7 @@ def create_setup_task(jobid, appsetupurl):
         id=task_id,
         user_identity=user,
         command_line=task_commands[0],
+        resource_files=resource_files,
     )
 
     batch_client.task.add(job_id=jobid, task=task)
@@ -793,7 +874,7 @@ def create_compute_task(
     anfmountdir = env["ANFMOUNTDIR"]
     if anfenabled:
         task_commands = [
-            f"/bin/bash -c 'export HOSTLIST_PPN=$(paste -d, -s <(sed \"s/ slots=[0-9]\+/:{ppn}/\" $HOSTFILE_PATH)); set ; source {anfmountdir}/{app_run_script} ; cd {fulltaskrundir}; {HPCADVISOR_FUNCTION_RUN}'",
+            f"/bin/bash -c 'export HOSTLIST_PPN=$(paste -d, -s <(sed \"s/ slots=[0-9]\+/:{ppn}/\" $HOSTFILE_PATH)); set ; whoami ; source {anfmountdir}/{app_run_script} ; pwd; ls -l ; cat {anfmountdir}/{app_run_script} ; cd {anfmountdir} ; pwd ; ls -l ; cd {fulltaskrundir}; {HPCADVISOR_FUNCTION_RUN}'",
         ]
     else:
         task_commands = [

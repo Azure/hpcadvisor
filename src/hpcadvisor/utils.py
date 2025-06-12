@@ -14,7 +14,7 @@ environment_filename = "env.conf"
 task_filename = "tasks.json"
 dataset_filename = "dataset.json"
 ui_default_filename = "ui_default.json"
-anfmountdir="/mnt/anfnfs"
+anfmountdir = "/mnt/anfnfs"
 
 hpcadvisor_dir = os.path.join(os.path.expanduser("~"), ".hpcadvisor")
 
@@ -25,6 +25,7 @@ def get_hpcadvisor_dir():
 
 def get_price_cache_filename():
     return os.path.join(hpcadvisor_dir, "price_cache.json")
+
 
 def get_ui_default_filename():
     return os.path.join(hpcadvisor_dir, "ui_defaults.json")
@@ -77,8 +78,8 @@ def get_deployments_file(name):
 
 def get_random_code():
     #    random_number = random.randint(1000, 9999)
-    random_letters = "".join(random.sample(string.ascii_lowercase, 3))
-    timestamp = datetime.datetime.now().strftime("%y%m%d%H%M")
+    random_letters = "".join(random.sample(string.ascii_lowercase, 2))
+    timestamp = datetime.datetime.now().strftime("%m%d%H%M")
     return f"{timestamp}{random_letters}"
 
 
@@ -104,10 +105,12 @@ def generate_env_file(rg_prefix, user_data):
         f.write("RG=" + rg_prefix + "\n")
         f.write("BATCHACCOUNT=" + rg_prefix + "ba\n")
         f.write("STORAGEACCOUNT=" + rg_prefix + "sa\n")
+        f.write("BLOBSTORAGEACCOUNT=" + rg_prefix + "bb\n")
+        f.write("BLOBCONTAINER=batchscripts\n")
         f.write("ANFACCOUNT=" + rg_prefix + "anf\n")
         f.write("ANFVOLUMENAME=anfvolume\n")
         f.write("ANFPOOLNAME=anfpool\n")
-        f.write("ANFMOUNTDIR="+anfmountdir+"\n")
+        f.write("ANFMOUNTDIR=" + anfmountdir + "\n")
         f.write("KEYVAULT=" + rg_prefix + "kv\n")
         f.write("VNETNAME=" + rg_prefix + "VNET\n")
         f.write("VSUBNETNAME=" + rg_prefix + "SUBNET\n")
