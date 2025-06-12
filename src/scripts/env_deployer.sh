@@ -352,6 +352,35 @@ create_anf_storage() {
     update_progress "created ANF storage"
 }
 
+create_nat_gateway_subnet() {
+
+    echo "Creating NAT gateway subnet"
+
+    NATGATEWAYNAME="natgateway"$(get_random_code)
+    BATCHNATIP="batchnatip"$(get_random_code)
+    BATCHNATNAME="batchnat"$(get_random_code)
+
+    az network public-ip create \
+        --resource-group "$RG" \
+        --name "$BATCHNATIP" \
+        --sku Standard \
+        --allocation-method static
+
+    az network nat gateway create \
+        --resource-group "$RG" \
+        --name "$BATCHNATNAME" \
+        --public-ip-addresses "$BATCHNATIP" \
+        --idle-timeout 10
+
+    az network vnet subnet update \
+        --resource-group "$RG" \
+        --vnet-name "$VNETNAME" \
+        --name "$VSUBNETNAME" \
+        --nat-gateway "$BATCHNATNAME"
+
+    update_progress "created NAT gateway subnet"
+}
+
 main() {
 
     if [ $# -ne 1 ]; then
@@ -380,6 +409,7 @@ main() {
 
     create_batch_account_with_usersubscription
     # login_batch_with_usersubcription
+    create_nat_gateway_subnet
     update_progress "environment created"
     echo "Environment deployer execution completed: $RG"
 }
