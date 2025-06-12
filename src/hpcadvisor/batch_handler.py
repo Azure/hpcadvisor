@@ -14,10 +14,15 @@ from azure.batch.models import PoolListOptions
 from azure.cli.core.util import b64encode
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.compute import ComputeManagementClient
-from azure.mgmt.compute.models import (DiskCreateOption, LinuxConfiguration,
-                                       OSProfile, SshConfiguration,
-                                       SshPublicKey, VirtualMachine,
-                                       VirtualMachineImage)
+from azure.mgmt.compute.models import (
+    DiskCreateOption,
+    LinuxConfiguration,
+    OSProfile,
+    SshConfiguration,
+    SshPublicKey,
+    VirtualMachine,
+    VirtualMachineImage,
+)
 from azure.mgmt.monitor import MonitorManagementClient
 from azure.mgmt.netapp import NetAppManagementClient
 from azure.mgmt.netapp.models import NetAppAccount
@@ -25,8 +30,7 @@ from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient, SubscriptionClient
 
 from hpcadvisor import dataset_handler, logger, taskset_handler, utils
-from hpcadvisor.azure_identity_credential_adapter import \
-    AzureIdentityCredentialAdapter
+from hpcadvisor.azure_identity_credential_adapter import AzureIdentityCredentialAdapter
 
 batch_supported_images = "batch_supported_images.txt"
 VMIMAGE = "almalinux:almalinux-hpc:8-hpc-gen2:latest"
@@ -615,6 +619,7 @@ def create_pool(sku, number_of_nodes):
             ),
             node_agent_sku_id=env["NODEAGENTSKU"],
         ),
+        storage_account_type="Premium_LRS",
         vm_size=sku,
         target_dedicated_nodes=number_of_nodes,
         enable_inter_node_communication=True,
