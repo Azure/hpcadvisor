@@ -156,7 +156,9 @@ def check_task_completion(task):
     return True, task_status
 
 
-def process_task_completion(task, task_status, tasks_file, dataset_file):
+def process_task_completion(
+    task, task_status, tasks_file, dataset_file, collector_config
+):
 
     jobname = task["tags"]["jobname"]
     taskid = task["tags"]["taskid"]
@@ -181,8 +183,10 @@ def process_task_completion(task, task_status, tasks_file, dataset_file):
 
     taskset_handler.update_task_status(task["id"], tasks_file, task_status)
 
-    batch_handler.delete_pool(poolname)
-    batch_handler.delete_job(jobname)
+    if not collector_config["keeppools"]:
+        batch_handler.delete_pool(poolname)
+    if not collector_config["keepjobs"]:
+        batch_handler.delete_job(jobname)
 
 
 def process_tasks_multitask(tasks_file, dataset_file, collector_config):
@@ -233,7 +237,9 @@ def process_tasks_multitask(tasks_file, dataset_file, collector_config):
             for task in running_tasks[:]:
                 task_has_completed, task_status = check_task_completion(task)
                 if task_has_completed:
-                    process_task_completion(task, task_status, tasks_file, dataset_file)
+                    process_task_completion(
+                        task, task_status, tasks_file, dataset_file, collector_config
+                    )
                     completed_tasks.append(task)
                     running_tasks.remove(task)
                     num_running_tasks -= 1
