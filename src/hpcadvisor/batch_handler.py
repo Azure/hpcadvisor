@@ -3,17 +3,16 @@
 import datetime
 import io
 import os
+import re
 import sys
 import time
 from datetime import timedelta
-import re
 from urllib.parse import urlparse
-
 
 import azure.batch.models as batchmodels
 import numpy as np
 from azure.batch import BatchServiceClient
-from azure.batch.models import PoolListOptions
+from azure.batch.models import PoolListOptions, ResourceFile
 from azure.cli.core.util import b64encode
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.compute import ComputeManagementClient
@@ -26,15 +25,13 @@ from azure.mgmt.compute.models import (
     VirtualMachine,
     VirtualMachineImage,
 )
-
-from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
 from azure.mgmt.monitor import MonitorManagementClient
 from azure.mgmt.netapp import NetAppManagementClient
 from azure.mgmt.netapp.models import NetAppAccount
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient, SubscriptionClient
 from azure.mgmt.storage import StorageManagementClient
-from azure.batch.models import ResourceFile
+from azure.storage.blob import BlobSasPermissions, BlobServiceClient, generate_blob_sas
 
 from hpcadvisor import dataset_handler, logger, taskset_handler, utils
 from hpcadvisor.azure_identity_credential_adapter import AzureIdentityCredentialAdapter
@@ -663,9 +660,10 @@ def create_pool(sku, number_of_nodes):
 
     return poolname
 
+
 def is_url(input_string):
 
-    is_url_bool = False    
+    is_url_bool = False
     parsed = urlparse(input_string)
 
     if parsed.scheme in ("http", "https") and parsed.netloc:
@@ -681,28 +679,37 @@ def is_url(input_string):
     log.debug(f"Input string '{input_string}' is URL: {is_url_bool}")
     return is_url_bool
 
+
 def get_blob_storage_key(subscription_id, resource_group, storage_account_name):
     credential = DefaultAzureCredential()
     storage_client = StorageManagementClient(credential, subscription_id)
-    keys = storage_client.storage_accounts.list_keys(resource_group, storage_account_name)
+    keys = storage_client.storage_accounts.list_keys(
+        resource_group, storage_account_name
+    )
     return keys.keys[0].value  # Use the first key
 
-def upload_file_to_blob(local_file_path, blob_storage_account, blob_storage_key, blob_container):
+
+def upload_file_to_blob(
+    local_file_path, blob_storage_account, blob_storage_key, blob_container
+):
 
     log.info(f"Uploading file {local_file_path} to blob storage")
     blob_storage_key = get_blob_storage_key(
-        env["SUBSCRIPTION"],
-        env["RG"],
-        blob_storage_account
+        env["SUBSCRIPTION"], env["RG"], blob_storage_account
     )
 
-    log.debug(f"blob_storage_account={blob_storage_account}, blob_container={blob_container}, blob_storage_key={blob_storage_key}") 
-    
+    log.debug(
+        f"blob_storage_account={blob_storage_account}, blob_container={blob_container}, blob_storage_key={blob_storage_key}"
+    )
+
     script_name = os.path.basename(local_file_path)
     blob_service_client = BlobServiceClient(
-        f"https://{blob_storage_account}.blob.core.windows.net", credential=blob_storage_key
+        f"https://{blob_storage_account}.blob.core.windows.net",
+        credential=blob_storage_key,
     )
-    blob_client = blob_service_client.get_blob_client(container=blob_container, blob=script_name)
+    blob_client = blob_service_client.get_blob_client(
+        container=blob_container, blob=script_name
+    )
     with open(local_file_path, "rb") as data:
         blob_client.upload_blob(data, overwrite=True)
 
@@ -712,12 +719,13 @@ def upload_file_to_blob(local_file_path, blob_storage_account, blob_storage_key,
         blob_name=script_name,
         account_key=blob_storage_key,
         permission=BlobSasPermissions(read=True),
-        expiry=datetime.datetime.now(datetime.timezone.utc) + timedelta(hours=2)
+        expiry=datetime.datetime.now(datetime.timezone.utc) + timedelta(hours=2),
     )
 
     log.info(f"File {script_name} uploaded to blob storage: {blob_client.url}")
     log.debug(f"SAS token: {sas_token}")
     return f"{blob_client.url}?{sas_token}", script_name
+
 
 def create_setup_task(jobid, appsetupurl):
     log.info(f"Creating setup task for jobid={jobid}")
@@ -739,11 +747,12 @@ def create_setup_task(jobid, appsetupurl):
     blob_storage_key = env["BLOBSTORAGEKEY"]
     blob_container = env["BLOBCONTAINER"]
 
-
     appsetup_is_url = is_url(appsetupurl)
     if not appsetup_is_url:
         log.debug(f"appsetupurl is not a URL: {appsetupurl}")
-        app_setup_url, script_name = upload_file_to_blob(appsetupurl, blob_storage_account, blob_storage_key, blob_container)
+        app_setup_url, script_name = upload_file_to_blob(
+            appsetupurl, blob_storage_account, blob_storage_key, blob_container
+        )
         resource_files = [ResourceFile(http_url=app_setup_url, file_path=script_name)]
     else:
         script_name = os.path.basename(appsetupurl)
@@ -752,11 +761,11 @@ def create_setup_task(jobid, appsetupurl):
     log.debug(f"script for application: {script_name}")
 
     anfmountdir = env["ANFMOUNTDIR"]
-     
+
     if anfenabled:
         if not appsetup_is_url:
             task_commands = [
-                    f"/bin/bash -c 'set ; cp {script_name} {anfmountdir} ; cd {anfmountdir} ; sudo chown _azbatch:_azbatchgrp {script_name} ; source {script_name} ; {HPCADVISOR_FUNCTION_SETUP}'"
+                f"/bin/bash -c 'set ; cp {script_name} {anfmountdir} ; cd {anfmountdir} ; sudo chown _azbatch:_azbatchgrp {script_name} ; source {script_name} ; {HPCADVISOR_FUNCTION_SETUP}'"
             ]
         else:
             task_commands = [
@@ -1379,12 +1388,19 @@ def get_app_execution_time(file_stdout):
     appexectime = 0
     with open(file_stdout, "r") as f:
         for line in f:
-            if "HPCADVISORVAR" in line and "APPEXECTIME":
-                line = line.strip()
-                # TODO: improve space handling here
-                line = line.replace("HPCADVISORVAR ", "")
-                appexectime = float(line.split("=")[1])
-                break
+            stripped = line.strip()
+            if stripped.startswith("#") and "HPCADVISORVAR" in stripped and "APPEXECTIME" in stripped:
+                cleaned = stripped.lstrip("#").strip()
+                if cleaned.startswith("HPCADVISORVAR"):
+                    cleaned = cleaned[len("HPCADVISORVAR"):].strip()
+                if "=" in cleaned:
+                    key, value = cleaned.split("=", 1)
+                    if key.strip() == "APPEXECTIME":
+                        try:
+                            appexectime = float(value.strip())
+                            break
+                        except ValueError:
+                            continue
 
     return appexectime
 
@@ -1397,13 +1413,17 @@ def get_app_level_metrics(file_stdout):
     metrics = {}
     with open(file_stdout, "r") as f:
         for line in f:
-            if "HPCADVISORVAR" in line:
-                line = line.strip()
-                # TODO: improve space handling here
-                line = line.replace("HPCADVISORVAR ", "")
-                key = line.split("=")[0]
-                value = line.split("=")[1]
-                metrics[key] = value
+            stripped = line.strip()
+            # Only consider lines that start with '#' and contain 'HPCADVISORVAR'
+            if stripped.startswith("#") and "HPCADVISORVAR" in stripped:
+                # Remove leading '#' and 'HPCADVISORVAR'
+                cleaned = stripped.lstrip("#").strip()
+                if cleaned.startswith("HPCADVISORVAR"):
+                    cleaned = cleaned[len("HPCADVISORVAR"):].strip()
+                # Now split on '=' and handle spaces
+                if "=" in cleaned:
+                    key, value = cleaned.split("=", 1)
+                    metrics[key.strip()] = value.strip()
 
     return metrics
 

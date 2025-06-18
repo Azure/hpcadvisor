@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 
 from hpcadvisor import logger, taskset_handler
 
+log = logger.logger
+
 
 class TaskPolicy(ABC):
     def __init__(self, name, config):

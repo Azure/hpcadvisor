@@ -17,6 +17,7 @@ def process_tasks_singletask(tasks_file, dataset_file, collector_config):
 
     taskcounter = 0
     log.debug("Starting task processing in single task mode")
+    log.debug(f"config: {collector_config}")
 
     while True:
         tasks = taskset_handler.get_tasks_from_file(tasks_file)
@@ -47,6 +48,8 @@ def process_tasks_singletask(tasks_file, dataset_file, collector_config):
 
             if collector_config["reusepools"]:
                 poolname = batch_handler.get_existing_pool(sku, number_of_nodes)
+                log.info(f"Try reuse pool sku: {sku} with {number_of_nodes} nodes")
+                log.info(f"Poolname: {poolname} to be reused")
 
             if not poolname or not collector_config["reusepools"]:
                 poolname = batch_handler.create_pool(sku, 1)
@@ -254,7 +257,7 @@ def collect_data(tasks_file, dataset_file, env_file, collector_config):
         log.debug("Environment setup completed")
         log.info("Starting tasks...this may take a while")
 
-        if collector_config.get("policy", None).config.get("num_tasks") == 1:
+        if collector_config.get("policy", None).config.get("paralleltasks") == 1:
             log.info("Single task mode")
             process_tasks_singletask(tasks_file, dataset_file, collector_config)
         else:
