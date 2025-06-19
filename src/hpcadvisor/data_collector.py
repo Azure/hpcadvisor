@@ -108,7 +108,14 @@ def start_task_in_parallel(task, tasks_file, dataset_file, collector_config):
 
     # for parallel execution mode, we need to create a pool for each task
     # so we will not resize it any more
-    poolname = batch_handler.create_pool(sku, number_of_nodes)
+    # EDIT: for single node, let's try to reuse the pool
+    if number_of_nodes == 1 and collector_config["reusepools"]:
+        poolname = batch_handler.get_existing_pool(sku, number_of_nodes)
+        log.info(f"Try reuse pool sku: {sku} with {number_of_nodes} nodes")
+        log.info(f"Poolname: {poolname} to be reused")
+        if not poolname:
+            poolname = batch_handler.create_pool(sku, number_of_nodes)
+    
     if poolname is None:
         log.error(f"Failed to create pool for sku: {sku}")
         return
@@ -217,6 +224,7 @@ def process_tasks_multitask(tasks_file, dataset_file, collector_config):
 
     running_tasks = []
     completed_tasks = []
+   
     while True:
         all_pending_tasks = taskset_handler.get_tasks_from_file(tasks_file)
 
