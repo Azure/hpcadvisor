@@ -23,6 +23,7 @@ pytest = "^7.4.4"
 azure-mgmt-netapp = "^13.2.0"
 azure-storage-blob = "^12.25.1"
 azure-mgmt-storage = "^23.0.0"
+azure-mgmt-batch = "^18.0.0"
 
 
 [build-system]
