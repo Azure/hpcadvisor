@@ -27,6 +27,7 @@ from azure.mgmt.compute.models import (
 )
 from azure.mgmt.monitor import MonitorManagementClient
 from azure.mgmt.netapp import NetAppManagementClient
+from azure.mgmt.batch import BatchManagementClient
 from azure.mgmt.netapp.models import NetAppAccount
 from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.resource import ResourceManagementClient, SubscriptionClient
@@ -525,6 +526,14 @@ def delete_pool(poolid):
     log.info(f"Delete pool: {poolid}")
     batch_client.pool.delete(poolid)
 
+def supported_sku(sku):
+    credentials = _get_credentials()
+    batch_mgmt_client = BatchManagementClient(credentials, env["SUBSCRIPTION"])
+    sizes = batch_mgmt_client.location.list_supported_virtual_machine_skus(location_name=env["REGION"])
+    for size in sizes:
+        if sku.lower() == size.name.lower():
+            return True
+    return False
 
 def create_pool(sku, number_of_nodes):
     random_code = utils.get_random_code()
@@ -533,7 +542,12 @@ def create_pool(sku, number_of_nodes):
     if not batch_client:
         log.critical("batch_client is None")
         return None
-
+    
+    supported = supported_sku(sku)
+    if not supported:
+        log.warning(f"SKU {sku} is not supported by Azure Batch")
+        return None
+        
     log.info(f"Create pool: {poolname}")
     subnetid = env["SUBVNETID"]
     pool_id = poolname

@@ -57,6 +57,7 @@ def process_tasks_singletask(tasks_file, dataset_file, collector_config):
             if poolname == None:
                 log.error(f"Failed to create pool for sku: {sku}")
                 log.error(f"Moving to another task")
+                taskset_handler.update_task_status(task["id"], tasks_file, taskset_handler.TaskStatus.FAILED)
                 continue
             jobname = batch_handler.create_job(poolname)
             batch_handler.create_setup_task(jobname, appsetupurl)
@@ -199,6 +200,7 @@ def process_task_completion(
         batch_handler.delete_job(jobname)
 
 
+# TODO: need to handle cases here when pool for a task cannot be created
 def process_tasks_multitask(tasks_file, dataset_file, collector_config):
 
     log.debug("Starting task processing in multi task mode")
